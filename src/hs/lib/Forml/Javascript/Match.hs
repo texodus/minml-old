@@ -22,6 +22,7 @@
 
 module Forml.Javascript.Match where
 
+import Data.Monoid
 import Language.Javascript.JMacro
 
 import Forml.AST
@@ -30,39 +31,57 @@ import Forml.Javascript.Ref
 
 ------------------------------------------------------------------------------
 
-data Match = Match JExpr Patt JExpr deriving (Show)
 
-instance ToJExpr Match where
+data MatchBind = MatchBind JExpr Patt deriving (Show)
 
-    toJExpr (Match val (ValPatt (LitVal l)) _) =
+instance ToStat MatchBind where
 
-        [jmacroE| `(l)` == `(val)` |]
+    toStat (MatchBind val (ValPatt (SymVal (Sym s)))) = [jmacro|
 
-    toJExpr (Match val (ValPatt (SymVal (Sym s))) scope) = [jmacroE|
-
-        (function() {
-            `(scope)`[`(s)`] = `(val)`;
-            return true;
-        })()
+        `(DeclStat (StrI s) Nothing)`;
+        `(ref s)` = `(val)`;
 
     |]
 
-    toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))) _) =
+    toStat (MatchBind val (ConPatt (TypeSymP _) ps)) = 
+
+        foldl1 mappend (fmap toStat (zipWith MatchBind (toAcc `fmap` [0 .. length ps]) ps))
+
+        where
+            toAcc n = [jmacroE| `(val)`[`(n)`] |]
+
+    toStat _ = mempty
+
+data Match = Match JExpr Patt deriving (Show)
+
+instance ToJExpr Match where
+
+    toJExpr (Match val (ValPatt (LitVal l))) =
+
+        [jmacroE| `(l)` == `(val)` |]
+
+    toJExpr (Match _ (ValPatt (SymVal _))) = [jmacroE|
+
+        true
+
+    |]
+
+    toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP sym))))) =
 
         [jmacroE| `(InfixExpr " instanceof " val (SelExpr (ref sym) (StrI "__type__")))` |]
 
-    toJExpr (Match _ (ValPatt (ConVal t)) _) =
+    toJExpr (Match _ (ValPatt (ConVal t))) =
 
         error $ "FATAL: " ++ show t
 
-    toJExpr (Match val (ConPatt (TypeSymP sym) ps) scope) = [jmacroE|
+    toJExpr (Match val (ConPatt (TypeSymP sym) ps)) = [jmacroE|
 
-        `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))) scope)` && (function() {
+        `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))))` && (function() {
             var result = true;
             for (var arg in `(val)`) {
                 if (arg != "__type__") {
                     var argg = `(val)`[arg];
-                    result = result && `(conds argg ps scope)`;
+                    result = result && `(conds argg ps)`;
                 }
             }
             return result;
@@ -70,12 +89,12 @@ instance ToJExpr Match where
 
     |]
 
-conds :: JExpr -> [Patt] -> JExpr -> JExpr
+conds :: JExpr -> [Patt] -> JExpr
 
-conds _ [] _ = [jmacroE| true |]
-conds val (x : xs) scope = [jmacroE|
+conds _ [] = [jmacroE| true |]
+conds val (x : xs) = [jmacroE|
 
-    `(Match val x scope)` && `(conds val xs scope)`
+    `(Match val x)` && `(conds val xs)`
 
 |]
 

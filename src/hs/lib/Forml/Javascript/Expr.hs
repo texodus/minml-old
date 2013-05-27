@@ -91,21 +91,27 @@ instance ToJExpr Expr where
 
     |]
 
-    toJExpr (MatExpr val ((patt, expr):cases)) = [jmacroE|
+    toJExpr (MatExpr val cases) = [jmacroE|
 
         (function() {
-            var scope = this;
             var vall = `(val)`;
-            if (`(Match vall patt scope)`)
-                return `(expr)`
-            else
-                return `(MatExpr val cases)`;
+            `(gunfold vall cases)`;
         })()
 
-    |]
+    |] where
+            gunfold vall ((patt, expr) : cases) = [jmacro|
 
-    toJExpr (MatExpr _ []) = [jmacroE|
-        (function() { throw "Pattern Match Exhausted"; })()
-    |]
+                `(MatchBind vall patt)`;
+                if (`(Match vall patt)`)
+                    return `(expr)`;
+                return (function() { 
+                    `(gunfold vall cases)`;
+                })();
+
+            |]
+
+            gunfold _ [] = [jmacro|
+                throw "Pattern Match Exhausted";
+            |]
 
 ------------------------------------------------------------------------------
