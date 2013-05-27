@@ -22,36 +22,30 @@ import Forml.AST
 
 ------------------------------------------------------------------------------
 
-curriedFun :: String -> TypeAbs () -> JExpr
+curriedFun :: TypeAbs () -> JExpr -> JExpr
 
-curriedFun sym (TypeAbsP (isFun -> Just (_, fs))) = [jmacroE|
+curriedFun (TypeAbsP (isFun -> Just (_, fs))) typ = [jmacroE|
 
     function(x) {
-        var args = [];
-        `(args)`.push(x); 
-        return `(curriedFun' sym args (TypeAbsP fs))`;
+        return `(curriedFun' [x] (TypeAbsP fs) typ)`;
     }
 
 |]
 
-curriedFun sym ts = curriedFun' sym "" ts
+curriedFun ts typ = curriedFun' [] ts typ
 
-curriedFun' :: (ToJExpr a) => String -> a -> TypeAbs () -> JExpr
-curriedFun' sym args (TypeAbsP (isFun -> Just (_, fs))) = [jmacroE|
+curriedFun' :: [JExpr] -> TypeAbs () -> JExpr -> JExpr
+curriedFun' args (TypeAbsP (isFun -> Just (_, fs))) typ = [jmacroE|
 
     function(x) {
-        `(args)`.push(x); 
-        return `(curriedFun' sym args (TypeAbsP fs))`;
+        return `(curriedFun' (args ++ [x]) (TypeAbsP fs) typ)`;
     }
 
 |]
 
-curriedFun' sym args _ = [jmacroE| 
+curriedFun' args _ typ = [jmacroE| 
 
-    {
-        attrs: `(args)`,
-        type: `(sym)`
-    }
+    new `(ApplExpr typ args)`
 
 |]
 

@@ -26,6 +26,7 @@ import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Javascript.Lit()
+import Forml.Javascript.Ref
 
 ------------------------------------------------------------------------------
 
@@ -46,9 +47,9 @@ instance ToJExpr Match where
 
     |]
 
-    toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP s)))) _) =
+    toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))) _) =
 
-        [jmacroE| `(val)`.type == `(s)` |]
+        [jmacroE| `(InfixExpr " instanceof " val (SelExpr (ref sym) (StrI "__type__")))` |]
 
     toJExpr (Match _ (ValPatt (ConVal t)) _) =
 
@@ -56,11 +57,13 @@ instance ToJExpr Match where
 
     toJExpr (Match val (ConPatt (TypeSymP sym) ps) scope) = [jmacroE|
 
-        `(val)`.type == `(sym)` && (function() {
+        `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))) scope)` && (function() {
             var result = true;
-            for (var arg in `(val)`.attrs) {
-                var argg = `(val)`.attrs[arg];
-                result = result && `(conds argg ps scope)`;
+            for (var arg in `(val)`) {
+                if (arg != "__type__") {
+                    var argg = `(val)`[arg];
+                    result = result && `(conds argg ps scope)`;
+                }
             }
             return result;
         })()

@@ -20,11 +20,13 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Forml.Javascript.Expr where
 
+import Data.Monoid
 import Language.Javascript.JMacro
 
 import Forml.AST
@@ -34,6 +36,28 @@ import Forml.Javascript.Curried
 import Forml.Javascript.Match
 
 ------------------------------------------------------------------------------
+
+instance ToJExpr (TypeAbs ()) where
+
+
+    toJExpr (TypeAbsP typ) = 
+
+        ValExpr (JFunc (toIdent `fmap` ids) (body ids))
+
+        where
+            ids = [(0 :: Integer) .. countIds typ]
+            
+            body (arg : args) =
+                [jmacro| this[`(arg)`] = `(ValExpr . JVar . toIdent $ arg)`; |] 
+                    `mappend` body args
+            body [] = mempty
+
+            toIdent = StrI . ("$" ++) . show
+
+            countIds (isFun -> Just (_, fs)) = 1 + countIds fs
+            countIds (isFun -> Nothing) = -1
+            countIds _ = error "FATAL: countIds"
+
 
 instance ToJExpr Expr where
 
@@ -58,8 +82,11 @@ instance ToJExpr Expr where
     toJExpr (TypExpr (TypeSymP sym) typsch expr) = [jmacroE|
 
         function() {
-            var scheme = `(curriedFun sym typsch)`;
-            return `(intro sym (const scheme) expr)`()
+            `(DeclStat (StrI sym) Nothing)`;
+            var x = `(typsch)`;
+            `(ref sym)` = `(curriedFun typsch x)`;
+            `(ref sym)`.__type__ = x;
+            return `(expr)`;
         }()
 
     |]
