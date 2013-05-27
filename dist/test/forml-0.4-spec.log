@@ -1,0 +1,182 @@
+Test suite spec: RUNNING...
+
+Integration
+  Forml.Parser
+    parseForml
+      - should parse a trivial example 
+      - should parse simple type errors
+      - should parse let expressions
+      - should error when trying to parse a missing let continuation
+      - should parse anonymous functions and application
+      - should parse anonymous functions in let bindings
+      - should parse match expressions
+      - should fail to parse match mixed semicolon
+      - should parse match expressions with type errors
+      - should parse user data types
+      - should parse with generic type errors
+      - should parse partial keywords
+      - should parse binding tricks
+
+      function application whitespace
+        - should fail to parse function application on separate lines
+        - should parse function application on separate lines indented
+
+Unit.Javascript.Expr
+  Forml.Javascript.Expr
+    generateJs
+      - should generate js for a trivial example 
+      - should generate js for simple type errors
+      - should generate js for let expressions
+      - should generate js for anonymous functions and application
+      - should generate js for anonymous functions in let bindings
+      - should generate js for match expressions
+      - should generate js for match expressions with type errors
+      - should generate js for user data types
+      - should generate js for with generic type errors
+      - should generate js for partial keywords
+      - should generate js for binding tricks
+
+Unit.Javascript.Lit
+  Forml.Javascript.Lit
+    toJExpr
+      - should parse integers
+      - should parse floats
+      - should parse strings
+      - should parse stringswith escapes 
+
+Unit.Javascript.Val
+  Forml.Javascript.Val
+    toJExpr
+      - should parse partial keywords
+      - should parse partial keywords
+
+    valP
+      - should parse floats
+      - should parse non-keywords
+      - should parse constructors
+      - should parse symbols
+
+Unit.Parse.Expr
+  Forml.Parser
+    parseForml
+      - should parse a trivial example 
+      - should parse simple type errors
+      - should parse let expressions
+      - should error when trying to parse a missing let continuation
+      - should parse anonymous functions and application
+      - should parse anonymous functions in let bindings
+      - should parse match expressions
+      - should fail to parse match mixed semicolon
+      - should parse match expressions with type errors
+      - should parse user data types
+      - should parse with generic type errors
+      - should parse partial keywords
+      - should parse binding tricks
+
+      function application whitespace
+        - should fail to parse function application on separate lines
+        - should parse function application on separate lines indented
+
+      whitespace let
+        - should parse whitespace statement sep
+        - should parse match expressions with mixed whitespace
+
+      whitespace match
+        - should parse match expressions
+
+      whitespace data
+        - should parse with generic type errors
+
+      without `let` keyword
+        - should parse whitespace statement sep
+        - should parse match expressions
+
+      without `=` reserved operator
+        - should parse anonymous functions in let bindings
+        - should parse whitespace statement sep
+        - should parse match expressions
+
+      with `λ` reserved operator
+        - should parse anonymous functions in let bindings
+        - should parse whitespace statement sep
+        - should parse match expressions
+
+Unit.Parse.Indent
+  Forml.Parser.Indent
+    indented
+      - should respect indented
+      - should fail when not indented
+
+    withSep
+      - should respect semicolons
+      - should respect new lines
+      - should fail improperly indented scopes
+      - should respect state reset with try
+
+Unit.Parse.Lit
+  Forml.Parser.Lit
+    litP
+      - should parse integers
+      - should parse floats
+      - should fail to parse negatives
+      - should fail to parse symbols
+      - should parse strings
+      - should parse stringswith escapes 
+
+Unit.Parse.Patt
+  Forml.Parser.Patt
+    pattP
+      - should parse Cons
+      - should parse Cons w/args
+      - should parse literals
+      - should parse symbols
+      - should parse nested
+
+Unit.Parse.Type
+  Forml.Parser.Lit
+    typSymP
+      - should parse type
+      - should fail to parse symbols
+      - should fail to parse integers
+
+    typAbsP
+      - should parse types
+      - should parse type abstractions
+      - should parse parens
+      - should parse type abstractions
+      - should parse type abstractions
+
+Unit.Parse.Val
+  Forml.Parse.Val
+    symP
+      - should parse non-keywords
+      - should parse integers
+      - should fail to parse keywords
+      - should fail to parse integers
+
+    valP
+      - should parse floats
+      - should parse non-keywords
+      - should parse constructors
+      - should parse symbols
+      - should fail to parse keywords
+
+Unit.TypeCheck.Expr
+  Forml.type checkr
+    type checkOhml
+      - should type check a trivial example 
+      - should type check simple type errors
+      - should type check let expressions
+      - should type check anonymous functions and application
+      - should type check anonymous functions in let bindings
+      - should type check match expressions
+      - should type check match expressions with type errors
+      - should type check user data types
+      - should type check with generic type errors
+      - should type check partial keywords
+      - should type check binding tricks
+
+Finished in 3.2147 seconds
+108 examples, 0 failures
+Test suite spec: PASS
+Test suite logged to: dist/test/forml-0.4-spec.log
