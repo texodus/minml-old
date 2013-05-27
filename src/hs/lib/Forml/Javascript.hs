@@ -32,15 +32,13 @@ import Forml.Javascript.Expr()
 
 ------------------------------------------------------------------------------
 
-generateJs :: (ToJExpr a) => a -> Either Err JExpr
+generateJs :: (ToJExpr a) => a -> Either Err JStat
 generateJs = Right . consoleLog . toJExpr
 
     where
-        consoleLog x = [jmacroE| 
-            function() {         
-                var y = `(x)`;   
-                console.log(y);
-            }()
+        consoleLog x = [jmacro| 
+            var y = `(x)`;   
+            console.log(y);
         |]                       
 
 ------------------------------------------------------------------------------

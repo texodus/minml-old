@@ -13,7 +13,7 @@ import Forml.AST
 
 ------------------------------------------------------------------------------
 
-renderText :: JExpr  -> Either Err String
+renderText :: (JsToDoc a, JMacro a) => a -> Either Err String
 renderText = Right . show . renderOneLine . renderJs
 
 ------------------------------------------------------------------------------

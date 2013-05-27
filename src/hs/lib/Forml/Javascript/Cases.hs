@@ -20,63 +20,35 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Forml.Javascript.Expr where
+module Forml.Javascript.Cases where
 
 import Language.Javascript.JMacro
 
 import Forml.AST
-import Forml.Javascript.Cases
-import Forml.Javascript.Curried
-import Forml.Javascript.Ref
-import Forml.Javascript.Type()
 import Forml.Javascript.Val()
+import Forml.Javascript.Match
 
 ------------------------------------------------------------------------------
 
-instance ToJExpr Expr where
+data Cases = forall a. ToJExpr a => Cases JExpr [(Patt, a)]
 
-    toJExpr (VarExpr v) =
-        toJExpr v
+instance ToStat Cases where
 
-    toJExpr (AbsExpr (Sym sym) ex) = 
-        intro sym id ex
+    toStat (Cases vall ((patt, expr) : cases)) = [jmacro|
 
-    toJExpr (isInfix -> Just (x, o, y)) =
-        InfixExpr o (toJExpr x) (toJExpr y)
-
-    toJExpr (AppExpr f x) = 
-        [jmacroE| `(f)`(`(x)`) |]
-
-    toJExpr (LetExpr (Sym sym) ex expr) = [jmacroE| 
-
-        `(intro sym (const ex) expr)`()
-
-    |]
-
-    toJExpr (TypExpr (TypeSymP sym) typsch expr) = [jmacroE|
-
-        function() {
-            `(DeclStat (StrI sym) Nothing)`;
-            var x = `(typsch)`;
-            `(ref sym)` = `(curriedFun typsch x)`;
-            `(ref sym)`.__type__ = x;
+        `(MatchBind vall patt)`;
+        if (`(Match vall patt)`)
             return `(expr)`;
-        }()
-
-    |]
-
-    toJExpr (MatExpr val cases) = [jmacroE|
-
-        (function() {
-            var vall = `(val)`;
+        return (function() { 
             `(Cases vall cases)`;
-        })()
+        })();
 
     |]
 
+    toStat (Cases _ []) = [jmacro|
+        throw "Pattern Match Exhausted";
+    |]
 
 ------------------------------------------------------------------------------

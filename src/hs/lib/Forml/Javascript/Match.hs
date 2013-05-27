@@ -20,7 +20,12 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Forml.Javascript.Match where
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+
+module Forml.Javascript.Match (
+    MatchBind( .. ),
+    Match( .. )
+) where
 
 import Data.Monoid
 import Language.Javascript.JMacro
@@ -31,7 +36,7 @@ import Forml.Javascript.Ref
 
 ------------------------------------------------------------------------------
 
-
+data Match     = Match JExpr Patt deriving (Show)
 data MatchBind = MatchBind JExpr Patt deriving (Show)
 
 instance ToStat MatchBind where
@@ -44,58 +49,38 @@ instance ToStat MatchBind where
     |]
 
     toStat (MatchBind val (ConPatt (TypeSymP _) ps)) = 
-
-        foldl1 mappend (fmap toStat (zipWith MatchBind (toAcc `fmap` [0 .. length ps]) ps))
-
-        where
-            toAcc n = [jmacroE| `(val)`[`(n)`] |]
+        conds mappend toStat MatchBind val ps
 
     toStat _ = mempty
-
-data Match = Match JExpr Patt deriving (Show)
 
 instance ToJExpr Match where
 
     toJExpr (Match val (ValPatt (LitVal l))) =
-
         [jmacroE| `(l)` == `(val)` |]
 
-    toJExpr (Match _ (ValPatt (SymVal _))) = [jmacroE|
-
-        true
-
-    |]
+    toJExpr (Match _ (ValPatt (SymVal _))) =
+        [jmacroE| true |]
 
     toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP sym))))) =
-
-        [jmacroE| `(InfixExpr " instanceof " val (SelExpr (ref sym) (StrI "__type__")))` |]
+        InfixExpr " instanceof " val (SelExpr (ref sym) (StrI "__type__"))
 
     toJExpr (Match _ (ValPatt (ConVal t))) =
-
         error $ "FATAL: " ++ show t
 
     toJExpr (Match val (ConPatt (TypeSymP sym) ps)) = [jmacroE|
 
-        `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))))` && (function() {
-            var result = true;
-            for (var arg in `(val)`) {
-                if (arg != "__type__") {
-                    var argg = `(val)`[arg];
-                    result = result && `(conds argg ps)`;
-                }
-            }
-            return result;
-        })()
+        `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))))`
+            && `(conds (InfixExpr "&&") toJExpr Match val ps)`
 
     |]
 
-conds :: JExpr -> [Patt] -> JExpr
+conds f g c val ps = 
+    foldl1 f (g `fmap` zipWith c args ps)
+    where
+        args  = toAcc val `fmap` [0 .. length ps]
 
-conds _ [] = [jmacroE| true |]
-conds val (x : xs) = [jmacroE|
-
-    `(Match val x)` && `(conds val xs)`
-
-|]
+toAcc :: JExpr -> Int -> JExpr
+toAcc val n = 
+    [jmacroE| `(val)`[`(n)`] |]
 
 ------------------------------------------------------------------------------

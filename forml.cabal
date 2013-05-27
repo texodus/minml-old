@@ -37,11 +37,13 @@ Library
     Forml.AST.Val,
     Forml.Exec,
     Forml.Javascript,
+    Forml.Javascript.Cases,
     Forml.Javascript.Curried,
     Forml.Javascript.Expr,
     Forml.Javascript.Lit,
     Forml.Javascript.Match,
     Forml.Javascript.Ref,
+    Forml.Javascript.Type,
     Forml.Javascript.Val,
     Forml.Parse,
     Forml.Parse.Expr
