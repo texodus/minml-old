@@ -17,18 +17,19 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Forml.Javascript.Cases where
+module Forml.Javascript.Cases (
+    Cases( .. )
+) where
 
 import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Javascript.Val()
 import Forml.Javascript.Match
+import Forml.Javascript.JMacro
 
 ------------------------------------------------------------------------------
 
@@ -36,16 +37,19 @@ data Cases = forall a. ToJExpr a => Cases JExpr [(Patt, a)]
 
 instance ToStat Cases where
 
-    toStat (Cases vall ((patt, expr) : cases)) = [jmacro|
+    toStat (Cases vall ((patt, expr) : cases)) = 
+        flip (foldl g) (getBindings vall patt) mat
+        where
+            g expr' (i, ex) = replace i ex $ expr'
+            mat = case minify (toJExpr (Match vall patt)) of
+                ValExpr (JVar (StrI "true")) -> [jmacro|
+                    return `(expr)`;
+                |]
 
-        `(MatchBind vall patt)`;
-        if (`(Match vall patt)`)
-            return `(expr)`;
-        return (function() { 
-            `(Cases vall cases)`;
-        })();
-
-    |]
+                matchIf -> [jmacro|
+                    if (`(matchIf)`) return `(expr)`;
+                    `(Cases vall cases)`;
+                |]
 
     toStat (Cases _ []) = [jmacro|
         throw "Pattern Match Exhausted";

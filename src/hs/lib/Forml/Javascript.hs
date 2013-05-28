@@ -36,7 +36,7 @@ generateJs :: (ToJExpr a) => a -> Either Err JStat
 generateJs = Right . consoleLog . toJExpr
 
     where
-        consoleLog x = [jmacro| 
+        consoleLog x = scopify [jmacro| 
             var y = `(x)`;   
             console.log(y);
         |]                       

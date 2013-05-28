@@ -28,16 +28,17 @@ assertGenerate a b = assertEqual "" gen b
 node :: String -> IO String
 node js = do
 
-    (Just std_in', Just std_out', _, p) <-
-        createProcess (proc "node" []) { std_in = CreatePipe, std_out = CreatePipe }
+    (Just std_in', Just std_out', Just std_err', p) <-
+        createProcess (proc "node" []) { std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe }
 
     hPutStrLn std_in' $ js ++ ";process.exit(0);\n"
 
     z <- waitForProcess p
     status <- hGetContents std_out'
+    errs <- hGetContents std_err'
     
     case z of
-        ExitFailure n -> return $ "FATAL: error code " ++ show n
+        ExitFailure n -> return $ "FATAL: error code " ++ show n ++ "\n" ++ errs
         ExitSuccess   -> return $ status
     
 

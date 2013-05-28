@@ -17,17 +17,15 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Forml.Javascript.Match (
-    MatchBind( .. ),
-    Match( .. )
+    Match( .. ),
+    getBindings
 ) where
 
-import Data.Monoid
 import Language.Javascript.JMacro
 
 import Forml.AST
@@ -36,22 +34,7 @@ import Forml.Javascript.Ref
 
 ------------------------------------------------------------------------------
 
-data Match     = Match JExpr Patt deriving (Show)
-data MatchBind = MatchBind JExpr Patt deriving (Show)
-
-instance ToStat MatchBind where
-
-    toStat (MatchBind val (ValPatt (SymVal (Sym s)))) = [jmacro|
-
-        `(DeclStat (StrI s) Nothing)`;
-        `(ref s)` = `(val)`;
-
-    |]
-
-    toStat (MatchBind val (ConPatt (TypeSymP _) ps)) = 
-        conds mappend toStat MatchBind val ps
-
-    toStat _ = mempty
+data Match = Match JExpr Patt deriving (Show)
 
 instance ToJExpr Match where
 
@@ -70,17 +53,20 @@ instance ToJExpr Match where
     toJExpr (Match val (ConPatt (TypeSymP sym) ps)) = [jmacroE|
 
         `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))))`
-            && `(conds (InfixExpr "&&") toJExpr Match val ps)`
+            && `(getConds (InfixExpr "&&") ((toJExpr .) . Match) val ps)`
 
     |]
 
-conds f g c val ps = 
-    foldl1 f (g `fmap` zipWith c args ps)
+getBindings val (ValPatt (SymVal (Sym s))) = [(s, val)]
+getBindings val (ConPatt (TypeSymP _) ps) = getConds (++) getBindings val ps
+getBindings _ _ = []
+
+getConds f c val ps = 
+    foldl1 f (zipWith c args ps)
     where
         args  = toAcc val `fmap` [0 .. length ps]
 
 toAcc :: JExpr -> Int -> JExpr
-toAcc val n = 
-    [jmacroE| `(val)`[`(n)`] |]
+toAcc val n = [jmacroE| `(val)`[`(n)`] |]
 
 ------------------------------------------------------------------------------

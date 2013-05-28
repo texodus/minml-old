@@ -32,6 +32,7 @@ import Forml.AST
 import Forml.Javascript.Cases
 import Forml.Javascript.Curried
 import Forml.Javascript.Ref
+import Forml.Javascript.JMacro
 import Forml.Javascript.Type()
 import Forml.Javascript.Val()
 
@@ -42,8 +43,13 @@ instance ToJExpr Expr where
     toJExpr (VarExpr v) =
         toJExpr v
 
-    toJExpr (AbsExpr (Sym sym) ex) = 
-        intro sym id ex
+    toJExpr (AbsExpr (Sym sym) ex) = [jmacroE|
+
+        function(arg) {
+            `(replace sym arg $ toStat ex)`;
+        }
+
+    |]
 
     toJExpr (isInfix -> Just (x, o, y)) =
         InfixExpr o (toJExpr x) (toJExpr y)
@@ -51,32 +57,42 @@ instance ToJExpr Expr where
     toJExpr (AppExpr f x) = 
         [jmacroE| `(f)`(`(x)`) |]
 
-    toJExpr (LetExpr (Sym sym) ex expr) = [jmacroE| 
-
-        `(intro sym (const ex) expr)`()
-
-    |]
-
-    toJExpr (TypExpr (TypeSymP sym) typsch expr) = [jmacroE|
-
-        function() {
-            `(DeclStat (StrI sym) Nothing)`;
-            var x = `(typsch)`;
-            `(ref sym)` = `(curriedFun typsch x)`;
-            `(ref sym)`.__type__ = x;
-            return `(expr)`;
-        }()
-
-    |]
-
-    toJExpr (MatExpr val cases) = [jmacroE|
+    toJExpr x = [jmacroE|
 
         (function() {
-            var vall = `(val)`;
-            `(Cases vall cases)`;
+            `(x)`;
         })()
 
     |]
 
+instance ToStat Expr where
+
+    toStat (LetExpr (Sym sym) ex expr) = [jmacro| 
+
+        var x = `(replace sym x $ toJExpr ex)`;
+        `(replace sym x $ toStat expr)`;
+
+    |]
+
+    toStat (TypExpr (TypeSymP sym) typsch expr) = [jmacro|
+
+        `(DeclStat (StrI sym) Nothing)`;
+        var x = `(typsch)`;
+        `(ref sym)` = `(curriedFun typsch x)`;
+        `(ref sym)`.__type__ = x;
+        `(expr)`;
+
+    |]
+
+    toStat (MatExpr val cases) = [jmacro|
+
+        var x = `(val)`;
+        `(Cases x cases)`;
+
+    |]
+
+    toStat x = [jmacro|
+        return `(x)`;
+    |]
 
 ------------------------------------------------------------------------------
