@@ -57,3 +57,19 @@ spec = do
                                                                              (TypeVar (TypeVarP "a")))
                                                                     (TypeVar (TypeVarP "b"))))
                                                   (TypeSym (TypeSymP "String")))))
+
+            describe "forall application whitespace" $ do
+
+                it "should fail to parse forall application on separate lines" $ assertParse typAbsP
+
+                    "List       \n\
+                    \f         "
+
+                    $ Right (TypeAbsP (TypeSym (TypeSymP "List")))
+
+                it "should parse forall application on separate lines indented" $ assertParse typAbsP
+
+                    "List    \n\
+                    \    f     "
+
+                    $ Right (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "f"))))

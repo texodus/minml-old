@@ -19,6 +19,7 @@ import Text.Parsec.Expr
 
 import Forml.AST
 import Forml.Parse.Token
+import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
@@ -33,7 +34,7 @@ typP = buildExpressionParser opPs termP <?> "Type Symbol"
 
     where
         opPs =
-            [ [Infix (spaces >> return TypeApp) AssocLeft]
+            [ [Infix (spaces >> indented >> return TypeApp) AssocLeft]
             , [Infix (reservedOp "->" >> return (fnConst "->")) AssocRight] ]
 
         fnConst = (TypeApp .) . TypeApp . TypeSym . TypeSymP
