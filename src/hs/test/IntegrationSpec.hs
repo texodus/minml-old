@@ -182,3 +182,13 @@ spec = do
                     \   length (Cons 1 (Cons 2 Nil))             \n"
 
                     (Right "2\n")
+
+            describe "let and function binding and implicit match" $ do
+
+                it "should compile & run basic unboxing" $ assertNode
+
+                    "   data Just: a -> Maybe a     \n\
+                    \   unbox (Just x) = x          \n\
+                    \   unbox (Just 5)              \n"
+
+                    (Right "5\n")

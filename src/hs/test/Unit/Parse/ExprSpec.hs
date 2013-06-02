@@ -53,14 +53,14 @@ spec = do
 
                 "   (fun x -> x + 4) 2 == 6   "
 
-                $ Right (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0))))
-
+                $ Right (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))])) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0))))
+                
             it "should parse anonymous functions in let bindings" $ assertParse
              
                 "   let g = fun x -> x + 4;   \
                 \   g 2 == 6                  "
 
-                $ Right (LetExpr (Sym "g") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
+                $ Right (LetExpr (Sym "g") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))])) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
 
             it "should parse match expressions" $ assertParse
 
@@ -71,7 +71,7 @@ spec = do
                 \       n -> fib (n - 1) + fib (n - 2);;    \
                 \   fib 7                                   "
 
-                $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
             it "should fail to parse match mixed semicolon" $ assertParse
 
@@ -102,7 +102,7 @@ spec = do
                 \                                            \
                 \   length (Cons 1 (Cons 2 Nil))             "
 
-                $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
+                $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
 
             it "should parse with generic type errors" $ assertParse
 
@@ -120,7 +120,7 @@ spec = do
                 \   (let func = fun x -> x + ((2));   \
                 \   func letly)                       "
 
-                $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
+                $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
             it "should parse binding tricks" $ assertParse
 
@@ -129,19 +129,7 @@ spec = do
                 \   let x = 2;                 \
                 \   f 3 == 6                   "
 
-                $ Right (LetExpr (Sym "x")
-                                 (VarExpr (LitVal (NumLit 3.0)))
-                                 (LetExpr (Sym "f") 
-                                          (AbsExpr (Sym "y")
-                                                   (AppExpr (AppExpr (VarExpr (SymVal (Sym "+")))
-                                                                     (VarExpr (SymVal (Sym "y"))))
-                                                            (VarExpr (SymVal (Sym "x")))))
-                                          (LetExpr (Sym "x")
-                                                   (VarExpr (LitVal (NumLit 2.0)))
-                                                   (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
-                                                                     (AppExpr (VarExpr (SymVal (Sym "f")))
-                                                                              (VarExpr (LitVal (NumLit 3.0)))))
-                                                            (VarExpr (LitVal (NumLit 6.0)))))))
+                $ Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 3.0))) (LetExpr (Sym "f") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "y")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "y")))) (VarExpr (SymVal (Sym "x"))))])) (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 2.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "f"))) (VarExpr (LitVal (NumLit 3.0))))) (VarExpr (LitVal (NumLit 6.0)))))))
 
             describe "function application whitespace" $ do
 
@@ -167,7 +155,7 @@ spec = do
                     \   let func = fun x -> x + ((2))    \n\
                     \   func letly                       \n"
 
-                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
+                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
                 it "should parse match expressions with mixed whitespace" $ assertParse
 
@@ -178,7 +166,7 @@ spec = do
                     \       n -> fib (n - 1) + fib (n - 2);    \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
             describe "whitespace match" $ do
 
@@ -191,7 +179,7 @@ spec = do
                     \       n -> fib (n - 1) + fib (n - 2)     \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
             describe "whitespace data" $ do
 
@@ -213,7 +201,7 @@ spec = do
                     \   func = fun x -> x + ((2))        \n\
                     \   func letly                       \n"
 
-                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
+                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
                 it "should parse match expressions" $ assertParse
 
@@ -224,7 +212,7 @@ spec = do
                     \       n -> fib (n - 1) + fib (n - 2)     \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
             describe "without `=` reserved operator" $ do
 
@@ -233,7 +221,7 @@ spec = do
                     "   let g = fun x = x + 4    \n\
                     \   g 2 == 6                 \n"
 
-                    $ Right (LetExpr (Sym "g") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
+                    $ Right (LetExpr (Sym "g") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))])) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
 
                 it "should parse whitespace statement sep" $ assertParse
 
@@ -241,7 +229,7 @@ spec = do
                     \   func = fun x = x + ((2))    \n\
                     \   func letly                  \n"
 
-                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
+                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
                 it "should parse match expressions" $ assertParse
 
@@ -252,7 +240,7 @@ spec = do
                     \       n -> fib (n - 1) + fib (n - 2)     \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
                 it "should parse match expressions" $ assertParse
 
@@ -263,7 +251,7 @@ spec = do
                     \       n = fib (n - 1) + fib (n - 2)      \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
             describe "with `λ` reserved operator" $ do
 
@@ -272,7 +260,7 @@ spec = do
                     "   let g = λ x = x + 4      \n\
                     \   g 2 == 6                 \n"
 
-                    $ Right (LetExpr (Sym "g") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
+                    $ Right (LetExpr (Sym "g") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))])) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "g"))) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0)))))
 
                 it "should parse whitespace statement sep" $ assertParse
 
@@ -280,7 +268,7 @@ spec = do
                     \   func = λ x = x + ((2))      \n\
                     \   func letly                  \n"
 
-                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "x") (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
+                    $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
                 it "should parse match expressions" $ assertParse
 
@@ -291,6 +279,6 @@ spec = do
                     \       n -> fib (n - 1) + fib (n - 2)     \n\
                     \   fib 7                                  \n"
 
-                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
+                    $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
 ------------------------------------------------------------------------------

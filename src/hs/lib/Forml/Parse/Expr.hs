@@ -40,11 +40,9 @@ exprP =
     where
 
         absExprP f =
-            pure AbsExpr
+            pure (AbsExpr (Sym "_match"))
                 <*  f
-                <*> symP
-                <*  (reservedOp "=" <|> reservedOp "->")
-                <*> exprP
+                <*> (pure (MatExpr (VarExpr (SymVal (Sym "_match"))) . (:[])) <*> caseP)
                 <?> "Abstraction"
 
         absExpr =
@@ -59,16 +57,14 @@ exprP =
                 <*> withScope (try caseP `sepEndBy` sep)
                 <?> "Match Expression"
 
-            where
-                toOp = reservedOp "->" <|> reservedOp "="
-                caseP =
-                    (,) <$> pattP <* toOp <*> exprP
+        toOp  = reservedOp "->" <|> reservedOp "="
+        caseP = (,) <$> pattP <* toOp <*> exprP
 
         letExprP =
             pure LetExpr
                 <*  (reserved "let" <|> return ())
                 <*> symP
-                <*> (valLetP <|> try (absExprP (return ())))
+                <*> (valLetP <|> absExprP (return ()))
                 <*> withSep exprP
                 <?> "Let Expression"
 
