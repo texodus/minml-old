@@ -14,6 +14,7 @@
 module Forml.TypeCheck.Kind where
 
 import Forml.AST
+import Forml.Utils
 
 ------------------------------------------------------------------------------
 
@@ -24,6 +25,7 @@ instance HasKind (Type Kind) where
     kind (TypeSym tc) = kind tc
     kind (TypeVar u)  = kind u
     kind (TypeApp (kind -> Kfun _ k) _) = k
+    kind (TypeRec _) = Star
     kind x = error (show x)
 
 instance HasKind (TypeVar Kind) where
@@ -37,5 +39,8 @@ toKind k (TypeSym (TypeSymP n)) = TypeSym (TypeSymT k n)
 toKind k (TypeVar (TypeVarP n)) = TypeVar (TypeVarT k n)
 toKind k (TypeApp f x) =
     TypeApp (toKind (Kfun Star k) f) (toKind Star x)
+
+toKind Star (TypeRec r) = TypeRec (toKind Star `fmap` r)
+toKind k (TypeRec r) = error $ "FATAL: Cannot construct " ++ fmt r ++ " of kind " ++ fmt k
 
 ------------------------------------------------------------------------------

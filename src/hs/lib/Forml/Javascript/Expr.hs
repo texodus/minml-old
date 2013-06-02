@@ -34,6 +34,7 @@ import Forml.Javascript.Curried
 import Forml.Javascript.JMacro
 import Forml.Javascript.Type()
 import Forml.Javascript.Val()
+import Forml.Javascript.Record()
 
 ------------------------------------------------------------------------------
 
@@ -57,6 +58,8 @@ instance ToJExpr Expr where
         [jmacroE| `(f)`(`(x)`) |]
 
     toJExpr (JSExpr js) = js
+
+    toJExpr (RecExpr r) = toJExpr r
 
     toJExpr x = [jmacroE|
 

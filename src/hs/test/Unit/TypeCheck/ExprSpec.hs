@@ -1,5 +1,6 @@
 module Unit.TypeCheck.ExprSpec where
 
+import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
@@ -7,7 +8,7 @@ import Forml.TypeCheck
 import Forml.AST
 
 assertCheck :: Expr -> Maybe Err -> Assertion
-assertCheck a b = assertEqual "" checked b
+assertCheck a b = assertEqual "" b checked
     where
         checked = case typeCheck a of
             Left x -> Just x
@@ -184,6 +185,58 @@ spec = do
                                                              (AppExpr (VarExpr (SymVal (Sym "f")))
                                                                       (VarExpr (LitVal (NumLit 3.0)))))
                                                     (VarExpr (LitVal (NumLit 6.0)))))))
+
+                Nothing
+
+            it "should type check records" $ assertCheck
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (VarExpr (SymVal (Sym "x"))))
+
+                Nothing
+
+
+            it "should type check records that don't unify" $ assertCheck
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (LetExpr (Sym "y")
+                                  (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                               , ("z", VarExpr (LitVal (NumLit 3.0))) ])))
+                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                                    (VarExpr (SymVal (Sym "x")))) 
+                                           (VarExpr (SymVal (Sym "y"))))))
+
+                $ Just (Err "Types do not unify\n  {x: Double, y: Double} and {x: Double, z: Double}")
+
+            it "should type check records that do unify" $ assertCheck
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (LetExpr (Sym "y")
+                                  (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                               , ("y", VarExpr (LitVal (NumLit 3.0))) ])))
+                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                                    (VarExpr (SymVal (Sym "x")))) 
+                                           (VarExpr (SymVal (Sym "y"))))))
+
+                Nothing
+
+            it "should type check patterns" $ assertCheck
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (LetExpr (Sym "y")
+                                  (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                               , ("y", VarExpr (LitVal (NumLit 3.0))) ])))
+                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                                    (VarExpr (SymVal (Sym "x")))) 
+                                           (VarExpr (SymVal (Sym "y"))))))
 
                 Nothing
 

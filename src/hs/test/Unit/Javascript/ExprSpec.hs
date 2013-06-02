@@ -1,5 +1,6 @@
 module Unit.Javascript.ExprSpec where
 
+import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
@@ -187,5 +188,52 @@ spec = do
                                                     (VarExpr (LitVal (NumLit 6.0)))))))
 
                 $ Right "var jmId_0;jmId_0 = (function(){var jmId_1;jmId_1 = 3.0;var jmId_4;jmId_4 = (function(jmId_6){return (jmId_6+jmId_1);});var jmId_9;jmId_9 = 2.0;return (jmId_4(3.0)==6.0);})();console.log(jmId_0);"
+
+            it "should type check records" $ assertGenerate
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (VarExpr (SymVal (Sym "x"))))
+
+                $ Right "var jmId_0;jmId_0 = (function(){var jmId_1;jmId_1 = { 'x': 4.0,'y': 6.0};return jmId_1;})();console.log(jmId_0);"
+
+            it "should type check records that don't unify" $ assertGenerate
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (LetExpr (Sym "y")
+                                  (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                               , ("z", VarExpr (LitVal (NumLit 3.0))) ])))
+                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                                    (VarExpr (SymVal (Sym "x")))) 
+                                           (VarExpr (SymVal (Sym "y"))))))
+
+                $ Right "var jmId_0;jmId_0 = (function(){var jmId_1;jmId_1 = { 'x': 4.0,'y': 6.0};var jmId_4;jmId_4 = { 'x': 4.0,'z': 3.0};return (jmId_1==jmId_4);})();console.log(jmId_0);"
+
+            it "should type check records that do unify" $ assertGenerate
+
+                (LetExpr (Sym "x")
+                         (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                      , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
+                         (LetExpr (Sym "y")
+                                  (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
+                                                               , ("y", VarExpr (LitVal (NumLit 3.0))) ])))
+                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                                    (VarExpr (SymVal (Sym "x")))) 
+                                           (VarExpr (SymVal (Sym "y"))))))
+
+                $ Right "var jmId_0;jmId_0 = (function(){var jmId_1;jmId_1 = { 'x': 4.0,'y': 6.0};var jmId_4;jmId_4 = { 'x': 4.0,'y': 3.0};return (jmId_1==jmId_4);})();console.log(jmId_0);"
+
+
+            it "should type check record patterns" $ assertGenerate
+
+                (LetExpr (Sym "f") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 3.0)))]))) (MatExpr (VarExpr (SymVal (Sym "f"))) [(RecPatt (Record (M.fromList [("x",ValPatt (SymVal (Sym "x")))])),VarExpr (SymVal (Sym "x"))),(ValPatt (SymVal (Sym "_")),VarExpr (LitVal (NumLit 0.0)))]))
+
+                $ Right "var jmId_0;jmId_0 = (function(){var jmId_1;jmId_1 = { 'x': 3.0};var jmId_4;jmId_4 = jmId_1;return jmId_4[\"x\"];})();console.log(jmId_0);"
+
+
+
 
 ------------------------------------------------------------------------------

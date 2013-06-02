@@ -14,6 +14,7 @@ module Forml.AST.Patt (
 
 import Forml.AST.Type
 import Forml.AST.Val
+import Forml.AST.Record
 import Forml.Utils
 
 --------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ data Patt where
 
     ValPatt :: Val -> Patt
     ConPatt :: TypeSym () -> [Patt] -> Patt
+    RecPatt :: Record Patt -> Patt
 
     deriving (Show, Eq, Ord)
 

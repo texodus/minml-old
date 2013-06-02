@@ -24,6 +24,7 @@ import Data.Ix
 import Data.List
 
 import Forml.AST.Kind
+import Forml.AST.Record
 import Forml.Utils
 
 ------------------------------------------------------------------------------
@@ -44,6 +45,7 @@ data Type a where
     TypeSym :: TypeSym a -> Type a
     TypeVar :: TypeVar a -> Type a
     TypeApp :: Type a -> Type a -> Type a
+    TypeRec :: Record (Type a) -> Type a
 
     TypeGen :: Int -> Type Kind
 
@@ -67,6 +69,7 @@ instance (Fmt a) => Fmt (Type a) where
     fmt (TypeVar v) = fmt v
     fmt (TypeApp a b) = "(" ++ fmt a ++ " " ++ fmt b ++ ")"
     fmt (TypeGen i) = "<<" ++ show i ++ ">>"
+    fmt (TypeRec m) = fmt m
 
 deriving instance (Ord a) => Ord (Type a)
 deriving instance (Ord a) => Ord (TypeVar a)

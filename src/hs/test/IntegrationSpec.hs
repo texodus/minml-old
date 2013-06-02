@@ -45,7 +45,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
 
             it "should compile & run anonymous functions and application" $ assertNode
 
@@ -200,3 +200,15 @@ spec = do
                     \   unbox (Just 5)              \n"
 
                     (Right "6\n")
+
+            describe "Records" $ do
+
+                it "should compile & run basic records" $ assertNode
+
+                    "   f = {x: 3}                  \n\
+                    \   match f with                \n\
+                    \       {x: x} = x              \n\
+                    \       _ = 0                   \n"
+
+                    (Right "3\n")
+

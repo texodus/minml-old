@@ -20,6 +20,7 @@ module Forml.TypeCheck.Unify where
 import Control.Applicative
 import Control.Monad.State
 import Control.Arrow
+import qualified Data.Map as M
 
 import Forml.AST
 import Forml.TypeCheck.Kind
@@ -36,6 +37,8 @@ unify t u = do
 mgu :: Type Kind -> Type Kind -> TypeCheck ()
 mgu (TypeApp f x) (TypeApp g y) = unify f g >> unify x y
 mgu (TypeSym t) (TypeSym u) | t == u = return ()
+mgu (TypeRec (Record t)) (TypeRec (Record u)) | M.keys t == M.keys u = 
+    sequence_ (zipWith mgu (M.elems t) (M.elems u))
 mgu (TypeVar u) t = u `varBind` t
 mgu t (TypeVar u) = u `varBind` t
 mgu t u = uniErr "Types do not unify" t u

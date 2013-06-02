@@ -18,6 +18,7 @@
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
@@ -26,6 +27,7 @@ module Forml.Javascript.Match (
     getBindings
 ) where
 
+import qualified Data.Map as M
 import Language.Javascript.JMacro
 
 import Forml.AST
@@ -49,6 +51,12 @@ instance ToJExpr Match where
     toJExpr (Match _ (ValPatt (ConVal t))) =
         error $ "FATAL: " ++ show t
 
+    toJExpr (Match val (RecPatt (Record (unzip . M.toList -> (ks, ps))))) = [jmacroE|
+
+        `(getGenConds ks (InfixExpr "&&") ((toJExpr .) . Match) val ps)`
+
+    |]
+
     toJExpr (Match val (ConPatt (TypeSymP sym) ps)) = [jmacroE|
 
         `(Match val (ValPatt (ConVal (TypeSym (TypeSymP sym)))))`
@@ -58,14 +66,18 @@ instance ToJExpr Match where
 
 getBindings val (ValPatt (SymVal (Sym s))) = [(s, val)]
 getBindings val (ConPatt (TypeSymP _) ps) = getConds (++) getBindings val ps
+getBindings val (RecPatt (Record (unzip . M.toList -> (ks, ps)))) =
+    getGenConds ks (++) getBindings val ps
 getBindings _ _ = []
 
-getConds f c val ps = 
+getGenConds keys f c val ps = 
     foldl1 f (zipWith c args ps)
     where
-        args  = toAcc val `fmap` [0 .. length ps]
+        args  = toAcc val `fmap` keys 
 
-toAcc :: JExpr -> Int -> JExpr
+getConds f c val ps = getGenConds [0 .. length ps] f c val ps
+
+toAcc :: ToJExpr a => JExpr -> a -> JExpr
 toAcc val n = [jmacroE| `(val)`[`(n)`] |]
 
 ------------------------------------------------------------------------------

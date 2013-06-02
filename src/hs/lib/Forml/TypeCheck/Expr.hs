@@ -56,6 +56,8 @@ module Forml.TypeCheck.Expr (
     exprCheck
 ) where
 
+import qualified Data.Map as M
+
 import Forml.AST
 import Forml.TypeCheck.Kind
 import Forml.TypeCheck.Prelude
@@ -85,6 +87,10 @@ exprCheck _ (JSExpr _) =
 
 exprCheck _ (VarExpr (ConVal t)) =
     error $ "FATAL: " ++ show t
+
+exprCheck as (RecExpr (Record (unzip . M.toList -> (ks, vs)))) = do
+    mapM (exprCheck as) vs >>=
+        return . TypeRec . Record . M.fromList . zip ks
 
 exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) expr) =
     exprCheck (name :>: typKAbs : as) expr

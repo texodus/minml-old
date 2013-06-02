@@ -23,6 +23,7 @@ import Language.Javascript.JMacro
 import Forml.AST
 import Forml.Parse.Indent
 import Forml.Parse.Patt
+import Forml.Parse.Record
 import Forml.Parse.Token
 import Forml.Parse.Type
 import Forml.Parse.Val
@@ -33,6 +34,7 @@ exprP :: Parser Expr
 exprP =
 
     jsExprP
+        <|> recExprP
         <|> absExprP absExpr
         <|> matExprP
         <|> try letExprP
@@ -86,6 +88,10 @@ exprP =
 
         valLetP =
             reservedOp "=" >> exprP
+
+        recExprP =
+            RecExpr <$> recordP exprP 
+                <?> "Record Expression"
 
         typExprP =
             pure TypExpr

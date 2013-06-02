@@ -20,6 +20,7 @@ import Text.PrettyPrint.Leijen.Text
 import Forml.AST.Patt
 import Forml.AST.Type
 import Forml.AST.Val
+import Forml.AST.Record
 import Forml.Utils
 
 ------------------------------------------------------------------------------
@@ -30,6 +31,7 @@ data Expr where
     AbsExpr :: Sym  -> Expr -> Expr
     VarExpr :: Val  -> Expr
     MatExpr :: Expr -> [(Patt, Expr)] -> Expr
+    RecExpr :: Record Expr -> Expr
     JSExpr  :: JExpr -> Expr
 
     TypExpr :: TypeSym () -> TypeAbs () -> Expr -> Expr
@@ -55,6 +57,9 @@ instance Fmt Expr where
 
     fmt (JSExpr js) =
         "`" ++ (show . renderOneLine . renderJs) js ++ "`"
+
+    fmt (RecExpr js) =
+        fmt js
 
     fmt (VarExpr x) = fmt x
 

@@ -1,5 +1,6 @@
 module Unit.Parse.ExprSpec where
 
+import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
@@ -45,8 +46,8 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
-                
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+
             it "should parse anonymous functions and application" $ assertParse
 
                 "   (fun x -> x + 4) 2 == 6   "
@@ -128,6 +129,21 @@ spec = do
                 \   f 3 == 6                   "
 
                 $ Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 3.0))) (LetExpr (Sym "f") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "y")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "y")))) (VarExpr (SymVal (Sym "x"))))])) (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 2.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (VarExpr (SymVal (Sym "f"))) (VarExpr (LitVal (NumLit 3.0))))) (VarExpr (LitVal (NumLit 6.0)))))))
+
+            it "should parse records" $ assertParse
+
+                "   let x = {x: 4; y: 6}   \n\  
+                \   x                      \n"
+
+                $ Right (LetExpr (Sym "x") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 4.0))),("y",VarExpr (LitVal (NumLit 6.0)))]))) (VarExpr (SymVal (Sym "x"))))
+
+            it "should parse record Equality" $ assertParse
+
+                "   let x = {x: 4; y: 6}   \n\
+                \   let y = {x: 4; z: 3}   \n\
+                \   x == y                 \n"
+
+                $ Right (LetExpr (Sym "x") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 4.0))),("y",VarExpr (LitVal (NumLit 6.0)))]))) (LetExpr (Sym "y") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 4.0))),("z",VarExpr (LitVal (NumLit 3.0)))]))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (VarExpr (SymVal (Sym "x")))) (VarExpr (SymVal (Sym "y"))))))
 
             describe "function application whitespace" $ do
 
@@ -295,4 +311,15 @@ spec = do
 
                     $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
 
-    ------------------------------------------------------------------------------
+            describe "Records" $ do
+
+                it "should compile & run basic record patterns" $ assertParse
+
+                    "   f = {x: 3}       \n\
+                    \   match f with     \n\
+                    \       {x: x} = x   \n\
+                    \       _ = 0        \n"
+
+                    (Right (LetExpr (Sym "f") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 3.0)))]))) (MatExpr (VarExpr (SymVal (Sym "f"))) [(RecPatt (Record (M.fromList [("x",ValPatt (SymVal (Sym "x")))])),VarExpr (SymVal (Sym "x"))),(ValPatt (SymVal (Sym "_")),VarExpr (LitVal (NumLit 0.0)))])))
+
+------------------------------------------------------------------------------

@@ -24,6 +24,7 @@ module Forml.TypeCheck.Patt (
 ) where
 
 import qualified Data.List as L
+import qualified Data.Map as M
 
 import Forml.AST
 import Forml.TypeCheck.Prelude
@@ -58,5 +59,9 @@ pattCheck as (ConPatt (TypeSymP con) ps) = do
     t  <- freshInst sc
     unify t (foldr fn t' (map snd x))
     return (L.concat (map fst x), t')
+
+pattCheck as (RecPatt (Record (unzip . M.toList -> (ks, vs)))) = do
+    (ass, pattTs) <- unzip `fmap` mapM (pattCheck as) vs
+    return (concat ass, TypeRec . Record . M.fromList . zip ks $ pattTs)
 
 ------------------------------------------------------------------------------
