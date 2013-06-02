@@ -49,11 +49,11 @@ data Type a where
 
 instance (Fmt a) => Fmt (TypeVar a) where
     fmt (TypeVarP s) = s
-    fmt (TypeVarT k s) = s ++ " :: " ++ fmt k
+    fmt (TypeVarT _ s) = s
 
 instance (Fmt a) => Fmt (TypeSym a) where
     fmt (TypeSymP s) = s
-    fmt (TypeSymT k s) = s ++ " :: " ++ fmt k
+    fmt (TypeSymT _ s) = s
 
 instance (Fmt a) => Fmt (TypeAbs a) where
     fmt (TypeAbsP t)   = "forall ?. " ++ fmt t

@@ -32,7 +32,7 @@ spec = do
 
                 "   4 + \"whoops\"   "
 
-                (Left (Err "Types do not unify\n  TypeSym (TypeSymT Star \"Double\") (Star) and TypeSym (TypeSymT Star \"String\") (Star)"))
+                (Left (Err "Types do not unify\n  Double and String"))
 
             it "should compile & run let expressions" $ assertNode
 
@@ -86,7 +86,7 @@ spec = do
 
                 "   match 3 + 3 with \"gotcha\" -> false;   "
 
-                (Left (Err "Types do not unify\n  TypeSym (TypeSymT Star \"String\") (Star) and TypeSym (TypeSymT Star \"Double\") (Star)"))
+                (Left (Err "Types do not unify\n  String and Double"))
 
             it "should compile & run user data types" $ assertNode
 
@@ -110,7 +110,7 @@ spec = do
                 \   match Just 5 with                 \
                 \       (Just \"blammo\") -> false;   "
 
-                (Left (Err "Types do not unify\n  TypeSym (TypeSymT Star \"String\") (Star) and TypeSym (TypeSymT Star \"Double\") (Star)"))
+                (Left (Err "Types do not unify\n  String and Double"))
 
             it "should compile & run partial keywords" $ assertNode
 

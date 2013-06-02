@@ -16,6 +16,7 @@ import Control.Monad.State
 import Forml.AST
 import Forml.TypeCheck.Kind
 import Forml.TypeCheck.Subst
+import Forml.Utils
 
 ------------------------------------------------------------------------------
 
@@ -30,12 +31,12 @@ newTypeVar k = do
 typErr :: String -> TypeCheck a
 typErr = lift . Left . Err
 
-uniErr :: (HasKind t, Show t, HasKind u, Show u) => 
+uniErr :: (HasKind t, Fmt t, HasKind u, Fmt u) => 
           String -> t -> u -> TypeCheck a
 
 uniErr msg t u = typErr $
     msg ++ "\n  "
-        ++ show u ++ " (" ++ show (kind u) ++ ") and " 
-        ++ show t ++ " (" ++ show (kind t) ++ ")"
+        ++ fmt u ++ " and " 
+        ++ fmt t
 
 ------------------------------------------------------------------------------

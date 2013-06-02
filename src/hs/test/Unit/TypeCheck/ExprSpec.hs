@@ -36,7 +36,7 @@ spec = do
                                   (VarExpr (LitVal (NumLit 4.0))))
                          (VarExpr (LitVal (StrLit "whoops"))))
 
-                $ Just (Err "Types do not unify\n  TypeSym (TypeSymT Star \"Double\") (Star) and TypeSym (TypeSymT Star \"String\") (Star)")
+                $ Just (Err "Types do not unify\n  Double and String")
 
             it "should type check let expressions" $ assertCheck
 
@@ -104,7 +104,7 @@ spec = do
                                   (VarExpr (LitVal (NumLit 3.0))))
                          [(ValPatt (LitVal (StrLit "gotcha")), VarExpr (SymVal (Sym "false")))])
 
-                $ Just (Err "Types do not unify\n  TypeSym (TypeSymT Star \"String\") (Star) and TypeSym (TypeSymT Star \"Double\") (Star)")
+                $ Just (Err "Types do not unify\n  String and Double")
 
             it "should type check user data types" $ assertCheck
 
@@ -153,7 +153,7 @@ spec = do
                                                     (VarExpr (LitVal (NumLit 5.0))))
                                            [ (ConPatt (TypeSymP "Just") [ValPatt (LitVal (StrLit "blammo"))], VarExpr (SymVal (Sym "false")))])))
 
-                $ Just (Err "Types do not unify\n  TypeSym (TypeSymT Star \"String\") (Star) and TypeSym (TypeSymT Star \"Double\") (Star)")
+                $ Just (Err "Types do not unify\n  String and Double")
 
             it "should type check partial keywords" $ assertCheck
 
