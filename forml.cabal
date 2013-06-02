@@ -42,7 +42,6 @@ Library
     Forml.Javascript.Expr,
     Forml.Javascript.Lit,
     Forml.Javascript.Match,
-    Forml.Javascript.Ref,
     Forml.Javascript.JMacro,
     Forml.Javascript.Type,
     Forml.Javascript.Val,

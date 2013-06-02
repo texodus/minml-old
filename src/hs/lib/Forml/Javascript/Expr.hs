@@ -31,7 +31,6 @@ import Language.Javascript.JMacro
 import Forml.AST
 import Forml.Javascript.Cases
 import Forml.Javascript.Curried
-import Forml.Javascript.Ref
 import Forml.Javascript.JMacro
 import Forml.Javascript.Type()
 import Forml.Javascript.Val()
@@ -78,8 +77,8 @@ instance ToStat Expr where
 
         `(DeclStat (StrI sym) Nothing)`;
         var x = `(typsch)`;
-        `(ref sym)` = `(curriedFun typsch x)`;
-        `(ref sym)`.__type__ = x;
+        `(jsv sym)` = `(curriedFun typsch x)`;
+        `(jsv sym)`.__type__ = x;
         `(expr)`;
 
     |]

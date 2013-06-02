@@ -34,7 +34,6 @@ ohmlDef = emptyDef {
     T.reservedOpNames = concat ops,
     T.identStart      = lowerP <|> char '_',
     T.identLetter     = letterP <|> digit <|> char '_'
-
 }
 
 type Parser = Parsec String SourcePos

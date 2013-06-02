@@ -30,7 +30,6 @@ import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Javascript.Lit()
-import Forml.Javascript.Ref
 
 ------------------------------------------------------------------------------
 
@@ -45,7 +44,7 @@ instance ToJExpr Match where
         [jmacroE| true |]
 
     toJExpr (Match val (ValPatt (ConVal (TypeSym (TypeSymP sym))))) =
-        InfixExpr " instanceof " val (SelExpr (ref sym) (StrI "__type__"))
+        InfixExpr " instanceof " val (SelExpr (jsv sym) (StrI "__type__"))
 
     toJExpr (Match _ (ValPatt (ConVal t))) =
         error $ "FATAL: " ++ show t
