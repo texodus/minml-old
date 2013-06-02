@@ -32,7 +32,7 @@ exprP :: Parser Expr
 exprP =
 
     try letExprP
-        <|> typExprP
+        <|> try typExprP
         <|> absExprP absExpr
         <|> matExprP
         <|> appExprP
@@ -73,7 +73,7 @@ exprP =
 
         typExprP =
             pure TypExpr
-                <*  reserved "data"
+                <*  (reserved "data" <|> return ())
                 <*> typSymP
                 <*  reserved ":"
                 <*> typAbsP

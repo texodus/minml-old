@@ -54,7 +54,7 @@ spec = do
                 "   (fun x -> x + 4) 2 == 6   "
 
                 $ Right (AppExpr (AppExpr (VarExpr (SymVal (Sym "=="))) (AppExpr (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 4.0))))])) (VarExpr (LitVal (NumLit 2.0))))) (VarExpr (LitVal (NumLit 6.0))))
-                
+
             it "should parse anonymous functions in let bindings" $ assertParse
              
                 "   let g = fun x -> x + 4;   \
@@ -281,4 +281,20 @@ spec = do
 
                     $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
-------------------------------------------------------------------------------
+            describe "without `data` keyword" $ do
+
+                it "should parse user data types" $ assertParse
+
+                    "   Cons: a -> List a -> List a            \n\
+                    \   Nil: List a                            \n\
+                    \                                          \n\
+                    \   length n =                             \n\
+                    \       match n with                       \n\
+                    \           Nil -> 0                       \n\
+                    \           (Cons _ xs) -> 1 + length xs   \n\
+                    \                                          \n\
+                    \   length (Cons 1 (Cons 2 Nil))           \n"
+
+                    $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
+
+    ------------------------------------------------------------------------------
