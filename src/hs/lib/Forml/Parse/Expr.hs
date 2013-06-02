@@ -57,8 +57,9 @@ exprP =
                 <?> "Match Expression"
 
             where
+                toOp = reservedOp "->" <|> reservedOp "="
                 caseP =
-                    (,) <$> pattP <* reservedOp "->" <*> exprP
+                    (,) <$> pattP <* toOp <*> exprP
 
         letExprP =
             pure LetExpr
