@@ -56,6 +56,8 @@ instance ToJExpr Expr where
     toJExpr (AppExpr f x) = 
         [jmacroE| `(f)`(`(x)`) |]
 
+    toJExpr (JSExpr js) = js
+
     toJExpr x = [jmacroE|
 
         (function() {

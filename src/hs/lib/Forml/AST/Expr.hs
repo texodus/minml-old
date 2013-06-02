@@ -14,6 +14,9 @@ module Forml.AST.Expr (
     Expr( .. ),
 ) where
 
+import Language.Javascript.JMacro
+import Text.PrettyPrint.Leijen.Text
+
 import Forml.AST.Patt
 import Forml.AST.Type
 import Forml.AST.Val
@@ -27,6 +30,7 @@ data Expr where
     AbsExpr :: Sym  -> Expr -> Expr
     VarExpr :: Val  -> Expr
     MatExpr :: Expr -> [(Patt, Expr)] -> Expr
+    JSExpr  :: JExpr -> Expr
 
     TypExpr :: TypeSym () -> TypeAbs () -> Expr -> Expr
 
@@ -48,6 +52,9 @@ instance Fmt Expr where
 
     fmt (TypExpr name def cont) =
         "data " ++ fmt name ++ " = " ++ fmt def ++ "; " ++ fmt cont
+
+    fmt (JSExpr js) =
+        "`" ++ (show . renderOneLine . renderJs) js ++ "`"
 
     fmt (VarExpr x) = fmt x
 

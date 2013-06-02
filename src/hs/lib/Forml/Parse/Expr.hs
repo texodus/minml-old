@@ -18,6 +18,7 @@ import Control.Applicative
 import Control.Arrow
 import Text.Parsec         hiding (many, (<|>))
 import Text.Parsec.Expr
+import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Parse.Indent
@@ -31,13 +32,28 @@ import Forml.Parse.Val
 exprP :: Parser Expr
 exprP =
 
-    try letExprP
-        <|> try typExprP
+    jsExprP
         <|> absExprP absExpr
         <|> matExprP
+        <|> try letExprP
+        <|> try typExprP
         <|> appExprP
 
     where
+
+        jsExprP =
+            (unwrap 
+                $ reservedOp "`"
+                >> (anyChar `manyTill` reservedOp "`"))
+                <?> "Javascript"
+            where
+                unwrap :: Parser String -> Parser Expr
+                unwrap f = do
+                    f' <- f
+
+                    case parseJME f' of
+                        Left x -> parserFail (show x) 
+                        Right x -> return (JSExpr x)
 
         absExprP f =
             pure (AbsExpr (Sym "_match"))

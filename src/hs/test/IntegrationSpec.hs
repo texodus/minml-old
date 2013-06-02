@@ -45,9 +45,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                (Left (Err "\"Parsing Forml\" (line 1, column 17):\n\
-                    \unexpected end of input\n\
-                    \expecting Let Expression, Type Kind Expression, Abstraction, Match Expression or Application"))
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
 
             it "should compile & run anonymous functions and application" $ assertNode
 
@@ -192,3 +190,13 @@ spec = do
                     \   unbox (Just 5)              \n"
 
                     (Right "5\n")
+
+            describe "Antiquotes" $ do
+
+                it "should compile & run basic javascript" $ assertNode
+
+                    "   data Just: a -> Maybe a     \n\
+                    \   unbox (Just x) = `x + 1`    \n\
+                    \   unbox (Just 5)              \n"
+
+                    (Right "6\n")

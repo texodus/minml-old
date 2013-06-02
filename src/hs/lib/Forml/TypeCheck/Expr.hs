@@ -80,6 +80,9 @@ exprCheck as (VarExpr (SymVal (Sym sym))) =
 exprCheck as (VarExpr (ConVal (TypeSym (TypeSymP sym)))) =
     find sym as >>= freshInst
 
+exprCheck _ (JSExpr _) =
+    newTypeVar Star
+
 exprCheck _ (VarExpr (ConVal t)) =
     error $ "FATAL: " ++ show t
 

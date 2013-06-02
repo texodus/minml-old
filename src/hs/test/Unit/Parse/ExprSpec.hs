@@ -45,10 +45,8 @@ spec = do
 
                 "   let x = 1;   "
 
-                (Left (Err "\"Parsing Forml\" (line 1, column 17):\n\
-                    \unexpected end of input\n\
-                    \expecting Let Expression, Type Kind Expression, Abstraction, Match Expression or Application"))
-
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                
             it "should parse anonymous functions and application" $ assertParse
 
                 "   (fun x -> x + 4) 2 == 6   "
