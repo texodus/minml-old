@@ -258,9 +258,9 @@ spec = do
 
                     "   fib = fun n =                          \n\
                     \       match n with                       \n\
-                    \       0 = 0                             \n\
-                    \       1 = 1                             \n\
-                    \       n = fib (n - 1) + fib (n - 2)     \n\
+                    \       0 = 0                              \n\
+                    \       1 = 1                              \n\
+                    \       n = fib (n - 1) + fib (n - 2)      \n\
                     \   fib 7                                  \n"
 
                     $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))

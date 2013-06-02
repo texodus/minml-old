@@ -155,3 +155,30 @@ spec = do
                     \       4       "
 
                     $ Right "4\n"
+
+            describe "let and function binding" $ do
+
+                it "should fail to compile & run" $ assertNode
+
+                    "   let fib n =                             \n\
+                    \       match n with                        \n\
+                    \       0 -> 0                              \n\
+                    \       1 -> 1                              \n\
+                    \       n -> fib (n - 1) + fib (n - 2)      \n\
+                    \   fib 7                                   \n"
+
+                    (Right "13\n")
+
+                it "should compile & run user data types" $ assertNode
+
+                    "   data Cons: a -> List a -> List a         \n\
+                    \   data Nil: List a                         \n\
+                    \                                            \n\
+                    \   let length n =                           \n\
+                    \       match n with                         \n\
+                    \           Nil = 0                          \n\
+                    \           (Cons _ xs) = 1 + length xs      \n\
+                    \                                            \n\
+                    \   length (Cons 1 (Cons 2 Nil))             \n"
+
+                    (Right "2\n")

@@ -22,12 +22,19 @@ import qualified Text.Parsec.Token    as T
 import Forml.AST
 
 ------------------------------------------------------------------------------
+letterP = 
+    lowerP <|> oneOf "ABSDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
+
+lowerP = 
+    oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
 
 ohmlDef :: LanguageDef SourcePos
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = concat ops,
-    T.identStart      = lower <|> char '_'
+    T.identStart      = lowerP <|> char '_',
+    T.identLetter     = letterP <|> digit <|> char '_'
+
 }
 
 type Parser = Parsec String SourcePos

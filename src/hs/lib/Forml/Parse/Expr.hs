@@ -33,19 +33,22 @@ exprP =
 
     try letExprP
         <|> typExprP
-        <|> absExprP
+        <|> absExprP absExpr
         <|> matExprP
         <|> appExprP
 
     where
 
-        absExprP =
+        absExprP f =
             pure AbsExpr
-                <*  (reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ")
+                <*  f
                 <*> symP
                 <*  (reservedOp "=" <|> reservedOp "->")
                 <*> exprP
                 <?> "Abstraction"
+
+        absExpr =
+            reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ"
 
         matExprP =
             pure MatExpr 
@@ -65,10 +68,12 @@ exprP =
             pure LetExpr
                 <*  (reserved "let" <|> return ())
                 <*> symP
-                <*  reservedOp "="
-                <*> exprP
+                <*> (valLetP <|> try (absExprP (return ())))
                 <*> withSep exprP
                 <?> "Let Expression"
+
+        valLetP =
+            reservedOp "=" >> exprP
 
         typExprP =
             pure TypExpr
