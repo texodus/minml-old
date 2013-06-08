@@ -16,7 +16,7 @@ import Forml.Parse.Token
 
 ------------------------------------------------------------------------------
 
-litP :: Parser Lit
+litP :: Parser s Lit
 litP = stringL <|> numL
     where
         stringL = StrLit <$> stringLiteral

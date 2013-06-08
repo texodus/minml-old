@@ -195,11 +195,13 @@ spec = do
 
                 it "should compile & run basic javascript" $ assertNode
 
-                    "   data Just: a -> Maybe a     \n\
-                    \   unbox (Just x) = `x + 1`    \n\
-                    \   unbox (Just 5)              \n"
+                    "   data Just: a -> Maybe a       \n\
+                    \   unbox x =                     \n\
+                    \       match x with              \n\
+                    \           (Just x) = ``x``      \n\
+                    \   unbox (Just 5)                \n"
 
-                    (Right "6\n")
+                    (Right "5\n")
 
             describe "Records" $ do
 

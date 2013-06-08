@@ -8,7 +8,7 @@
 
 {-# LANGUAGE GADTs #-}
 
-module Forml.AST(
+module Forml.AST (
     module Forml.AST.Type,
     module Forml.AST.Val,
     module Forml.AST.Patt,

@@ -13,7 +13,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Forml.Parse.Token where
+module Forml.Parse.MacroToken where
 
 import           Text.Parsec
 import           Text.Parsec.Language
@@ -29,17 +29,17 @@ letterP =
 lowerP = 
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
 
-ohmlDef :: LanguageDef (SourcePos, [(String, a)])
+ohmlDef :: LanguageDef ()
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
-    T.reservedOpNames = "=" : concat ops ,
+    T.reservedOpNames = concat ops,
     T.identStart      = lowerP <|> char '_',
     T.identLetter     = letterP <|> digit <|> char '_',
     T.opStart         = oneOf "`:!#$%&*+./<=>?@\\^|-~",
     T.opLetter        = oneOf "`:!#$%&*+./<=>?@\\^|-~"
 }
 
-type Parser a = Parsec String (SourcePos, [(String, a)])
+type MParser = Parsec String ()
 
 T.TokenParser { .. } = T.makeTokenParser ohmlDef
 

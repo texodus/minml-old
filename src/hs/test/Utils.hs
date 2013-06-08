@@ -12,10 +12,10 @@ import Forml.AST
 import Forml.Parse.Token
 import Forml.RenderText
 
-assertParse :: (Eq a, Show a) => Parser a -> String -> Either Err a -> Assertion
+assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
 assertParse p a b = flip (assertEqual "") parseResult b
 	where
-		parseResult = case runParser p (initialPos "") "" a of
+		parseResult = case runParser p (initialPos "", []) "" a of
 			Left x -> Left . Err . show $ x
 			Right x -> Right x
 

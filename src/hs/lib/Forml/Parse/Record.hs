@@ -4,6 +4,8 @@
 
 ------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes #-}
+
 module Forml.Parse.Record (
     recordP
 ) where
@@ -18,16 +20,16 @@ import Forml.AST.Record
 
 ------------------------------------------------------------------------------
 
-recordP :: Parser a -> Parser (Record a)
+recordP :: Parser s a -> Parser s (Record a)
 recordP x =
 
     pure (Record . M.fromList)
-        <* reservedOp "{"
+        <*  reservedOp "{"
         <*> withScope (pair x `sepEndBy` sep)
-        <* reservedOp "}"
+        <*  reservedOp "}"
         <?> "Record"
  
-pair :: Parser a -> Parser (String, a)
+pair :: Parser s a -> Parser s (String, a)
 pair x = (,) <$> identifier <* reservedOp ":" <*> x
 
 ------------------------------------------------------------------------------

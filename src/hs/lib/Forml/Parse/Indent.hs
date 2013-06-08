@@ -4,6 +4,8 @@
 
 ------------------------------------------------------------------------------
 
+{-# LANGUAGE RankNTypes #-}
+
 module Forml.Parse.Indent (
     indented,
     withSep,
@@ -23,31 +25,31 @@ import Forml.Parse.Token
 --   most recent invocation of `withScope`, or `initialPos` if it has
 --   not been invoked.
 
-withScope :: Parser a -> Parser a
+withScope :: Parser s a -> Parser s a
 withScope parser = do
-    st  <- getState
+    (st, rs)  <- getState
     pos <- getPosition
-    setState pos
+    setState (pos, rs)
     res <- parser
-    setState st
+    setState (st, rs)
     return res
 
-inScope :: Parser ()
+inScope :: Parser s ()
 inScope = condSep sourceLine (>) "in scope" >> condSep sourceColumn (>=) "in scope"
 
-indented :: Parser ()
+indented :: Parser s ()
 indented = condSep sourceColumn (>) "indented"
 
-withSep :: Parser a -> Parser a
+withSep :: Parser s a -> Parser s a
 withSep parser =
     (semi >> parser) <|> (inScope >> withScope parser)
 
-sep :: Parser ()
+sep :: Parser s ()
 sep = (semi >> return ()) <|> inScope
 
-condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser ()
+condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
 condSep f cond name = do
-    st  <- getState
+    (st, _)  <- getState
     pos <- getPosition
     if f pos `cond` f st
         then return ()

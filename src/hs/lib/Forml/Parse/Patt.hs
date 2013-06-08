@@ -16,7 +16,7 @@ import Forml.Parse.Val
 
 ------------------------------------------------------------------------------
 
-pattP :: Parser Patt
+pattP :: Parser s Patt
 pattP =
 
     valPattP <|> conPattP <|> parens conPatsP <|> recPattP

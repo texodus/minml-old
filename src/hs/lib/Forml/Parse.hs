@@ -29,9 +29,10 @@ import Forml.Parse.Indent
 ------------------------------------------------------------------------------
 
 parseForml :: String -> Either Err Expr
-parseForml = left (Err . show) . runParser grammar (initialPos "") "Parsing Forml"
+parseForml =
+    left (Err . show) . runParser grammar (initialPos "", []) "Parsing Forml"
 
-grammar :: Parser Expr
+grammar :: Parser Expr Expr
 grammar = spaces *> withScope exprP <* eof
 
 ------------------------------------------------------------------------------

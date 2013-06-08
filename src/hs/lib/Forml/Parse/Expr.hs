@@ -9,6 +9,7 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Forml.Parse.Expr (
     exprP
@@ -22,6 +23,7 @@ import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Parse.Indent
+import Forml.Parse.Macro
 import Forml.Parse.Patt
 import Forml.Parse.Record
 import Forml.Parse.Token
@@ -30,10 +32,12 @@ import Forml.Parse.Val
 
 ------------------------------------------------------------------------------
 
-exprP :: Parser Expr
+exprP :: Parser Expr Expr
 exprP =
 
-    jsExprP
+    notationP
+        <|> macroP
+        <|> jsExprP
         <|> recExprP
         <|> absExprP absExpr
         <|> matExprP
@@ -41,84 +45,99 @@ exprP =
         <|> try typExprP
         <|> appExprP
 
+macroP :: Parser Expr Expr
+macroP = do
+    (_, rs) <- getState
+    foldl (<|>) (parserFail "marco") (macroExpP exprP <$> rs)
+
+notationP :: Parser Expr Expr
+notationP = do
+    reservedOp "`" 
+    rule <- anyChar `manyTill` reservedOp "`"
+    reservedOp "="
+    ex <- exprP
+    (st, rs) <- getState
+    setState (st, rs ++ [(rule, ex)])
+    exprP
+
+jsExprP :: Parser Expr Expr
+jsExprP =
+    (unwrap 
+        $ reservedOp "``" >> (anyChar `manyTill` reservedOp "``") )
+        <?> "Javascript"
     where
+        unwrap :: Parser Expr String -> Parser Expr Expr
+        unwrap f = do
+            f' <- f
+            case parseJME f' of
+                Left x  -> parserFail (show x) 
+                Right x -> return (JSExpr x)
 
-        jsExprP =
-            (unwrap 
-                $ reservedOp "`"
-                >> (anyChar `manyTill` reservedOp "`"))
-                <?> "Javascript"
-            where
-                unwrap :: Parser String -> Parser Expr
-                unwrap f = do
-                    f' <- f
+absExprP :: Parser Expr () -> Parser Expr Expr
+absExprP f =
+    pure (AbsExpr (Sym "_match"))
+        <*  f
+        <*> (pure (MatExpr (VarExpr (SymVal (Sym "_match"))) . (:[])) <*> caseP)
+        <?> "Abstraction"
 
-                    case parseJME f' of
-                        Left x -> parserFail (show x) 
-                        Right x -> return (JSExpr x)
+absExpr :: Parser Expr ()
+absExpr =
+    reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ"
 
-        absExprP f =
-            pure (AbsExpr (Sym "_match"))
-                <*  f
-                <*> (pure (MatExpr (VarExpr (SymVal (Sym "_match"))) . (:[])) <*> caseP)
-                <?> "Abstraction"
 
-        absExpr =
-            reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ"
+matExprP =
+    pure MatExpr 
+        <*  reserved "match"
+        <*> exprP
+        <*  reserved "with"
+        <*  indented
+        <*> withScope (try ((,) <$> pattP <* toOp <*> exprP) `sepEndBy` sep)
+        <?> "Match Expression"
 
-        matExprP =
-            pure MatExpr 
-                <*  reserved "match"
-                <*> exprP
-                <*  reserved "with"
-                <*  indented
-                <*> withScope (try caseP `sepEndBy` sep)
-                <?> "Match Expression"
+caseP = (,) <$> pattP <* toOp <*> exprP
+toOp  = reservedOp "->" <|> reservedOp "="
+    
+letExprP =
+    pure LetExpr
+        <*  (reserved "let" <|> return ())
+        <*> symP
+        <*> (valLetP <|> absExprP (return ()))
+        <*> withSep exprP
+        <?> "Let Expression"
 
-        toOp  = reservedOp "->" <|> reservedOp "="
-        caseP = (,) <$> pattP <* toOp <*> exprP
+valLetP =
+    reservedOp "=" >> exprP
 
-        letExprP =
-            pure LetExpr
-                <*  (reserved "let" <|> return ())
-                <*> symP
-                <*> (valLetP <|> absExprP (return ()))
-                <*> withSep exprP
-                <?> "Let Expression"
+recExprP =
+    RecExpr <$> recordP exprP 
+        <?> "Record Expression"
 
-        valLetP =
-            reservedOp "=" >> exprP
+typExprP =
+    pure TypExpr
+        <*  (reserved "data" <|> return ())
+        <*> typSymP
+        <*  reserved ":"
+        <*> typAbsP
+        <*> withSep exprP 
+        <?> "Type Kind Expression"
 
-        recExprP =
-            RecExpr <$> recordP exprP 
-                <?> "Record Expression"
+appExprP = buildExpressionParser opPs termP <?> "Application"
 
-        typExprP =
-            pure TypExpr
-                <*  (reserved "data" <|> return ())
-                <*> typSymP
-                <*  reserved ":"
-                <*> typAbsP
-                <*> withSep exprP 
-                <?> "Type Kind Expression"
+    where
+        opPs =
+            [[ Infix ap AssocLeft ]]
+                ++ toInfixTerm opConst AssocLeft (tail ops)
 
-        appExprP = buildExpressionParser opPs termP <?> "Application"
+        toInfixTerm op assoc =
+            fmap . fmap $
+                flip Infix assoc
+                <<< uncurry (*>)
+                <<< reservedOp
+                &&& return . op
 
-            where
-                opPs =
-                    [[ Infix ap AssocLeft ]]
-                        ++ toInfixTerm opConst AssocLeft (tail ops)
-
-                toInfixTerm op assoc =
-                    fmap . fmap $
-                        flip Infix assoc
-                        <<< uncurry (*>)
-                        <<< reservedOp
-                        &&& return . op
-
-                ap = spaces >> indented >> return AppExpr
-                valExprP = VarExpr <$> valP <?> "Value"
-                termP = valExprP <|> parens exprP
-                opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
+        ap = spaces >> indented >> return AppExpr
+        valExprP = VarExpr <$> valP <?> "Value"
+        termP = valExprP <|> matExprP <|> macroP <|> parens exprP
+        opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
 ------------------------------------------------------------------------------

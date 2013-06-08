@@ -21,6 +21,7 @@ Library
     process        == 1.1.0.1,
     transformers   == 0.3.0.0,
     wl-pprint-text == 1.1.0.0,
+    MissingH       == 1.2.0.0,
     directory
   ghc-options: 
     -Wall -fwarn-tabs -funbox-strict-fields
@@ -34,6 +35,7 @@ Library
     Forml.AST.Lit,
     Forml.AST.Patt,
     Forml.AST.Record,
+    Forml.AST.Replace,
     Forml.AST.Type,
     Forml.AST.Val,
     Forml.Exec,
@@ -51,6 +53,8 @@ Library
     Forml.Parse.Expr
     Forml.Parse.Indent,
     Forml.Parse.Lit,
+    Forml.Parse.Macro,
+    Forml.Parse.MacroToken,
     Forml.Parse.Patt,
     Forml.Parse.Record,
     Forml.Parse.Token,
