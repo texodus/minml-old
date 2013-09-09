@@ -65,13 +65,25 @@ spec = do
 
                 (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
 
-            it "should parse repeating args" $ assertParse
-              
-                "   `[ (a*) ]` = ``a``                          \n\
-                \                                               \n\
-                \   [ 3; 4; 5 ] == [ 3; 4; 5 ]                  \n"
+            it "should parse scope introduction" $ pendingWith "TODO add replaceLet"
 
-                (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
+               --assertParse
+              
+               -- "   `var (a) to (b) then (c)` =                      \n\
+               -- \       let a = b; c                            \n\
+               -- \                                               \n\
+               -- \   var x to 12 then x + 1                                      \n"
+
+               -- (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0))))))
+
+            it "should parse repeating args" $ pendingWith "TODO figure out syntax"
+            --assertParse
+              
+            --    "   `[ (a*) ]` = ``a``                          \n\
+            --    \                                               \n\
+            --    \   [ 3; 4; 5 ] == [ 3; 4; 5 ]                  \n"
+
+            --    (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
 
     	describe "run" $ do
 

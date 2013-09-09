@@ -1,3 +1,17 @@
 cabal-dev
 dist
 iQuotes
+.hpc/IntegrationSpec.mix
+.hpc/Main.mix
+.hpc/RewriteSpec.mix
+.hpc/Unit.Javascript.ExprSpec.mix
+.hpc/Unit.Javascript.LitSpec.mix
+.hpc/Unit.Javascript.ValSpec.mix
+.hpc/Unit.Parse.ExprSpec.mix
+.hpc/Unit.Parse.IndentSpec.mix
+.hpc/Unit.Parse.LitSpec.mix
+.hpc/Unit.Parse.PattSpec.mix
+.hpc/Unit.Parse.TypeSpec.mix
+.hpc/Unit.Parse.ValSpec.mix
+.hpc/Unit.TypeCheck.ExprSpec.mix
+.hpc/Utils.mix

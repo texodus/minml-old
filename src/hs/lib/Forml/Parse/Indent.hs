@@ -14,6 +14,8 @@ module Forml.Parse.Indent (
     inScope
 ) where
 
+import Control.Lens
+import Control.Monad.State
 import Text.Parsec
 
 import Forml.Parse.Token
@@ -27,11 +29,11 @@ import Forml.Parse.Token
 
 withScope :: Parser s a -> Parser s a
 withScope parser = do
-    (st, rs)  <- getState
+    st  <- get
     pos <- getPosition
-    setState (pos, rs)
+    sourcePos .= pos
     res <- parser
-    setState (st, rs)
+    setState st
     return res
 
 inScope :: Parser s ()
@@ -49,10 +51,10 @@ sep = (semi >> return ()) <|> inScope
 
 condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
 condSep f cond name = do
-    (st, _)  <- getState
-    pos <- getPosition
-    if f pos `cond` f st
+    oldPos <- use sourcePos
+    pos    <- getPosition
+    if f pos `cond` f oldPos
         then return ()
-        else parserFail $ "Statement " ++ name ++ " (introduced at " ++ show st ++ ")"
+        else parserFail $ "Statement " ++ name ++ " (introduced at " ++ show oldPos ++ ")"
 
 ------------------------------------------------------------------------------

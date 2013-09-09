@@ -20,7 +20,7 @@ spec = do
 
     describe "Forml.Parser" $ do
 
-    	describe "parseForml" $ do
+        describe "parseForml" $ do
 
             it "should compile & run a trivial example " $ assertNode
               
@@ -45,7 +45,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
 
             it "should compile & run anonymous functions and application" $ assertNode
 

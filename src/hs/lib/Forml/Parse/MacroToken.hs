@@ -33,10 +33,10 @@ ohmlDef :: LanguageDef ()
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = concat ops,
-    T.identStart      = lowerP <|> char '_',
-    T.identLetter     = letterP <|> digit <|> char '_',
-    T.opStart         = oneOf "`:!#$%&*+./<=>?@\\^|-~",
-    T.opLetter        = oneOf "`:!#$%&*+./<=>?@\\^|-~"
+    T.identStart      = lowerP <|> letterP <|> char '_',
+    T.identLetter     = letterP <|> lowerP <|> digit <|> char '_',
+    T.opStart         = oneOf ":!#$%&*+./<=>?@\\^|-~",
+    T.opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
 }
 
 type MParser = Parsec String ()

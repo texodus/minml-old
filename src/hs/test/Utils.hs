@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Utils where
 
 import System.IO
@@ -6,16 +8,46 @@ import System.Exit
 import Test.HUnit
 import Text.Parsec
 import Text.Parsec.Pos
+import Test.QuickCheck
 import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Parse.Token
 import Forml.RenderText
 
+
+import Control.Monad
+
+instance Arbitrary Sym where
+
+    arbitrary = (Sym . (:[])) `fmap` choose ('a', 'z')
+
+instance Arbitrary Lit where
+
+    arbitrary = oneof [ StrLit `fmap` oneof (return `fmap` [ "string1", "string2", "string3" ])
+                      , NumLit `fmap` oneof (return `fmap` [ 1, 2, 3, 4, 5, 6, 7 ]) ]
+
+instance Arbitrary Val where
+
+    arbitrary = oneof [ SymVal `fmap` arbitrary
+                      , LitVal `fmap` arbitrary ]
+
+instance Arbitrary Expr where
+
+    arbitrary = sized expr'
+        where
+            expr' 0 = VarExpr `fmap` arbitrary
+            expr' n = oneof [ liftM3 LetExpr arbitrary subExpr subExpr
+                            , liftM2 AppExpr subExpr subExpr
+                            , liftM2 AbsExpr arbitrary subExpr
+                            , liftM  VarExpr arbitrary ]
+
+                where subExpr = expr' (n `div` 10)
+
 assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
 assertParse p a b = flip (assertEqual "") parseResult b
 	where
-		parseResult = case runParser p (initialPos "", []) "" a of
+		parseResult = case runParser p (MacroState (initialPos "") []) "" a of
 			Left x -> Left . Err . show $ x
 			Right x -> Right x
 

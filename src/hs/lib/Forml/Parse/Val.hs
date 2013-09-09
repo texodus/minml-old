@@ -14,44 +14,28 @@ module Forml.Parse.Val (
 ) where
 
 import Control.Applicative
+import Control.Lens
 import Text.Parsec hiding ((<|>))
 
 import Forml.AST
 import Forml.Parse.Lit
 import Forml.Parse.Token
 import Forml.Parse.Type
-import qualified Forml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------
 
 symP :: Parser s Sym
 symP = try $ do
-    (_, rs) <- getState
+    ars <- use macros
     sym <- identifier
-    case sym `elem` getReserved rs of
-        True -> parserFail (show sym ++ "   " ++ show (getReserved rs) )
+    case sym `elem` getReserved ars of
+        True -> parserFail ("symbol (`" ++ show sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
         False -> return $ Sym sym
 
-getReserved :: [(String, t)] -> [String]
-getReserved ((name, _) : xs) =
-    getReserved xs ++ case runParser keywordP () "KeywordParser" name of
-        Left _ -> error "PARADOX"
-        Right x -> x
-getReserved [] = []
-
-keywordP :: Parsec String () [String]
-keywordP = term <|> capture <|> lastTerm
-    where
-        term = do
-            f <- M.identifier
-            restP <- keywordP
-            return (f : restP)
-        
-        capture = do
-            M.parens (M.identifier)
-            keywordP
-
-        lastTerm = eof >> return []
+getReserved :: [Macro a] -> [String]
+getReserved (Token x zs : ys) = [x] ++ getReserved ys ++ getReserved zs
+getReserved (Arg _ zs : xs) = getReserved xs ++ getReserved zs
+getReserved _ = []
 
 valP :: Parser s Val
 valP =

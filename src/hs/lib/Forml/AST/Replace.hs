@@ -38,4 +38,12 @@ instance Replace Expr where
 
     replace f ex (TypExpr a b e) = TypExpr a b $ replace f ex e
 
+instance (Replace a) => Replace (Macro a) where
+
+    replace sym (Leaf val) (Leaf expr) = Leaf $ replace sym val expr
+    replace _ _  (Leaf _) = error "TODO: decide how this should work"
+    replace sym y (Token x xs) = Token x (replace sym y `fmap` xs)
+    replace sym y (Arg x xs) = Arg x (replace sym y `fmap` xs)
+
+
 ------------------------------------------------------------------------------

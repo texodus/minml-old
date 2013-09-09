@@ -17,6 +17,10 @@ spec = do
 
     	describe "parseForml" $ do
 
+            it "should parse anything it can format, and they should be the same" $ pendingWith "TODO this is useful, but transforms make this difficult"
+ 
+                -- property $ \x -> parseForml (fmt x) == Right x
+
             it "should parse a trivial example " $ assertParse
               
                 "   2 + 2.0 == 4.0   "
@@ -46,7 +50,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
 
             it "should parse anonymous functions and application" $ assertParse
 

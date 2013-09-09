@@ -8,7 +8,7 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs      #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Forml.Parse.Expr (
@@ -17,13 +17,15 @@ module Forml.Parse.Expr (
 
 import Control.Applicative
 import Control.Arrow
-import Text.Parsec         hiding (many, (<|>))
-import Text.Parsec.Expr
+import Control.Lens
 import Language.Javascript.JMacro
+import Text.Parsec                hiding (many, (<|>))
+import Text.Parsec.Expr
 
 import Forml.AST
+import Forml.AST.Replace
 import Forml.Parse.Indent
-import Forml.Parse.Macro
+import Forml.Parse.Notation
 import Forml.Parse.Patt
 import Forml.Parse.Record
 import Forml.Parse.Token
@@ -35,7 +37,7 @@ import Forml.Parse.Val
 exprP :: Parser Expr Expr
 exprP =
 
-    notationP
+    notationP exprP
         <|> macroP
         <|> jsExprP
         <|> recExprP
@@ -46,23 +48,23 @@ exprP =
         <|> appExprP
 
 macroP :: Parser Expr Expr
-macroP = do
-    (_, rs) <- getState
-    foldl (<|>) (parserFail "marco") (macroExpP exprP <$> rs)
+macroP = use macros >>= tryChild
 
-notationP :: Parser Expr Expr
-notationP = do
-    reservedOp "`" 
-    rule <- anyChar `manyTill` reservedOp "`"
-    reservedOp "="
-    ex <- exprP
-    (st, rs) <- getState
-    setState (st, rs ++ [(rule, ex)])
-    exprP
+    where
+        tryChild (Token x ex : exs) = do
+            (reserved x >> tryChild ex) <|> tryChild exs
+
+        tryChild (Arg a ex : _) = do
+            arg  <- exprP
+            rest <- tryChild ex
+            return (replace a arg rest)
+
+        tryChild (Leaf x : _) = return x
+        tryChild [] = parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =
-    (unwrap 
+    (unwrap
         $ reservedOp "``" >> (anyChar `manyTill` reservedOp "``") )
         <?> "Javascript"
     where
@@ -70,7 +72,7 @@ jsExprP =
         unwrap f = do
             f' <- f
             case parseJME f' of
-                Left x  -> parserFail (show x) 
+                Left x  -> parserFail (show x)
                 Right x -> return (JSExpr x)
 
 absExprP :: Parser Expr () -> Parser Expr Expr
@@ -84,9 +86,9 @@ absExpr :: Parser Expr ()
 absExpr =
     reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ"
 
-
+matExprP :: Parser Expr Expr
 matExprP =
-    pure MatExpr 
+    pure MatExpr
         <*  reserved "match"
         <*> exprP
         <*  reserved "with"
@@ -94,9 +96,13 @@ matExprP =
         <*> withScope (try ((,) <$> pattP <* toOp <*> exprP) `sepEndBy` sep)
         <?> "Match Expression"
 
+caseP :: Parser Expr (Patt, Expr)
 caseP = (,) <$> pattP <* toOp <*> exprP
+
+toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
-    
+
+letExprP :: Parser Expr Expr
 letExprP =
     pure LetExpr
         <*  (reserved "let" <|> return ())
@@ -105,22 +111,26 @@ letExprP =
         <*> withSep exprP
         <?> "Let Expression"
 
+valLetP :: Parser Expr Expr
 valLetP =
     reservedOp "=" >> exprP
 
+recExprP :: Parser Expr Expr
 recExprP =
-    RecExpr <$> recordP exprP 
+    RecExpr <$> recordP exprP
         <?> "Record Expression"
 
+typExprP :: Parser Expr Expr
 typExprP =
     pure TypExpr
         <*  (reserved "data" <|> return ())
         <*> typSymP
         <*  reserved ":"
         <*> typAbsP
-        <*> withSep exprP 
+        <*> withSep exprP
         <?> "Type Kind Expression"
 
+appExprP :: Parser Expr Expr
 appExprP = buildExpressionParser opPs termP <?> "Application"
 
     where
@@ -128,12 +138,12 @@ appExprP = buildExpressionParser opPs termP <?> "Application"
             [[ Infix ap AssocLeft ]]
                 ++ toInfixTerm opConst AssocLeft (tail ops)
 
-        toInfixTerm op assoc =
+        toInfixTerm optr assoc =
             fmap . fmap $
                 flip Infix assoc
                 <<< uncurry (*>)
                 <<< reservedOp
-                &&& return . op
+                &&& return . optr
 
         ap = spaces >> indented >> return AppExpr
         valExprP = VarExpr <$> valP <?> "Value"

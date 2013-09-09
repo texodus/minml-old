@@ -13,16 +13,16 @@ homepage:      http://texodus.github.com/forml
 Library
   hs-source-dirs: src/hs/lib
   Build-depends:
-    base           == 4.5.*,
+    base           ,
     parsec,    
     mtl            >= 2.1 && <= 2.2,
     jmacro         >= 0.6.3 && <0.7,
-    containers     >= 0.4 && < 0.5,
-    process        == 1.1.0.1,
+    containers     >= 0.5 && < 0.6,
+    process        >= 1.1,
     transformers   == 0.3.0.0,
     wl-pprint-text == 1.1.0.0,
-    MissingH       == 1.2.0.0,
-    directory
+    lens           == 3.9.0.2,
+    directory      >= 1.1
   ghc-options: 
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
@@ -33,6 +33,7 @@ Library
     Forml.AST.Expr,
     Forml.AST.Kind,
     Forml.AST.Lit,
+    Forml.AST.Macro,
     Forml.AST.Patt,
     Forml.AST.Record,
     Forml.AST.Replace,
@@ -53,7 +54,7 @@ Library
     Forml.Parse.Expr
     Forml.Parse.Indent,
     Forml.Parse.Lit,
-    Forml.Parse.Macro,
+    Forml.Parse.Notation,
     Forml.Parse.MacroToken,
     Forml.Parse.Patt,
     Forml.Parse.Record,
@@ -84,20 +85,20 @@ Executable forml
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
     -funfolding-use-threshold=16 -fexcess-precision
-    -optc-O3 -optc-ffast-math          
+    -optc-O3 -optc-ffast-math        
   
 Test-Suite spec
-  Type:           exitcode-stdio-1.0
+  Type: exitcode-stdio-1.0
   Hs-Source-Dirs: src/hs/test
-  Ghc-Options:    -Wall -threaded
-  Main-Is:        Spec.hs
+  Ghc-Options: -Wall -threaded -fbreak-on-exception
+  Main-Is: Spec.hs
   Build-Depends:
     base,
     hspec        >= 1.3,
     silently     >= 1.2.0.2 && <1.3,
-    process      == 1.1.0.1,
-    jmacro       >= 0.6.3 && <0.7,
-    containers   >= 0.4 && < 0.5,
+    process      == 1.1.0.2,
+    jmacro       == 0.6.8,
+    containers   >= 0.5 && < 0.6,
     QuickCheck,
     HUnit,
     parsec,
