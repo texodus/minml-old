@@ -9,6 +9,7 @@
 module Forml.Parse.Indent (
     indented,
     withSep,
+    withCont,
     withScope,
     sep,
     inScope
@@ -46,8 +47,13 @@ withSep :: Parser s a -> Parser s a
 withSep parser =
     (semi >> parser) <|> (inScope >> withScope parser)
 
+withCont :: Parser s a -> Parser s a
+withCont parser =
+    (condSep sourceLine (==) "inline" >> parser) <|> (inScope >> withScope parser)
+
+
 sep :: Parser s ()
-sep = (semi >> return ()) <|> inScope
+sep = void semi <|> inScope
 
 condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
 condSep f cond name = do

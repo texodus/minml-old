@@ -8,14 +8,14 @@ import Forml.Parse
 import Forml.AST
 
 assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = flip (assertEqual "") (parseForml a) b
+assertParse a = flip (assertEqual "") (parseForml a)
 
 spec :: Spec
-spec = do
+spec =
 
-    describe "Forml.Parser" $ do
+    describe "Forml.Parser" $
 
-    	describe "parseForml" $ do
+        describe "parseForml" $ do
 
             it "should parse anything it can format, and they should be the same" $ pendingWith "TODO this is useful, but transforms make this difficult"
  
@@ -175,6 +175,16 @@ spec = do
 
                     $ Right (LetExpr (Sym "letly") (VarExpr (LitVal (NumLit 4.0))) (LetExpr (Sym "func") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "x")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 2.0))))])) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (SymVal (Sym "letly"))))))
 
+                it "should parse whitespace statement sep with proper scope" $ assertParse
+
+                    "   let letly =                          \n\
+                    \       let func =                       \n\
+                    \            5                           \n\
+                    \       4                                \n\
+                    \   func 5                               \n"
+
+                    $ Right (LetExpr (Sym "letly") (LetExpr (Sym "func") (VarExpr (LitVal (NumLit 5.0))) (VarExpr (LitVal (NumLit 4.0)))) (AppExpr (VarExpr (SymVal (Sym "func"))) (VarExpr (LitVal (NumLit 5.0)))))
+ 
                 it "should parse match expressions with mixed whitespace" $ assertParse
 
                     "   let fib = fun n ->                     \n\
@@ -299,7 +309,7 @@ spec = do
 
                     $ Right (LetExpr (Sym "fib") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (LitVal (NumLit 0.0)),VarExpr (LitVal (NumLit 0.0))),(ValPatt (LitVal (NumLit 1.0)),VarExpr (LitVal (NumLit 1.0))),(ValPatt (SymVal (Sym "n")),AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 1.0)))))) (AppExpr (VarExpr (SymVal (Sym "fib"))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "-"))) (VarExpr (SymVal (Sym "n")))) (VarExpr (LitVal (NumLit 2.0))))))])])) (AppExpr (VarExpr (SymVal (Sym "fib"))) (VarExpr (LitVal (NumLit 7.0)))))
 
-            describe "without `data` keyword" $ do
+            describe "without `data` keyword" $
 
                 it "should parse user data types" $ assertParse
 
@@ -315,7 +325,7 @@ spec = do
 
                     $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
 
-            describe "Records" $ do
+            describe "Records" $
 
                 it "should compile & run basic record patterns" $ assertParse
 

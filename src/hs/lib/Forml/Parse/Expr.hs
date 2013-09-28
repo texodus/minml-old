@@ -37,7 +37,7 @@ import Forml.Parse.Val
 exprP :: Parser Expr Expr
 exprP =
 
-    notationP exprP
+    letMacroP
         <|> macroP
         <|> jsExprP
         <|> recExprP
@@ -47,11 +47,18 @@ exprP =
         <|> try typExprP
         <|> appExprP
 
+letMacroP :: Parser Expr Expr
+letMacroP = do
+    def <- notationP
+    ms  <- def <$> withCont exprP
+    macros %= merge [ms]
+    withSep exprP
+
 macroP :: Parser Expr Expr
 macroP = use macros >>= tryChild
 
     where
-        tryChild (Token x ex : exs) = do
+        tryChild (Token x ex : exs) =
             (reserved x >> tryChild ex) <|> tryChild exs
 
         tryChild (Arg a ex : _) = do
@@ -64,8 +71,8 @@ macroP = use macros >>= tryChild
 
 jsExprP :: Parser Expr Expr
 jsExprP =
-    (unwrap
-        $ reservedOp "``" >> (anyChar `manyTill` reservedOp "``") )
+    unwrap
+        (reservedOp "``" >> (anyChar `manyTill` reservedOp "``"))
         <?> "Javascript"
     where
         unwrap :: Parser Expr String -> Parser Expr Expr
@@ -103,17 +110,17 @@ toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
 
 letExprP :: Parser Expr Expr
-letExprP =
+letExprP = withScope (
     pure LetExpr
         <*  (reserved "let" <|> return ())
         <*> symP
         <*> (valLetP <|> absExprP (return ()))
         <*> withSep exprP
-        <?> "Let Expression"
+        <?> "Let Expression")
 
 valLetP :: Parser Expr Expr
 valLetP =
-    reservedOp "=" >> exprP
+    reservedOp "=" >> withCont exprP
 
 recExprP :: Parser Expr Expr
 recExprP =
@@ -135,8 +142,8 @@ appExprP = buildExpressionParser opPs termP <?> "Application"
 
     where
         opPs =
-            [[ Infix ap AssocLeft ]]
-                ++ toInfixTerm opConst AssocLeft (tail ops)
+            [ Infix ap AssocLeft ]
+                : toInfixTerm opConst AssocLeft (tail ops)
 
         toInfixTerm optr assoc =
             fmap . fmap $

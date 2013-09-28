@@ -14,13 +14,13 @@ assertNode a b = do
     res <- case compile a of 
         Left x -> return $ Left x
         Right x -> Right `fmap` node x
-    flip (assertEqual "") res b
+    assertEqual "" b res
 
 assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = flip (assertEqual "") (parseForml a) b
+assertParse a b = assertEqual "" b (parseForml a)
 
 spec :: Spec
-spec = do
+spec =
 
     describe "Forml.Parser" $ do
 
@@ -114,6 +114,49 @@ spec = do
                 \       else 4                                  \n"
 
                 (Right "5\n")
+
+            it "should compile & run nested definitions" $ assertNode
+              
+                "   True: Bool                                  \n\
+                \   False: Bool                                 \n\
+                \                                               \n\
+                \   `do (b)` =                                  \n\
+                \       `bind (a) to (d) in (c)` =              \n\
+                \            c                                  \n\
+                \       b                                       \n\
+                \                                               \n\
+                \   do bind True to False                       \n\
+                \      in 4                                     \n"
+
+                (Left (Err "Unbound identifier: bind"))
+
+            it "should compile & run nested definitions" $ assertNode
+              
+                "   True: Bool                                  \n\
+                \   False: Bool                                 \n\
+                \                                               \n\
+                \   `do (b)` =                                  \n\
+                \       `bind (a) to (b) in (c)` =              \n\
+                \            c                                  \n\
+                \       bind 4 to asd asd fas in b              \n\
+                \                                               \n\
+                \   do 4                                        \n"
+
+                (Right "4\n")
+
+            it "should compile & run nested definitions, without var capturing" $ assertNode
+              
+                "   True: Bool                                  \n\
+                \   False: Bool                                 \n\
+                \                                               \n\
+                \   `do (b)` =                                  \n\
+                \       `bind (a) to (d) in (c)` =              \n\
+                \            c                                  \n\
+                \       bind 4 to asd asd fas in b              \n\
+                \                                               \n\
+                \   do 4                                        \n"
+
+                (Right "4\n")
 
 
 
