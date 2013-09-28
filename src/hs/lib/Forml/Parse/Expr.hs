@@ -19,7 +19,7 @@ import Control.Applicative
 import Control.Arrow
 import Control.Lens
 import Language.Javascript.JMacro
-import Text.Parsec                hiding (many, (<|>))
+import Text.Parsec                hiding (many, (<|>), optional)
 import Text.Parsec.Expr
 
 import Forml.AST
@@ -49,7 +49,10 @@ exprP =
 
 letMacroP :: Parser Expr Expr
 letMacroP = do
+    reservedOp "`" 
     def <- notationP
+    reservedOp "`" 
+    reservedOp "="
     ms  <- def <$> withCont exprP
     macros %= merge [ms]
     withSep exprP
@@ -64,7 +67,7 @@ macroP = use macros >>= tryChild
         tryChild (Arg a ex : _) = do
             arg  <- exprP
             rest <- tryChild ex
-            return (replace a arg rest)
+            return (replaceLet a arg rest)
 
         tryChild (Leaf x : _) = return x
         tryChild [] = parserZero
@@ -110,14 +113,14 @@ toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
 
 letExprP :: Parser Expr Expr
-letExprP = withScope (
+letExprP =
     pure LetExpr
-        <*  (reserved "let" <|> return ())
+        <*  optional(reserved "let")
         <*> symP
         <*> (valLetP <|> absExprP (return ()))
         <*> withSep exprP
-        <?> "Let Expression")
-
+        <?> "Let Expression"
+ 
 valLetP :: Parser Expr Expr
 valLetP =
     reservedOp "=" >> withCont exprP
@@ -130,7 +133,7 @@ recExprP =
 typExprP :: Parser Expr Expr
 typExprP =
     pure TypExpr
-        <*  (reserved "data" <|> return ())
+        <*  optional (reserved "data")
         <*> typSymP
         <*  reserved ":"
         <*> typAbsP

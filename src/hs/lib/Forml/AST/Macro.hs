@@ -11,7 +11,6 @@ module Forml.AST.Macro where
 data Macro a = Token String [Macro a] | Arg String [Macro a] | Leaf a
     deriving (Eq, Ord, Show)
 
-
 merge :: [Macro a] -> [Macro a] -> [Macro a]
 merge newMacs oldMacs =
     [ merged | new <- newMacs, merged <- mergeWith' new oldMacs ]

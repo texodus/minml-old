@@ -29,9 +29,9 @@ module Forml.Javascript.Expr where
 import Language.Javascript.JMacro
 
 import Forml.AST
+import Forml.AST.Replace
 import Forml.Javascript.Cases
 import Forml.Javascript.Curried
-import Forml.Javascript.JMacro
 import Forml.Javascript.Type()
 import Forml.Javascript.Val()
 import Forml.Javascript.Record()

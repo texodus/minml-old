@@ -5,7 +5,6 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Forml.Javascript.JMacro (
-    replace,
     minify
 ) where
 
@@ -22,13 +21,5 @@ minify orig @ (InfixExpr "&&" x y) = case (minify x, minify y) of
     (z, ValExpr (JVar (StrI "true"))) -> z
     _ -> orig
 minify x = x
-
-replace :: JMacro a => String -> JExpr -> a -> a
-replace s x = 
-    withHygiene (jfromGADT . composOp f . jtoGADT)
-    where
-        f :: JMGadt a -> JMGadt a
-        f (JMGExpr (ValExpr (JVar (StrI z)))) | z == s = JMGExpr x
-        f z = composOp f z
 
 ------------------------------------------------------------------------------

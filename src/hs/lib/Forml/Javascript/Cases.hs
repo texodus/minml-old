@@ -27,6 +27,8 @@ module Forml.Javascript.Cases (
 import Language.Javascript.JMacro
 
 import Forml.AST
+import Forml.AST.Replace
+
 import Forml.Javascript.Val()
 import Forml.Javascript.Match
 import Forml.Javascript.JMacro
@@ -38,9 +40,9 @@ data Cases = forall a. ToJExpr a => Cases JExpr [(Patt, a)]
 instance ToStat Cases where
 
     toStat (Cases vall ((patt, expr) : cases)) = 
-        flip (foldl g) (getBindings vall patt) mat
+        foldl g mat (getBindings vall patt)
         where
-            g expr' (i, ex) = replace i ex $ expr'
+            g expr' (i, ex) = replace i ex expr'
             mat = case minify (toJExpr (Match vall patt)) of
                 ValExpr (JVar (StrI "true")) -> [jmacro|
                     return `(expr)`;

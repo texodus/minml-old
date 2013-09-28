@@ -65,16 +65,15 @@ spec =
 
                 (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
 
-            it "should parse scope introduction" $ pendingWith "TODO add replaceLet"
-
-               --assertParse
+            it "should parse scope introduction" $ assertParse
               
-               -- "   `var (a) to (b) then (c)` =                      \n\
-               -- \       let a = b; c                            \n\
-               -- \                                               \n\
-               -- \   var x to 12 then x + 1                                      \n"
+                "   `bind (a) to (b) in (c)` =    \n\
+                \       let a = b                 \n\
+                \       c                         \n\
+                \                                 \n\
+                \   bind x to 12 in x + 1         \n"
 
-               -- (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0))))))
+                (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0))))))
 
             it "should parse repeating args" $ pendingWith "TODO figure out syntax"
             --assertParse

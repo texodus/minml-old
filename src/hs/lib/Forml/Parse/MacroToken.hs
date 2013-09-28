@@ -20,6 +20,7 @@ import           Text.Parsec.Language
 import qualified Text.Parsec.Token    as T
 
 import Forml.AST
+import qualified Forml.Parse.Token as FT
 
 ------------------------------------------------------------------------------
 
@@ -29,18 +30,16 @@ letterP =
 lowerP = 
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
 
-ohmlDef :: LanguageDef ()
-ohmlDef = emptyDef {
+macroDef :: LanguageDef (FT.MacroState a)
+macroDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = concat ops,
     T.identStart      = lowerP <|> letterP <|> char '_',
     T.identLetter     = letterP <|> lowerP <|> digit <|> char '_',
-    T.opStart         = oneOf ":!#$%&*+./<=>?@\\^|-~",
-    T.opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
+    T.opStart         = oneOf ":!#$%&*+./{}<=>?@\\^|-~",
+    T.opLetter        = oneOf ":!#$%&*+./{}<=>?@\\^|-~"
 }
 
-type MParser = Parsec String ()
-
-T.TokenParser { .. } = T.makeTokenParser ohmlDef
+T.TokenParser { .. } = T.makeTokenParser macroDef
 
 ------------------------------------------------------------------------------

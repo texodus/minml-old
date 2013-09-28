@@ -11,9 +11,7 @@ module Forml.Parse.Notation (
     notationP
 ) where
 
-
 import Control.Applicative
-import Text.Parsec hiding (many, (<|>))
 import Forml.AST
 import Forml.AST.Replace
 import Forml.Parse.Token
@@ -21,28 +19,22 @@ import qualified Forml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------
 
-keywordP :: (ToSym a, Replace a) => Parsec String () (a -> Macro a)
-keywordP = 
+notationP :: Parser Expr (Expr -> Macro Expr)
+notationP = 
     term <|> capture <|> lastTerm
     where
         term = do
-            f <- M.identifier <|> M.semi
-            ((Token f . (:[])) .) <$> keywordP
+            f <- M.identifier <|> M.operator <|> M.semi
+            ((Token f . (:[])) .) <$> notationP
         
         capture = do
             sym <- M.parens M.identifier
-            ((Arg ('*' : sym) . (:[]) . replace sym (Leaf (toSym ('*' : sym)))) .) <$> keywordP
+            (toArg sym .) <$> notationP
 
         lastTerm = return Leaf
 
-notationP :: (ToSym a, Replace a) => Parser a (a -> Macro a)
-notationP = do
-    reservedOp "`" 
-    rule <- anyChar `manyTill` reservedOp "`" 
-    reservedOp "="
-    case runParser keywordP () "KeywordParser" rule of
-        Left _ -> error ("Failed to parse notation `" ++ rule ++ "`")
-        Right newMacs -> return newMacs
-
+        toArg sym = 
+            let escSym = '*' : sym
+            in Arg escSym . (:[]) . replaceLet sym escSym
 
 ------------------------------------------------------------------------------

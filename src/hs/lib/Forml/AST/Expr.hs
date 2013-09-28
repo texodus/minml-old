@@ -11,9 +11,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 
 module Forml.AST.Expr (
-    Expr( .. ),
-    toSym,
-    ToSym
+    Expr( .. )
 ) where
 
 import Language.Javascript.JMacro
@@ -39,14 +37,6 @@ data Expr where
     TypExpr :: TypeSym () -> TypeAbs () -> Expr -> Expr
 
     deriving (Eq, Ord, Show)
-
-class ToSym a where
-
-    toSym :: String -> a
-
-instance ToSym Expr where
-
-    toSym = VarExpr . SymVal . Sym
 
 instance Fmt Expr where
 
