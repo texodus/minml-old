@@ -1,10 +1,12 @@
 --------------------------------------------------------------------------------
 
--- This ensures that any `Type a` will be consistent, and allows us to
--- generate 2 types of `Type a` which share most of their structure.
+-- | Types
 
--- `TypeGen`s are a special `TypeVar` which we use to mark places where
--- we want a type to be polymorphic.
+--   This ensures that any `Type a` will be consistent, and allows us to
+--   generate 2 types of `Type a` which share most of their structure.
+
+--   `TypeGen`s are a special `TypeVar` which we use to mark places where
+--   we want a type to be polymorphic.
 
 --------------------------------------------------------------------------------
 
@@ -28,17 +30,35 @@ import Forml.Utils
 
 ------------------------------------------------------------------------------
 
+-- | Type Variables
+
 data TypeVar a where
     TypeVarP :: String -> TypeVar ()
     TypeVarT :: Kind -> String -> TypeVar Kind
+
+instance (Fmt a) => Fmt (TypeVar a) where
+    fmt (TypeVarP s) = s
+    fmt (TypeVarT _ s) = s
+
+deriving instance (Ord a)  => Ord  (TypeVar a)
+deriving instance (Eq a)   => Eq   (TypeVar a)
+deriving instance (Show a) => Show (TypeVar a)
+
+
+-- | Type Symbols
 
 data TypeSym a where
     TypeSymP :: String -> TypeSym ()
     TypeSymT :: Kind -> String -> TypeSym Kind
 
+-- | Polymorphic Types, aka Type Abstractions
+
 data TypeAbs a where
     TypeAbsP :: Type () -> TypeAbs ()
     TypeAbsT :: [Kind] -> Type Kind -> TypeAbs Kind
+
+-- | Union type for all types, including `TypeGen` which is only used
+--   in typechecking to represent generalized types.
 
 data Type a where
     TypeSym :: TypeSym a -> Type a
@@ -48,9 +68,6 @@ data Type a where
 
     TypeGen :: Int -> Type Kind
 
-instance (Fmt a) => Fmt (TypeVar a) where
-    fmt (TypeVarP s) = s
-    fmt (TypeVarT _ s) = s
 
 instance (Fmt a) => Fmt (TypeSym a) where
     fmt (TypeSymP s) = s
@@ -71,17 +88,14 @@ instance (Fmt a) => Fmt (Type a) where
     fmt (TypeRec m) = fmt m
 
 deriving instance (Ord a) => Ord (Type a)
-deriving instance (Ord a) => Ord (TypeVar a)
 deriving instance (Ord a) => Ord (TypeSym a)
 deriving instance (Ord a) => Ord (TypeAbs a)
 
 deriving instance (Eq a) => Eq (Type a)
-deriving instance (Eq a) => Eq (TypeVar a)
 deriving instance (Eq a) => Eq (TypeSym a)
 deriving instance (Eq a) => Eq (TypeAbs a)
 
 deriving instance (Show a) => Show (Type a)
-deriving instance (Show a) => Show (TypeVar a)
 deriving instance (Show a) => Show (TypeSym a)
 deriving instance (Show a) => Show (TypeAbs a)
 

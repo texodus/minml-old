@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------
 
--- We saw two new constructs during `Expr` rendering.  `curriedFun` is to
--- artificially construct a curried version of a data constructors.  We're
--- going to use the first call in the curried chain to introduce an array to
--- capture arguments through the partial application.  This means we need to
--- treat constructor functions and empty constructors differently.
+-- | We saw two new constructs during `Expr` rendering.  `curriedFun` is to
+--   artificially construct a curried version of a data constructors.  We're
+--   going to use the first call in the curried chain to introduce an array to
+--   capture arguments through the partial application.  This means we need to
+--   treat constructor functions and empty constructors differently.
 
 ------------------------------------------------------------------------------
 
@@ -21,6 +21,8 @@ import Language.Javascript.JMacro
 import Forml.AST
 
 ------------------------------------------------------------------------------
+
+-- | Creates a `JExpr` curried function, given its expected type and body.
 
 curriedFun :: TypeAbs () -> JExpr -> JExpr
 curriedFun t typ =  curriedFun' [] t

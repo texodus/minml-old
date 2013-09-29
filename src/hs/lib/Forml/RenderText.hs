@@ -1,5 +1,7 @@
 ------------------------------------------------------------------------------
 
+-- | JExpr -> String
+
 ------------------------------------------------------------------------------
 
 module Forml.RenderText (
@@ -12,6 +14,8 @@ import Text.PrettyPrint.Leijen.Text
 import Forml.AST
 
 ------------------------------------------------------------------------------
+
+-- | Renders a `JExpr` as a string
 
 renderText :: (JsToDoc a, JMacro a) => a -> Either Err String
 renderText = Right . show . renderOneLine . renderJs

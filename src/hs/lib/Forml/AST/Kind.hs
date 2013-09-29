@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
--- A `Kind` can be thought of as a type of types.
+-- | Type Kinds
 
 --------------------------------------------------------------------------------
 
@@ -13,6 +13,8 @@ module Forml.AST.Kind (
 import Forml.Utils
 
 --------------------------------------------------------------------------------
+
+-- | A `Kind` can be thought of as a type of types.
 
 data Kind where
     Star :: Kind

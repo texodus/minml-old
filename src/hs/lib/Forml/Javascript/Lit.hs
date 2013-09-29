@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 
--- Marshalling the OHML AST into `JExpr`s - the strategy is to rely
--- on instances of `ToJExpr` for our AST.
+-- | Marshalling the OHML AST into `JExpr`s - the strategy is to rely
+--   on instances of `ToJExpr` for our AST.
 
 ------------------------------------------------------------------------------
 

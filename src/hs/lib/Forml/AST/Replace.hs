@@ -1,10 +1,6 @@
 ------------------------------------------------------------------------------
 
--- Expression parser.
-
--- `LetExpr` and `TypExpr` are roughly identical; here they've been arranged
--- slightly differently to show the symmetry between function application
--- & combinators of the `Applicative` type class.
+-- | Replace typeclass
 
 ------------------------------------------------------------------------------
 
@@ -18,6 +14,9 @@ module Forml.AST.Replace where
 import Language.Javascript.JMacro
 
 ------------------------------------------------------------------------------
+
+-- | Represents a data structure where, given a string symbol, all matches
+--   some class specific notion in `b` can be replaced with `a`.
 
 class Replace a b where
 

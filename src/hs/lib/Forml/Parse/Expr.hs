@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------
 
--- Expression parser.
+-- | Expression parser.
 
--- `LetExpr` and `TypExpr` are roughly identical; here they've been arranged
--- slightly differently to show the symmetry between function application
--- & combinators of the `Applicative` type class.
+--   `LetExpr` and `TypExpr` are roughly identical; here they've been arranged
+--   slightly differently to show the symmetry between function application
+--   & combinators of the `Applicative` type class.
 
 ------------------------------------------------------------------------------
 

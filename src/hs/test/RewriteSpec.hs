@@ -1,7 +1,13 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module RewriteSpec where
 
 import Test.Hspec
 import Test.HUnit
+import Text.InterpolatedString.Perl6
 
 import Forml.AST
 import Forml.Exec
@@ -19,6 +25,22 @@ assertNode a b = do
 assertParse :: String -> Either Err Expr -> Assertion
 assertParse a b = assertEqual "" b (parseForml a)
 
+class Assert a b | a -> b where
+
+    (===) :: String -> a -> Assertion
+    (=!=) :: String -> b -> Assertion
+
+instance Assert Expr Err where
+
+    x === y = assertParse x (Right y)
+    x =!= y = assertParse x (Left y)
+
+instance Assert String String where
+
+    x === y = assertNode x (Right y)
+    x =!= y = assertNode x (Left (Err y))
+
+
 spec :: Spec
 spec =
 
@@ -27,31 +49,47 @@ spec =
 
         describe "parse" $ do
 
-            it "should parse a trivial example " $ assertParse
+
+
+            it "should parse a trivial example " $ [q|
               
-                "   `if (a) then (d) else (c)` = match a with   \n\
-                \       True = d                                \n\
-                \       False = c                               \n\
-                \                                               \n\
-                \   if False then 3 else 4                      \n"
+                `if (a) then (d) else (c)` =
 
-                (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
-                                [ (ValPatt (ConVal (TypeSym (TypeSymP "True"))), VarExpr (LitVal (NumLit 3.0)))
-                                , (ValPatt (ConVal (TypeSym (TypeSymP "False"))), VarExpr (LitVal (NumLit 4.0)))]))
+                    match a with
+                        True  = d                             
+                        False = c                            
+                                                         
+                if False then 3 else 4                   
 
-            it "should parse a trivial example with some odd whitespace" $ assertParse
+            |] ===
+
+                MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
+                        [ ( ValPatt (ConVal (TypeSym (TypeSymP "True")))
+                          , VarExpr (LitVal (NumLit 3.0)))
+                        , ( ValPatt (ConVal (TypeSym (TypeSymP "False")))
+                          , VarExpr (LitVal (NumLit 4.0)))]
+
+
+
+            it "should parse a trivial example with some odd whitespace" $ [q|
               
-                "   `if (a) then (d) else (c)` = match a with   \n\
-                \       True = d                                \n\
-                \       False = c                               \n\
-                \                                               \n\
-                \   if False                                    \n\
-                \       then 3                                  \n\
-                \       else 4                                  \n"
+                `if (a) then (d) else (c)` = match a with   
+                    True = d                                
+                    False = c                               
+                                                            
+                if False                                    
+                    then 3                                  
+                    else 4                                  
 
-                (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
-                                [ (ValPatt (ConVal (TypeSym (TypeSymP "True"))), VarExpr (LitVal (NumLit 3.0)))
-                                , (ValPatt (ConVal (TypeSym (TypeSymP "False"))), VarExpr (LitVal (NumLit 4.0)))]))
+            |] ===
+
+                MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
+                        [ ( ValPatt (ConVal (TypeSym (TypeSymP "True")))
+                          , VarExpr (LitVal (NumLit 3.0)))
+                        , ( ValPatt (ConVal (TypeSym (TypeSymP "False")))
+                          , VarExpr (LitVal (NumLit 4.0)))]
+
+
 
             it "should parse nested macros" $ assertParse
               
@@ -114,48 +152,75 @@ spec =
 
                 (Right "5\n")
 
-            it "should compile & run nested definitions" $ assertNode
+
+
+            it "should compile & run nested definitions" $ [q|
               
-                "   True: Bool                                  \n\
-                \   False: Bool                                 \n\
-                \                                               \n\
-                \   `do (b)` =                                  \n\
-                \       `bind (a) to (d) in (c)` =              \n\
-                \            c                                  \n\
-                \       b                                       \n\
-                \                                               \n\
-                \   do bind True to False                       \n\
-                \      in 4                                     \n"
+                True: Bool                     
+                False: Bool                    
+                                               
+                `do (b)` =                     
+                    `bind (a) to (d) in (c)` = 
+                         c                     
+                    b                          
+                                               
+                do bind True to False          
+                   in 4                        
 
-                (Left (Err "Unbound identifier: bind"))
+            \] =!=
 
-            it "should compile & run nested definitions" $ assertNode
+                "Unbound identifier: bind"
+
+
+
+            it "should compile & run nested definitions" $ [q|
               
-                "   True: Bool                                  \n\
-                \   False: Bool                                 \n\
-                \                                               \n\
-                \   `do (b)` =                                  \n\
-                \       `bind (a) to (b) in (c)` =              \n\
-                \            c                                  \n\
-                \       bind 4 to asd asd fas in b              \n\
-                \                                               \n\
-                \   do 4                                        \n"
+                True: Bool                                  
+                False: Bool                                 
+                                                            
+                `do (b)` =                                  
+                    `bind (a) to (b) in (c)` =              
+                         c                                  
+                    bind 4 to asd asd fas in b              
+                                                            
+                do 4
 
-                (Right "4\n")
+            |] ===
 
-            it "should compile & run nested definitions, without var capturing" $ assertNode
+                "4\n"
+
+
+
+            it "should compile & run nested definitions, without var capturing" $ [q|
               
-                "   True: Bool                                  \n\
-                \   False: Bool                                 \n\
-                \                                               \n\
-                \   `do (b)` =                                  \n\
-                \       `bind (a) to (d) in (c)` =              \n\
-                \            c                                  \n\
-                \       bind 4 to asd asd fas in b              \n\
-                \                                               \n\
-                \   do 4                                        \n"
+                True: Bool
+                False: Bool
 
-                (Right "4\n")
+                `do (b)` =
+                    `bind (a) to (d) in (c)` =
+                         c
+                    bind 4 to asd asd fas in b
+
+                do 4 
+
+            |] ===
+
+                "4\n"
+
+
+
+            it "should compile & run scope introduction" $ [q|
+              
+                `bind (a) to (b) in (c)` =
+                    let a = b             
+                    c                     
+                                          
+                bind x to 12 in x + 1     
+
+            |] ===
+
+                "13\n"
+
 
 
 

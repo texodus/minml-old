@@ -1,8 +1,6 @@
 ------------------------------------------------------------------------------
 
--- Expressions.
-
--- Here, `AbsExpr` is an Abstraction, and `AppExpr` is an Application.
+-- | Record Expressions.
 
 ------------------------------------------------------------------------------
 
@@ -11,7 +9,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 
 module Forml.AST.Record (
-    Record( .. ),
+    Record( .. )
 ) where
 
 import qualified Data.Map as M
@@ -20,6 +18,9 @@ import qualified Data.List as L
 import Forml.Utils
 
 ------------------------------------------------------------------------------
+
+-- | A record is simply a map of key / a pairs.  Used for both
+--   record tpes and record expressions
 
 newtype Record a = Record (M.Map String a) deriving (Eq, Show, Ord)
 

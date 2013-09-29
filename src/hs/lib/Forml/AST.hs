@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
--- Meta module, exporting the Types for Forml's abstract syntax tree.
--- There is some static info we need to define about our language.  The 
--- keywords and operators, arranged in precedence order.
+-- | Meta module, exporting the Types for Forml's abstract syntax tree.
+--   There is some static info we need to define about our language.  The 
+--   keywords and operators, arranged in precedence order.
 
 --------------------------------------------------------------------------------
 
@@ -32,8 +32,13 @@ import Forml.Utils
 
 --------------------------------------------------------------------------------
 
+-- | built-in keywords; TODO extract these to custom notations
+
 keywords :: [String]
 keywords = [ "let", "fun", "match", "with", "data" ]
+
+-- | built-in operators.  Arranged in precedence order for parsing via
+--   `buildExpressionParser`
 
 ops :: [[String]]
 ops = [ [ "" ]
@@ -43,15 +48,21 @@ ops = [ [ "" ]
       , [ "<", "<=", ">=", ">", "==", "!=" ]
       , [ "&&", "||" ] ]
 
+-- | Error type
+
 newtype Err = Err String deriving (Eq, Show, Ord)
 
 instance Fmt Err where
 
     fmt (Err x) = "ERROR " ++ x
 
+-- | Is type t a function type?
+
 isFun :: Type t -> Maybe (Type (), Type ())
 isFun (TypeApp (TypeApp (TypeSym (TypeSymP "->")) x) y) = Just (x, y)
 isFun _ = Nothing
+
+-- | Is an expression an application of an infix operator?`
 
 isInfix :: Expr -> Maybe (Expr, String, Expr)
 isInfix (AppExpr (AppExpr (VarExpr (SymVal (Sym o))) x) y) 

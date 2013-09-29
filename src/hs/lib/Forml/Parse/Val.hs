@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------
 
--- Parsers for `Val` and `Sym`.
+-- | Parsers for `Val` and `Sym`.
 
--- "Alternative" combinator will evaluate to its second argument, iff
--- it's first argument fails and consumes no input - backtracking is explicit
--- via `try`.
+--   "Alternative" combinator will evaluate to its second argument, iff
+--   it's first argument fails and consumes no input - backtracking is explicit
+--   via `try`.
 
 ------------------------------------------------------------------------------
 
@@ -24,6 +24,8 @@ import Forml.Parse.Type
 
 ------------------------------------------------------------------------------
 
+-- | Sym parser
+
 symP :: Parser s Sym
 symP = try $ do
     ars <- use macros
@@ -36,6 +38,8 @@ getReserved :: Macro a -> [String]
 getReserved (Macro (Token x zs : ys)) = [x] ++ getReserved (Macro ys) ++ getReserved zs
 getReserved (Macro (Arg _ zs : xs)) = getReserved (Macro xs) ++ getReserved zs
 getReserved _ = []
+
+-- | Val parser
 
 valP :: Parser s Val
 valP =

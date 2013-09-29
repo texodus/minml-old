@@ -1,18 +1,18 @@
 ------------------------------------------------------------------------------
 
--- We also saw `Match` earlier, a datatype to represent the javascript
--- generation of the application of a value to a pattern - as this is 
--- used in the cond position of an `if` statement earlier.
+-- | We also saw `Match` earlier, a datatype to represent the javascript
+--   generation of the application of a value to a pattern - as this is 
+--   used in the cond position of an `if` statement earlier.
 
--- Literal matches are a simple equality test.
+--   Literal matches are a simple equality test.
 
--- Symbol matches introduce a new property onto the `scope` object
+--   Symbol matches introduce a new property onto the `scope` object
 
--- Datatype constructors without arguments are checked via their `type`
--- property.
+--   Datatype constructors without arguments are checked via their `type`
+--   property.
 
--- A `ConPatt` with arguments, however, needs to recursively unwrap its
--- arguments as `Match`s.
+--   A `ConPatt` with arguments, however, needs to recursively unwrap its
+--   arguments as `Match`s.
 
 ------------------------------------------------------------------------------
 

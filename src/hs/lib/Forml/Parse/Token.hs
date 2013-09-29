@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------
 
--- Parsec provides tokenization for free, given some basic rules about what
--- defines a keyword, operator, etc.  Record wild card will bind locally all
--- fields of the `TokenParser`, of which there are many (5).
+-- | Parsec provides tokenization for free, given some basic rules about what
+--   defines a keyword, operator, etc.  Record wild card will bind locally all
+--   fields of the `TokenParser`, of which there are many (5).
 
--- (5) http://legacy.cs.uu.nl/daan/download/parsec/parsec.html#TokenParser
+--   (5) http://legacy.cs.uu.nl/daan/download/parsec/parsec.html#TokenParser
 
 ------------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 
--- The Literal parser is a simple parser which generates Lit values.  Here,
--- `stringLiteral` and `naturalOrFloat` come from `T.TokenParser`.
+-- | The Literal parser is a simple parser which generates Lit values.  Here,
+--   `stringLiteral` and `naturalOrFloat` come from `T.TokenParser`.
 
 ------------------------------------------------------------------------------
 

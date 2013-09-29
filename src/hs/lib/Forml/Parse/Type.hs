@@ -1,9 +1,9 @@
 ------------------------------------------------------------------------------
 
--- A neat product of the Parsec's combinator API is that the elemental
--- parsers are themselves full parsers, so they're easy to test.
+-- | A neat product of the Parsec's combinator API is that the elemental
+--   parsers are themselves full parsers, so they're easy to test.
 
--- Putting it all together in one parser ...
+--   Putting it all together in one parser ...
 
 ------------------------------------------------------------------------------
 

@@ -1,8 +1,6 @@
 ------------------------------------------------------------------------------
 
--- Patterns are either `Val` or `Con` (which is really a decon, amirite?).
--- Note we do not distinguish between literal and symbol matching,
--- because this is captured in the definition of `Val`
+-- | Pattern AST
 
 ------------------------------------------------------------------------------
 
@@ -18,6 +16,10 @@ import Forml.AST.Record
 import Forml.Utils
 
 --------------------------------------------------------------------------------
+
+-- | Patterns are either `Val` or `Con` (which is really a decon, amirite?).
+--   Note we do not distinguish between literal and symbol matching,
+--   because this is captured in the definition of `Val`
 
 data Patt where
 

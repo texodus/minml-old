@@ -1,8 +1,6 @@
 ------------------------------------------------------------------------------
 
--- Expressions.
-
--- Here, `AbsExpr` is an Abstraction, and `AppExpr` is an Application.
+-- | Expressions.
 
 ------------------------------------------------------------------------------
 
@@ -27,6 +25,9 @@ import Forml.AST.Replace
 import Forml.Utils
 
 ------------------------------------------------------------------------------
+
+-- | The Expression AST data type.  `App` is a function application; `Abs` is
+--   function literal (function abstraction)
 
 data Expr where
     LetExpr :: Sym -> Expr -> Expr -> Expr

@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 
--- A library for writing shitespace aware parsers with parsec.
+-- | A library for writing whitespace-aware parsers with parsec.
 
 ------------------------------------------------------------------------------
 
@@ -37,23 +37,34 @@ withScope parser = do
     setState st
     return res
 
+-- | Fails if the cursor is not within the current scope
+
 inScope :: Parser s ()
 inScope = condSep sourceLine (>) "in scope" >> condSep sourceColumn (>=) "in scope"
 
+-- | Fails if the cursor is not indented, or on the same line
+
 indented :: Parser s ()
 indented = condSep sourceColumn (>) "indented"
+
+-- | Tries a parser as a continuation of an existing block
 
 withSep :: Parser s a -> Parser s a
 withSep parser =
     (semi >> parser) <|> (inScope >> withScope parser)
 
+-- | Same as withSep, but without a semi
+
 withCont :: Parser s a -> Parser s a
 withCont parser =
     (condSep sourceLine (==) "inline" >> parser) <|> (inScope >> withScope parser)
 
+-- | Line separator parser
 
 sep :: Parser s ()
 sep = void semi <|> inScope
+
+-- | Optionally parse a separator in-scope
 
 condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
 condSep f cond name = do
