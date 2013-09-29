@@ -38,7 +38,7 @@ mgu :: Type Kind -> Type Kind -> TypeCheck ()
 mgu (TypeApp f x) (TypeApp g y) = unify f g >> unify x y
 mgu (TypeSym t) (TypeSym u) | t == u = return ()
 mgu (TypeRec (Record t)) (TypeRec (Record u)) | M.keys t == M.keys u = 
-    sequence_ (zipWith mgu (M.elems t) (M.elems u))
+    zipWithM_ mgu (M.elems t) (M.elems u)
 mgu (TypeVar u) t = u `varBind` t
 mgu t (TypeVar u) = u `varBind` t
 mgu t u = uniErr "Types do not unify" t u
@@ -51,6 +51,6 @@ varBind u t
     | otherwise          = extSubst [(u, t)]
 
 extSubst :: Subst -> TypeCheck ()
-extSubst new = get >>= return . first (ext new) >>= put          
+extSubst new = liftM (first (ext new)) get >>= put          
            
 ------------------------------------------------------------------------------

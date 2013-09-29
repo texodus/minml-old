@@ -18,6 +18,7 @@ module Forml.Parse (
 
 import Control.Applicative
 import Control.Arrow
+import Data.Monoid
 import Text.Parsec hiding ((<|>), many)
 import Text.Parsec.Pos
 
@@ -30,7 +31,7 @@ import Forml.Parse.Indent
 
 parseForml :: String -> Either Err Expr
 parseForml =
-    left (Err . show) . runParser grammar (MacroState (initialPos "") []) "Parsing Forml"
+    left (Err . show) . runParser grammar (MacroState (initialPos "") mempty) "Parsing Forml"
 
 grammar :: Parser Expr Expr
 grammar = spaces *> withScope exprP <* eof

@@ -28,13 +28,13 @@ symP :: Parser s Sym
 symP = try $ do
     ars <- use macros
     sym <- identifier
-    case sym `elem` getReserved ars of
-        True -> parserFail ("symbol (`" ++ show sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
-        False -> return $ Sym sym
+    if sym `elem` getReserved ars 
+        then parserFail ("symbol (`" ++ show sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
+        else return $ Sym sym
 
-getReserved :: [Macro a] -> [String]
-getReserved (Token x zs : ys) = [x] ++ getReserved ys ++ getReserved zs
-getReserved (Arg _ zs : xs) = getReserved xs ++ getReserved zs
+getReserved :: Macro a -> [String]
+getReserved (Macro (Token x zs : ys)) = [x] ++ getReserved (Macro ys) ++ getReserved zs
+getReserved (Macro (Arg _ zs : xs)) = getReserved (Macro xs) ++ getReserved zs
 getReserved _ = []
 
 valP :: Parser s Val

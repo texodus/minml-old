@@ -21,7 +21,6 @@ module Forml.AST.Type (
 ) where
 
 import Data.Ix
-import Data.List
 
 import Forml.AST.Kind
 import Forml.AST.Record
@@ -61,7 +60,7 @@ instance (Fmt a) => Fmt (TypeAbs a) where
     fmt (TypeAbsP t)   = "forall ?. " ++ fmt t
     fmt (TypeAbsT k s) = "forall " ++ varNames k ++ ". " ++ fmt s
         where
-            varNames = concat . intersperse " " . toTypGen
+            varNames = unwords . toTypGen
             toTypGen = map (fmt . TypeGen) . range . (0,) . length
 
 instance (Fmt a) => Fmt (Type a) where

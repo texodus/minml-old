@@ -46,16 +46,14 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Forml.TypeCheck.Expr (
     exprCheck
 ) where
 
+import Control.Monad
 import qualified Data.Map as M
 
 import Forml.AST
@@ -88,9 +86,8 @@ exprCheck _ (JSExpr _) =
 exprCheck _ (VarExpr (ConVal t)) =
     error $ "FATAL: " ++ show t
 
-exprCheck as (RecExpr (Record (unzip . M.toList -> (ks, vs)))) = do
-    mapM (exprCheck as) vs >>=
-        return . TypeRec . Record . M.fromList . zip ks
+exprCheck as (RecExpr (Record (unzip . M.toList -> (ks, vs)))) =
+    liftM (TypeRec . Record . M.fromList . zip ks) (mapM (exprCheck as) vs)
 
 exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) expr) =
     exprCheck (name :>: typKAbs : as) expr
@@ -128,7 +125,7 @@ exprCheck as (MatExpr expr patts) = do
             unify exprT pattT
             argRecCheck exprT pattAs res es
 
-        argCheck _ [] = error $ "FATAL: argCheck"
+        argCheck _ [] = error "FATAL: argCheck"
 
         argRecCheck _ pattAs res [] =
             exprCheck (pattAs ++ as) res

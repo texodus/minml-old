@@ -18,6 +18,7 @@ module Forml.Parse.Expr (
 import Control.Applicative
 import Control.Arrow
 import Control.Lens
+import Data.Monoid
 import Language.Javascript.JMacro
 import Text.Parsec                hiding (many, (<|>), optional)
 import Text.Parsec.Expr
@@ -54,23 +55,23 @@ letMacroP = do
     reservedOp "`" 
     reservedOp "="
     ms  <- def <$> withCont exprP
-    macros %= merge [ms]
+    macros %= mappend (Macro [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
 macroP = use macros >>= tryChild
 
     where
-        tryChild (Token x ex : exs) =
-            (reserved x >> tryChild ex) <|> tryChild exs
+        tryChild (Macro (Token x ex : exs)) =
+            (reserved x >> tryChild ex) <|> tryChild (Macro exs)
 
-        tryChild (Arg a ex : _) = do
+        tryChild (Macro (Arg a ex : _)) = do
             arg  <- exprP
             rest <- tryChild ex
             return (replaceLet a arg rest)
 
-        tryChild (Leaf x : _) = return x
-        tryChild [] = parserZero
+        tryChild (Macro (Leaf x : _)) = return x
+        tryChild (Macro []) = parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -115,7 +116,7 @@ toOp  = reservedOp "->" <|> reservedOp "="
 letExprP :: Parser Expr Expr
 letExprP =
     pure LetExpr
-        <*  optional(reserved "let")
+        <*  optional (reserved "let")
         <*> symP
         <*> (valLetP <|> absExprP (return ()))
         <*> withSep exprP

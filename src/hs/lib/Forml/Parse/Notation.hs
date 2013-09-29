@@ -1,11 +1,8 @@
 ------------------------------------------------------------------------------
 
--- Converts a notation string to a `Parser Expr Expr` 
+-- Notation parsing
 
 ------------------------------------------------------------------------------
-
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Forml.Parse.Notation (
     notationP
@@ -19,13 +16,16 @@ import qualified Forml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------
 
-notationP :: Parser Expr (Expr -> Macro Expr)
+-- | Parses a notation string.  This returns a `MacroCell Expr` constructor,
+--   once the body of the notation block has been parsed.
+
+notationP :: Parser Expr (Expr -> MacroCell Expr)
 notationP = 
     term <|> capture <|> lastTerm
     where
         term = do
             f <- M.identifier <|> M.operator <|> M.semi
-            ((Token f . (:[])) .) <$> notationP
+            ((Token f . toMac) .) <$> notationP
         
         capture = do
             sym <- M.parens M.identifier
@@ -33,8 +33,10 @@ notationP =
 
         lastTerm = return Leaf
 
+        toMac = Macro . (:[])
+
         toArg sym = 
             let escSym = '*' : sym
-            in Arg escSym . (:[]) . replaceLet sym escSym
+            in Arg escSym . toMac . replaceLet sym escSym
 
 ------------------------------------------------------------------------------

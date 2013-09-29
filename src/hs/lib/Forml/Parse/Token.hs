@@ -54,7 +54,7 @@ instance MonadState st (Parsec tok st) where
 
 data MacroState a = MacroState {
     _sourcePos :: SourcePos,
-    _macros    :: [Macro a]
+    _macros    :: Macro a
 }
 
 makeLenses ''MacroState

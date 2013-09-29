@@ -5,7 +5,6 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ViewPatterns #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 

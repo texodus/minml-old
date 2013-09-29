@@ -13,17 +13,13 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Forml.TypeCheck.Patt (
     pattCheck
 ) where
 
-import qualified Data.List as L
 import qualified Data.Map as M
 
 import Forml.AST
@@ -57,8 +53,8 @@ pattCheck as (ConPatt (TypeSymP con) ps) = do
     x  <- mapM (pattCheck as) ps
     t' <- newTypeVar Star
     t  <- freshInst sc
-    unify t (foldr fn t' (map snd x))
-    return (L.concat (map fst x), t')
+    unify t (foldr (fn . snd) t' x)
+    return (concatMap fst x, t')
 
 pattCheck as (RecPatt (Record (unzip . M.toList -> (ks, vs)))) = do
     (ass, pattTs) <- unzip `fmap` mapM (pattCheck as) vs

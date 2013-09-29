@@ -9,7 +9,7 @@
 {-# LANGUAGE GADTs #-}
 
 module Forml.AST.Patt (
-    Patt( .. )
+    Patt(..)
 ) where
 
 import Forml.AST.Type

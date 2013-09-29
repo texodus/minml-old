@@ -2,6 +2,7 @@
 
 module Utils where
 
+import Data.Monoid
 import System.IO
 import System.Process
 import System.Exit
@@ -45,14 +46,14 @@ instance Arbitrary Expr where
                 where subExpr = expr' (n `div` 10)
 
 assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
-assertParse p a b = flip (assertEqual "") parseResult b
+assertParse p a b = assertEqual "" b parseResult
 	where
-		parseResult = case runParser p (MacroState (initialPos "") []) "" a of
+		parseResult = case runParser p (MacroState (initialPos "") mempty) "" a of
 			Left x -> Left . Err . show $ x
 			Right x -> Right x
 
 assertGenerate :: (ToJExpr a) => a -> Either Err String -> Assertion
-assertGenerate a b = assertEqual "" gen b
+assertGenerate a = assertEqual "" gen
     where
         gen = renderText $ toJExpr a 
 
@@ -71,7 +72,7 @@ node js = do
     
     case z of
         ExitFailure n -> return $ "FATAL: error code " ++ show n ++ "\n" ++ errs
-        ExitSuccess   -> return $ status
+        ExitSuccess   -> return status
     
 
 

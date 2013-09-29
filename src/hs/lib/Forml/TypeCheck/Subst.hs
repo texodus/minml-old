@@ -43,7 +43,7 @@ instance Substitute (Type Kind) where
 
 instance Substitute a => Substitute [a] where
     apply s = map (apply s)
-    getVars = L.nub . concat . map getVars
+    getVars = L.nub . concatMap getVars
 
 instance Substitute (TypeAbs Kind) where
     apply s (TypeAbsT ks qt) = TypeAbsT ks (apply s qt)

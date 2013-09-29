@@ -28,10 +28,10 @@ instance ToJExpr (TypeAbs ()) where
         where
             ids = [(0 :: Integer) .. countIds typ]
             
-            body [] = mempty
-            body (arg : args) =
-                [jmacro| this[`(arg)`] = `(ValExpr . JVar . toIdent $ arg)`; |] 
-                    `mappend` body args
+            body = foldr (mappend . assign) mempty
+                where assign arg = [jmacro|
+                    this[`(arg)`] = `(ValExpr . JVar . toIdent $ arg)`; 
+                |]
 
             toIdent = StrI . ("$" ++) . show
 

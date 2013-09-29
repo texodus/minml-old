@@ -24,16 +24,13 @@ import Forml.Utils
 newtype Record a = Record (M.Map String a) deriving (Eq, Show, Ord)
 
 instance (Fmt a) => Fmt (Record a) where
-
-    fmt (Record m) =
-        "{" ++ showRec m ++ "}"
+    fmt (Record m) = "{" ++ showRec m ++ "}"
 
 instance Functor Record where
-
     fmap f (Record m) = Record (f `fmap` m)
 
 showRec :: (Fmt a) => M.Map String a -> String 
-showRec = concat . L.intersperse ", " . map showPair . M.toList
+showRec = L.intercalate ", " . map showPair . M.toList
 
 showPair :: Fmt a => (String, a) -> String
 showPair (a, b) = a ++ ": " ++ fmt b

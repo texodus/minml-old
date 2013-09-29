@@ -29,7 +29,7 @@ find i ((i' :>: sc) : as)
     | otherwise = find i as
 
 instance Substitute Ass where
-    apply s (i :>: sc) = i :>: (apply s sc)
+    apply s (i :>: sc) = i :>: apply s sc
     getVars (_ :>: sc) = getVars sc
 
 ------------------------------------------------------------------------------
