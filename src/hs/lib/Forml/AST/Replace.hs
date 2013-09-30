@@ -19,18 +19,10 @@ import Language.Javascript.JMacro
 --   some class specific notion in `b` can be replaced with `a`.
 
 class Replace a b where
-
-    repGen     :: (forall c d. (Replace c d) => String -> c -> d -> d) -> String -> a -> b -> b
-    replace    :: String -> a -> b -> b
-    replaceLet :: String -> a -> b -> b
-
-    replace    = repGen replace
-    replaceLet = repGen replaceLet
-    repGen     = undefined
+    replace :: String -> a -> b -> b
 
 instance (Functor f, Replace a b) => Replace a (f b) where
-    repGen g sym   = fmap . repGen g sym
-    replaceLet sym = fmap . replaceLet sym
+    replace sym = fmap . replace sym
 
 instance (JMacro a) => Replace JExpr a where
  

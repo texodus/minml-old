@@ -184,7 +184,7 @@ spec =
 
                 `if (a) { (b) } else { (c) }` = if a then b else c
                 `if (a) { (b) } else (c)`     = if a then b else c
-                `if (a); (b) else (c)`        = if a then b else c
+                `if (a); (b); (c)`        = if a then b else c
 
                 if True then if False { 1 } else 2 else 3
 
@@ -230,58 +230,83 @@ spec =
 
 
 
-            it "should compile & run scope introduction" $ [q|
-              
-                `bind (a) to (b) in (c)` =
-                    let a = b             
-                    c                     
-                                          
-                bind x to 12 in x + 1     
-
-            |] ===
-
-                "13\n"
+            describe "Let binding replacements" $ do
 
 
 
-            it "should compile & run scope introduction" $ [q|
-              
-                `bind (a) to (b) in (c)` =
-                    let a = b             
-                    c                     
-                                          
-                bind x to 12 in x + 1     
+                it "should compile & run scope introduction" $ [q|
+                  
+                    `bind (a) to (b) in (c)` =
+                        let a = b             
+                        c                     
+                                              
+                    bind x to 12 in x + 1     
 
-            |] ===
+                |] ===
 
-                "13\n"
-
-
-
-            it "should compile & run separators with a newline" $ [q|
-              
-                `bind (a) to (b); (c)` =
-                    let a = b             
-                    c                     
-                                          
-                bind x to 12
-                x + 1     
-
-            |] ===
-
-                "13\n"
+                    "13\n"
 
 
 
-            it "should compile & run separators with a semicolon" $ [q|
-              
-                `bind (a) to (b); (c)` =
-                    let a = b             
-                    c                     
-                                          
-                bind x to 12; x + 1     
+                it "should compile & run scope introduction" $ [q|
+                  
+                    `bind (a) to (b) in (c)` =
+                        let a = b             
+                        c                     
+                                              
+                    bind x to 12 in x + 1     
 
-            |] ===
+                |] ===
 
-                "13\n"
+                    "13\n"
 
+
+
+                it "should compile & run separators with a newline" $ [q|
+                  
+                    `bind (a) to (b); (c)` =
+                        let a = b             
+                        c                     
+                                              
+                    bind x to 12
+                    x + 1     
+
+                |] ===
+
+                    "13\n"
+
+
+
+                it "should compile & run separators with a semicolon" $ [q|
+                  
+                    `bind (a) to (b); (c)` =
+                        let a = b             
+                        c                     
+                                              
+                    bind x to 12; x + 1     
+
+                |] ===
+
+                    "13\n"
+
+
+
+                it "should compile & run recursive references bound to let replacements" $ [q|
+                  
+                    Cons: a -> List a -> List a         
+                    Nil: List a                         
+                                                        
+                    `check length (a) of (b)` =
+
+                        a n =                     
+                            match n with                    
+                                Nil = 0                     
+                                (Cons _ xs) = 1 + a xs 
+                                                            
+                        size b     
+
+                    check length size of (Cons 1 (Cons 2 Nil)) 
+
+                |] ===
+
+                    "2\n"

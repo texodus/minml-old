@@ -43,48 +43,79 @@ data Expr where
     deriving (Eq, Ord, Show)
 
 instance Replace String Expr where
-    repGen g sym   = repGen g sym . VarExpr . SymVal . Sym
-    replaceLet sym = replaceLet sym . VarExpr . SymVal . Sym
+    replace sym  = replace sym . ValPatt . SymVal . Sym
 
 instance Replace Expr Expr where
 
-    repGen _ f _  (LetExpr (Sym f') a b) | f == f' = 
+    replace f _  (LetExpr (Sym f') a b) | f == f' = 
         LetExpr (Sym f') a b
 
-    repGen g f ex (LetExpr f' a b) =
-        LetExpr f' (g f ex a) (g f ex b)
+    replace f ex (LetExpr f' a b) =
+        LetExpr f' (replace f ex a) (replace f ex b)
 
-    repGen g f ex (AppExpr a b) =
-        AppExpr (g f ex a) (g f ex b)
+    replace f ex (AppExpr a b) =
+        AppExpr (replace f ex a) (replace f ex b)
 
-    repGen _ f ex (VarExpr (SymVal (Sym f'))) | f == f' =
+    replace f ex (VarExpr (SymVal (Sym f'))) | f == f' =
         ex
 
-    repGen _ _ _  (VarExpr x) =
+    replace _ _ (VarExpr x) =
         VarExpr x
 
-    repGen g f ex (MatExpr e xs) =
-        MatExpr (g f ex e) (map (second (g f ex)) xs)
+    replace f ex (MatExpr e xs) =
+        MatExpr (replace f ex e) (map (second (replace f ex)) xs)
 
-    repGen g f ex (TypExpr a b e) =
-        TypExpr a b $ g f ex e
+    replace f ex (TypExpr a b e) =
+        TypExpr a b $ replace f ex e
 
-    repGen _ f _ (AbsExpr (Sym f') ex) | f == f' =
+    replace f _ (AbsExpr (Sym f') ex) | f == f' =
         AbsExpr (Sym f') ex
 
-    repGen g f x (AbsExpr y z) =
-        AbsExpr y (repGen g f x z)
+    replace f x (AbsExpr y z) =
+        AbsExpr y (replace f x z)
 
-    repGen _ _ _ (RecExpr _)   = undefined
-    repGen _ _ _ (JSExpr _)    = undefined
+    replace _ _ (RecExpr _) = undefined
+    replace _ _ (JSExpr _) = undefined
 
-    replaceLet f t @ (VarExpr (SymVal f'')) (LetExpr (Sym f') a b) | f == f' =
-        LetExpr f'' (replaceLet f t a) (replaceLet f t b)
 
-    replaceLet f t @ (VarExpr (SymVal f'')) (AbsExpr (Sym f') ex) | f == f' =
-        AbsExpr f'' (replaceLet f t ex)
+instance Replace Patt Expr where
 
-    replaceLet f g h = repGen replaceLet f g h
+    replace f t @ (ValPatt (SymVal f'')) (LetExpr (Sym f') a b) | f == f' =
+        LetExpr f'' (replace f t . replace f (VarExpr (SymVal f'')) $ a) 
+                    (replace f t . replace f (VarExpr (SymVal f'')) $ b)
+
+    replace f t @ (ValPatt (SymVal f'')) (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr f'' (replace f t . replace f (VarExpr (SymVal f'')) $ ex)
+
+    replace f _  (LetExpr (Sym f') a b) | f == f' = 
+        LetExpr (Sym f') a b
+
+    replace f ex (LetExpr f' a b) =
+        LetExpr f' (replace f ex a) (replace f ex b)
+
+    replace f ex (AppExpr a b) =
+        AppExpr (replace f ex a) (replace f ex b)
+
+    replace f (ValPatt (SymVal f'')) (VarExpr (SymVal (Sym f'))) | f == f' =
+        VarExpr (SymVal f'')
+
+    replace _ _  (VarExpr x) =
+        VarExpr x
+
+    replace f ex (MatExpr e xs) =
+        MatExpr (replace f ex e) (map (second (replace f ex)) xs)
+
+    replace f ex (TypExpr a b e) =
+        TypExpr a b $ replace f ex e
+
+    replace f _ (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr (Sym f') ex
+
+    replace f x (AbsExpr y z) =
+        AbsExpr y (replace f x z)
+
+    replace _ _ (RecExpr _) = undefined
+    replace _ _ (JSExpr _) = undefined
 
 instance Fmt Expr where
 

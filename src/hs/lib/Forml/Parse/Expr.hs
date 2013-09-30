@@ -68,7 +68,9 @@ macroP = use macros >>= tryChild
         tryChild (Macro (Arg a ex : _)) = do
             arg  <- exprP
             rest <- tryChild ex
-            return (replaceLet a arg rest)
+            case arg of
+                (VarExpr (SymVal f)) -> return (replace a (ValPatt (SymVal f)) rest)
+                arg -> return (replace a arg rest)
 
         tryChild (Macro (Sep ex : _)) =
             withSep (tryChild ex)

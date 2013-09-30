@@ -40,6 +40,6 @@ notationP =
 
         toArg sym = 
             let escSym = '*' : sym
-            in Arg escSym . toMac . replaceLet sym escSym
+            in Arg escSym . toMac . replace sym escSym
 
 ------------------------------------------------------------------------------

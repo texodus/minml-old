@@ -18,7 +18,6 @@ module Forml.Parse (
 
 import Control.Applicative
 import Control.Arrow
-import Data.Monoid
 import Text.Parsec hiding ((<|>), many)
 import Text.Parsec.Pos
 
@@ -31,7 +30,21 @@ import Forml.Parse.Indent
 
 parseForml :: String -> Either Err Expr
 parseForml =
-    left (Err . show) . runParser grammar (MacroState (initialPos "") mempty) "Parsing Forml"
+    left (Err . show) . runParser grammar (MacroState (initialPos "") defNotes) "Parsing Forml"
+
+defNotes :: Macro Expr
+defNotes = Macro [
+        --parseNote "let (a) = (b); (c)" (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c"))))
+        --parseNote "let (a) (b) = (c) "  
+        --parseNote "fun (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
+        --parseNote "fun (x) = (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
+        --parseNote "\\ (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
+        --parseNote "\\ (x) = (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+    ]
+    --where
+    --    parseNote a = case runParser notationP (MacroState (initialPos "") mempty) "" a of
+    --        Left x -> error . show $ x
+    --        Right x -> x
 
 grammar :: Parser Expr Expr
 grammar = spaces *> withScope exprP <* eof
