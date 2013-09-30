@@ -25,7 +25,7 @@ assertNode a b = do
 assertParse :: String -> Either Err Expr -> Assertion
 assertParse a b = assertEqual "" b (parseForml a)
 
-class Assert a b | a -> b where
+class Assert a b | b -> a, a -> b where
 
     (===) :: String -> a -> Assertion
     (=!=) :: String -> b -> Assertion
@@ -167,9 +167,30 @@ spec =
                 do bind True to False          
                    in 4                        
 
-            \] =!=
+            |] =!=
 
                 "Unbound identifier: bind"
+
+
+
+            it "should compile & run a complicated nested macro" $ [q|
+
+                True:  Bool
+                False: Bool
+
+                `if (a) then (b) else (c)` = match a with
+                    True  = b
+                    False = c
+
+                `if (a) { (b) } else { (c) }` = if a then b else c
+                `if (a) { (b) } else (c)`     = if a then b else c
+                `if (a); (b) else (c)`        = if a then b else c
+
+                if True then if False { 1 } else 2 else 3
+
+            |] ===
+
+                "2\n"
 
 
 
@@ -223,5 +244,44 @@ spec =
 
 
 
+            it "should compile & run scope introduction" $ [q|
+              
+                `bind (a) to (b) in (c)` =
+                    let a = b             
+                    c                     
+                                          
+                bind x to 12 in x + 1     
 
-  
+            |] ===
+
+                "13\n"
+
+
+
+            it "should compile & run separators with a newline" $ [q|
+              
+                `bind (a) to (b); (c)` =
+                    let a = b             
+                    c                     
+                                          
+                bind x to 12
+                x + 1     
+
+            |] ===
+
+                "13\n"
+
+
+
+            it "should compile & run separators with a semicolon" $ [q|
+              
+                `bind (a) to (b); (c)` =
+                    let a = b             
+                    c                     
+                                          
+                bind x to 12; x + 1     
+
+            |] ===
+
+                "13\n"
+

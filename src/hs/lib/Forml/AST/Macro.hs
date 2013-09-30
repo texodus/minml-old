@@ -19,12 +19,13 @@ import Data.Monoid
 
 -- | A single child node on an n-tree
 
-data MacroCell a = Token String (Macro a) | Arg String (Macro a) | Leaf a
+data MacroCell a = Token String (Macro a) | Arg String (Macro a) | Sep (Macro a) | Leaf a
     deriving (Eq, Ord, Show)
 
 instance Functor MacroCell where
     fmap f (Token x m) = Token x (fmap f m)
     fmap f (Arg x m)   = Arg x (fmap f m)
+    fmap f (Sep x)     = Sep (fmap f x)
     fmap f (Leaf x)    = Leaf (f x)
 
 
@@ -52,10 +53,13 @@ instance Monoid (Macro a) where
 
 insert :: MacroCell a -> [MacroCell a] -> [MacroCell a]      
 insert (Token x xs) (Token y ys : zs) | x == y = 
-    Token x (mappend xs ys) : zs
+    Token x (xs <> ys) : zs
 
 insert (Arg x xs) (Arg y ys : zs) | x == y =
-    Arg x (mappend xs ys) : zs
+    Arg x (xs <> ys) : zs
+
+insert (Sep xs) (Sep ys : zs) =
+    Sep (xs <> ys) : zs
 
 insert (Arg x _) (Arg y _ : _) = error $
     "Arg naming conflict: (" ++ x ++ ") and (" ++ y ++ ")"

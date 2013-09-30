@@ -9,6 +9,7 @@ module Forml.Parse.Notation (
 ) where
 
 import Control.Applicative
+
 import Forml.AST
 import Forml.AST.Replace
 import Forml.Parse.Token
@@ -21,15 +22,17 @@ import qualified Forml.Parse.MacroToken as M
 
 notationP :: Parser Expr (Expr -> MacroCell Expr)
 notationP = 
-    term <|> capture <|> lastTerm
+    term <|> capture <|> sep <|> lastTerm
     where
         term = do
-            f <- M.identifier <|> M.operator <|> M.semi
+            f <- M.identifier <|> M.operator
             ((Token f . toMac) .) <$> notationP
         
         capture = do
             sym <- M.parens M.identifier
             (toArg sym .) <$> notationP
+
+        sep = semi >> ((Sep . toMac) .) <$> notationP
 
         lastTerm = return Leaf
 

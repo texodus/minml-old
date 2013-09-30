@@ -43,7 +43,7 @@ data Expr where
     deriving (Eq, Ord, Show)
 
 instance Replace String Expr where
-    repGen g sym  = repGen g sym . VarExpr . SymVal . Sym
+    repGen g sym   = repGen g sym . VarExpr . SymVal . Sym
     replaceLet sym = replaceLet sym . VarExpr . SymVal . Sym
 
 instance Replace Expr Expr where
@@ -69,13 +69,20 @@ instance Replace Expr Expr where
     repGen g f ex (TypExpr a b e) =
         TypExpr a b $ g f ex e
 
-    repGen _ f _ (AbsExpr (Sym f') _) | f == f' = undefined
-    repGen _ _ _ (AbsExpr _ _) = undefined
+    repGen _ f _ (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr (Sym f') ex
+
+    repGen g f x (AbsExpr y z) =
+        AbsExpr y (repGen g f x z)
+
     repGen _ _ _ (RecExpr _)   = undefined
     repGen _ _ _ (JSExpr _)    = undefined
 
     replaceLet f t @ (VarExpr (SymVal f'')) (LetExpr (Sym f') a b) | f == f' =
         LetExpr f'' (replaceLet f t a) (replaceLet f t b)
+
+    replaceLet f t @ (VarExpr (SymVal f'')) (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr f'' (replaceLet f t ex)
 
     replaceLet f g h = repGen replaceLet f g h
 

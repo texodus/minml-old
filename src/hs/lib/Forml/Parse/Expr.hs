@@ -70,6 +70,9 @@ macroP = use macros >>= tryChild
             rest <- tryChild ex
             return (replaceLet a arg rest)
 
+        tryChild (Macro (Sep ex : _)) =
+            withSep (tryChild ex)
+
         tryChild (Macro (Leaf x : _)) = return x
         tryChild (Macro []) = parserZero
 
