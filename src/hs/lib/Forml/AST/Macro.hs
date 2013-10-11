@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE GADTs #-}
 
 module Forml.AST.Macro(
     Macro(..), 
@@ -19,12 +20,21 @@ import Data.Monoid
 
 -- | A single child node on an n-tree
 
-data MacroCell a = Token String (Macro a) | Arg String (Macro a) | Sep (Macro a) | Leaf a
+data MacroCell a where 
+    Token :: String -> Macro a -> MacroCell a
+    Arg   :: String -> Macro a -> MacroCell a
+    Let   :: String -> Macro a -> MacroCell a
+    Pat   :: String -> Macro a -> MacroCell a
+    Sep   :: Macro a -> MacroCell a
+    Leaf  :: a -> MacroCell a
+
     deriving (Eq, Ord, Show)
 
 instance Functor MacroCell where
     fmap f (Token x m) = Token x (fmap f m)
     fmap f (Arg x m)   = Arg x (fmap f m)
+    fmap f (Let x m)   = Let x (fmap f m)
+    fmap f (Pat x m)   = Pat x (fmap f m)
     fmap f (Sep x)     = Sep (fmap f x)
     fmap f (Leaf x)    = Leaf (f x)
 
@@ -53,16 +63,28 @@ instance Monoid (Macro a) where
 
 insert :: MacroCell a -> [MacroCell a] -> [MacroCell a]      
 insert (Token x xs) (Token y ys : zs) | x == y = 
-    Token x (xs <> ys) : zs
+    Token x (ys <> xs) : zs
 
 insert (Arg x xs) (Arg y ys : zs) | x == y =
-    Arg x (xs <> ys) : zs
+    Arg x (ys <> xs) : zs
+
+insert (Pat x xs) (Pat y ys : zs) | x == y =
+    Pat x (ys <> xs) : zs
+
+insert (Let x xs) (Let y ys : zs) | x == y =
+    Let x (ys <> xs) : zs
 
 insert (Sep xs) (Sep ys : zs) =
-    Sep (xs <> ys) : zs
+    Sep (ys <> xs) : zs
 
 insert (Arg x _) (Arg y _ : _) = error $
     "Arg naming conflict: (" ++ x ++ ") and (" ++ y ++ ")"
+
+insert (Let x _) (Let y _ : _) = error $
+    "Let naming conflict: (" ++ x ++ ") and (" ++ y ++ ")"
+
+insert (Pat x _) (Pat y _ : _) = error $
+    "Pat naming conflict: (" ++ x ++ ") and (" ++ y ++ ")"
 
 insert (Leaf _) (Leaf _ : _) = error
     "Notation duplicate"

@@ -5,6 +5,7 @@ import Test.HUnit
 
 import Forml.AST
 import Forml.Exec
+import Forml.Parse
 
 import Utils
 
@@ -45,7 +46,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"let\", identifier, Javascript, Record Expression, Abstraction, Match Expression, Type Kind Expression or Application")
 
             it "should compile & run anonymous functions and application" $ assertNode
 
@@ -156,7 +157,7 @@ spec = do
 
             describe "let and function binding" $ do
 
-                it "should fail to compile & run" $ assertNode
+                it "should compile & run" $ assertNode
 
                     "   let fib n =                             \n\
                     \       match n with                        \n\
@@ -213,4 +214,6 @@ spec = do
                     \       _ = 0                   \n"
 
                     (Right "3\n")
+
+
 

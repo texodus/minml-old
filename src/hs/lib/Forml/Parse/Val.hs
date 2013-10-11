@@ -37,6 +37,7 @@ symP = try $ do
 getReserved :: Macro a -> [String]
 getReserved (Macro (Token x zs : ys)) = [x] ++ getReserved (Macro ys) ++ getReserved zs
 getReserved (Macro (Arg _ zs : xs)) = getReserved (Macro xs) ++ getReserved zs
+getReserved (Macro (Let _ zs : xs)) = getReserved (Macro xs) ++ getReserved zs
 getReserved _ = []
 
 -- | Val parser

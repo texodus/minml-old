@@ -70,8 +70,7 @@ condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
 condSep f cond name = do
     oldPos <- use sourcePos
     pos    <- getPosition
-    if f pos `cond` f oldPos
-        then return ()
-        else parserFail $ "Statement " ++ name ++ " (introduced at " ++ show oldPos ++ ")"
+    unless (f pos `cond` f oldPos) $
+        parserFail $ "Statement " ++ name ++ " (introduced at " ++ show oldPos ++ ")"
 
 ------------------------------------------------------------------------------

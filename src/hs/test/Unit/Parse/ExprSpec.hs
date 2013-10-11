@@ -50,7 +50,7 @@ spec =
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", Javascript, Record Expression, Abstraction, Match Expression, Let Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"let\", identifier, Javascript, Record Expression, Abstraction, Match Expression, Type Kind Expression or Application")
 
             it "should parse anonymous functions and application" $ assertParse
 
@@ -85,7 +85,7 @@ spec =
                 \       n -> fib (n - 1) + fib (n - 2);     \
                 \   fib 7                                   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 223):\nunexpected \"7\"\nexpecting \"->\" or \"=\"")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 223):\nunexpected \"7\"\nexpecting \"->\", \"=\" or Application")
 
             it "should parse match expressions with type errors" $ assertParse
 
@@ -323,7 +323,7 @@ spec =
                     \                                          \n\
                     \   length (Cons 1 (Cons 2 Nil))           \n"
 
-                    $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "_match") (MatExpr (VarExpr (SymVal (Sym "_match"))) [(ValPatt (SymVal (Sym "n")),MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
+                    $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (LetExpr (Sym "length") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])) (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
 
             describe "Records" $
 

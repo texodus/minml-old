@@ -296,17 +296,21 @@ spec =
                     Cons: a -> List a -> List a         
                     Nil: List a                         
                                                         
-                    `check length (a) of (b)` =
+                    `check prop (a) of (b)` =
 
                         a n =                     
                             match n with                    
                                 Nil = 0                     
                                 (Cons _ xs) = 1 + a xs 
                                                             
-                        size b     
+                        a b     
 
-                    check length size of (Cons 1 (Cons 2 Nil)) 
+                    check prop size of (Cons 1 (Cons 2 Nil)) 
 
                 |] ===
 
                     "2\n"
+
+
+
+ 

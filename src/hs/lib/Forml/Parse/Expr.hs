@@ -39,12 +39,12 @@ exprP :: Parser Expr Expr
 exprP =
 
     letMacroP
-        <|> macroP
+        <|> try macroP
         <|> jsExprP
         <|> recExprP
         <|> absExprP absExpr
         <|> matExprP
-        <|> try letExprP
+        -- <|> try letExprP
         <|> try typExprP
         <|> appExprP
 
@@ -62,18 +62,28 @@ macroP :: Parser Expr Expr
 macroP = use macros >>= tryChild
 
     where
+        -- tryChild (Macro (Token "=" ex : exs)) =
+        --    try (reservedOp "=" >> withCont (tryChild ex)) <|> tryChild (Macro exs)
+
         tryChild (Macro (Token x ex : exs)) =
-            (reserved x >> tryChild ex) <|> tryChild (Macro exs)
+            try (reserved x >> spaces >> indented >> tryChild ex) <|> tryChild (Macro exs)
 
-        tryChild (Macro (Arg a ex : _)) = do
-            arg  <- exprP
+        tryChild (Macro (Let a ex : exs)) = try (do
+            arg  <- symP
+            --spaces
+            --indented
             rest <- tryChild ex
-            case arg of
-                (VarExpr (SymVal f)) -> return (replace a (ValPatt (SymVal f)) rest)
-                arg -> return (replace a arg rest)
+            return (replace a arg rest)) <|> tryChild (Macro exs)
 
-        tryChild (Macro (Sep ex : _)) =
-            withSep (tryChild ex)
+        tryChild (Macro (Arg a ex : exs)) = try (do
+            arg  <- exprP
+            --spaces
+            --indented
+            rest <- tryChild ex
+            return (replace a arg rest)) <|> tryChild (Macro exs)
+
+        tryChild (Macro (Sep ex : exs)) =
+            withSep (tryChild ex) <|> tryChild (Macro exs)
 
         tryChild (Macro (Leaf x : _)) = return x
         tryChild (Macro []) = parserZero
@@ -161,7 +171,7 @@ appExprP = buildExpressionParser opPs termP <?> "Application"
                 <<< reservedOp
                 &&& return . optr
 
-        ap = spaces >> indented >> return AppExpr
+        ap = indented >> return AppExpr
         valExprP = VarExpr <$> valP <?> "Value"
         termP = valExprP <|> matExprP <|> macroP <|> parens exprP
         opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym

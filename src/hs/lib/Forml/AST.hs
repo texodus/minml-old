@@ -35,7 +35,7 @@ import Forml.Utils
 -- | built-in keywords; TODO extract these to custom notations
 
 keywords :: [String]
-keywords = [ "let", "fun", "match", "with", "data" ]
+keywords = [ "fun", "match", "with", "data" ]
 
 -- | built-in operators.  Arranged in precedence order for parsing via
 --   `buildExpressionParser`
