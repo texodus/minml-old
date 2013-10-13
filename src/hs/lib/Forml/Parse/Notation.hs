@@ -27,7 +27,7 @@ notationP =
     term <|> capture <|> sep <|> lastTerm
     where
         term = do
-            f <- M.identifier <|> M.operator
+            f <- M.identifier <|> M.operator <|> (M.reserved "λ" >> return "λ")
             ((Token f . toMac) .) <$> notationP
         
         capture = do

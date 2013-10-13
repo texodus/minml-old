@@ -173,10 +173,10 @@ spec = do
                     "   data Cons: a -> List a -> List a         \n\
                     \   data Nil: List a                         \n\
                     \                                            \n\
-                    \   let length n =                           \n\
+                    \   let length n =                          \n\
                     \       match n with                         \n\
-                    \           Nil = 0                          \n\
-                    \           (Cons _ xs) = 1 + length xs      \n\
+                    \           Nil -> 0                          \n\
+                    \           (Cons _ xs) -> 1 + length xs      \n\
                     \                                            \n\
                     \   length (Cons 1 (Cons 2 Nil))             \n"
 
@@ -184,13 +184,13 @@ spec = do
 
             describe "let and function binding and implicit match" $ do
 
-                it "should compile & run basic unboxing" $ assertNode
+                it "should compile & run basic unboxing" $ pending
 
-                    "   data Just: a -> Maybe a     \n\
-                    \   unbox (Just x) = x          \n\
-                    \   unbox (Just 5)              \n"
+                    -- "   data Just: a -> Maybe a     \n\
+                    -- \   unbox (Just x) = x          \n\
+                    -- \   unbox (Just 5)              \n"
 
-                    (Right "5\n")
+                    -- (Right "5\n")
 
             describe "Antiquotes" $ do
 

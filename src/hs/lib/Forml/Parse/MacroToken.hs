@@ -25,7 +25,7 @@ import qualified Forml.Parse.Token as FT
 ------------------------------------------------------------------------------
 
 letterP = 
-    lowerP <|> oneOf "ABSDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
+    lowerP <|> oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
 
 lowerP = 
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"

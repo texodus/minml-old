@@ -33,7 +33,7 @@ import Forml.AST
 ------------------------------------------------------------------------------
 
 letterP = 
-    lowerP <|> oneOf "ABSDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
+    lowerP <|> oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
 
 lowerP = 
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"

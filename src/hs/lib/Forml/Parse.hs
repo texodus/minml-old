@@ -35,21 +35,27 @@ parseForml =
     left (Err . show) . runParser grammar (MacroState (initialPos "") defNotes) "Parsing Forml"
 
 defNotes :: Macro Expr
-defNotes = Macro [
-        parseNote "let (a) = (b); (c)" (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c"))))
-        , parseNote "let (a) (b) = (c); (d)" (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
+defNotes = Macro . foldl1 mappend $ 
+
+        -- Let
+        --[ parseNote "fun (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        --, parseNote "fun (x) = (y)"  (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        --, parseNote "λ (x) -> (y)"   (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        --, parseNote "λ (x) = (y)"    (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        --, parseNote "\\ (x) -> (y)"  (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        --, parseNote "\\ (x) = (y)"   (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+
+    [ parseNote "let (a) = (b); (c)"     (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c"))))
+    , parseNote "let (a) (b) = (c); (d)" (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
+    , parseNote "(a) = (b); (c)"         (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c")))) 
+    , parseNote "(a) (b) = (c); (d)"     (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
         
-        , parseNote "(a) = (b); (c)" (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c")))) 
-        , parseNote "(a) (b) = (c); (d)" (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
-        --parseNote "fun (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
-        --parseNote "fun (x) = (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
-        --parseNote "\\ (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y")))),
-        --parseNote "\\ (x) = (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+        -- Fun
     ]
     where
         parseNote a = case runParser notationP (MacroState (initialPos "") mempty) "" a of
             Left x -> error . show $ x
-            Right x -> x
+            Right x -> (:[]) . x
 
 grammar :: Parser Expr Expr
 grammar = spaces *> withScope exprP <* eof
