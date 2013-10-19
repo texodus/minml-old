@@ -22,84 +22,96 @@ import qualified Forml.Parse.MacroToken as M
 -- | Parses a notation string.  This returns a `MacroCell Expr` constructor,
 --   once the body of the notation block has been parsed.
 
-notationP :: Parser Expr (Expr -> MacroCell Expr)
+notationP :: Parser Expr (Expr -> Macro Expr)
 notationP = 
     term <|> capture <|> sep <|> lastTerm
     where
         term = do
             f <- M.identifier <|> M.operator <|> (M.reserved "λ" >> return "λ")
-            ((Token f . toMac) .) <$> notationP
+            (toMac (Token f) .) <$> notationP
         
         capture = do
             sym <- M.parens M.identifier
             (toArg sym .) <$> notationP
 
-        sep = semi >> ((Sep . toMac) .) <$> notationP
+        sep = semi >> (toMac Sep .) <$> notationP
 
-        lastTerm = return Leaf
+        lastTerm = return MacroLeaf
 
-        toMac = Macro . (:[])
+        toMac :: MacroCell -> Macro Expr -> Macro Expr
+        toMac cell = MacroTerm cell . MacroList . (:[])
 
-        toArg :: String -> MacroCell Expr -> MacroCell Expr
+        toArg :: String -> Macro Expr -> Macro Expr
         toArg sym expr = 
-            con' (fromCell expr) . toMac . replace sym escSym $ expr
+            toMac (con' (fromCell expr)) . replace sym escSym $ expr
             where
-                escSym = "*" ++ sym
+                escSym = '*' : sym
 
-                fromCell (Arg _ (Macro [x])) = fromCell x
-                fromCell (Pat _ (Macro [x])) = fromCell x
-                fromCell (Let _ (Macro [x])) = fromCell x
-                fromCell (Sep (Macro [x]))   = fromCell x
-                fromCell (Token _ (Macro [x])) = fromCell x
-                fromCell (Leaf x) = x
-                fromCell _ = undefined
+                fromCell :: Macro Expr -> Expr
+                fromCell (MacroTerm _ (MacroList [x])) = fromCell x
+                fromCell (MacroLeaf x) = x
 
-                con' as ms = fromMaybe (Arg escSym ms) (con as ms)
+                con' :: Expr -> MacroCell
+                con' as = fromMaybe (Arg escSym) (con as)
 
-                equate as ms | S.size (S.fromList (catMaybes (flip con ms `fmap` as))) < 2 = con (head as) ms
-                equate as _ = error (show as++" possible derivations for "++show sym)
+                equate as | types as < 2 =
+                    head (fmap con as)
 
-                equate2 ps as ms | S.size 
-                    (S.fromList (catMaybes (flip con ms `fmap` as)) 
-                        `S.union` S.fromList (catMaybes (flip patt ms `fmap` ps))) < 2 =
+                equate as =
+                    error (show as++" possible derivations for "++show sym)
 
-                    con (head as) ms
+                types :: [Expr] -> Int
+                types = S.size . S.fromList . catMaybes . fmap con
 
-                equate2 ps as _ = error (show as++" possible derivations for "++show sym)
+                equate2 ps as | S.size 
+                    (S.fromList (catMaybes (con `fmap` as)) 
+                        `S.union` S.fromList (catMaybes (patt `fmap` ps))) < 2 =
 
-                patt (ValPatt (SymVal (Sym f))) ms | f == sym = Just (Pat escSym ms)
+                    con (head as)
 
-                patt _ _ = Nothing
+                equate2 _ as = error (show as++" possible derivations for "++show sym)
 
-                con (LetExpr (Sym f) a b) ms 
+                patt (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat escSym)
+
+                patt _ = Nothing
+
+                con :: Expr -> Maybe MacroCell
+                con (LetExpr (Sym f) a b) 
                     | f == sym && (
-                        isNothing (equate [a, b] ms) ||
-                        equate [a, b] ms == Just (Arg escSym ms)) = 
+                        isNothing (equate [a, b]) ||
+                        equate [a, b] == Just (Arg escSym)) = 
 
-                    Just (Let escSym ms)
+                        Just (Let escSym)
 
-                con (LetExpr f a b) ms = equate [a, b] ms
+                   -- | f /= sym && (
+                   --     isJust (con a) ||
+                   --     equate [a, b] == Just (Arg escSym)) = 
 
-                con (AppExpr a b) ms = equate [a, b] ms
+                   --     Just (Let escSym)
 
-                con (VarExpr (SymVal (Sym f))) ms | f == sym = Just (Arg escSym ms)
-                con (VarExpr _) ms = Nothing
+                con (LetExpr _ a b) = equate [a, b]
 
-                con (MatExpr e xs) ms = equate2 (map fst xs) (e : map snd xs) ms
+                con (AppExpr a b) = equate [a, b]
 
-                con (TypExpr a b e) ms = con e ms
+                con (VarExpr (SymVal (Sym f))) | f == sym = Just (Arg escSym)
+                con (VarExpr _) = Nothing
 
-                con (AbsExpr (Sym f) ex) ms
-                   | f == sym && (
-                        isNothing (con ex ms) ||
-                        con ex ms == Just (Arg escSym ms)) = 
+                con (MatExpr e xs) = equate2 (map fst xs) (e : map snd xs)
 
-                    Just (Let escSym ms)
+                con (TypExpr a b e) = con e
 
-                con (AbsExpr (Sym f) z) ms | f == sym = error "Fail"
+                con (AbsExpr (Sym f) ex)
+                    | f == sym && (
+                        isNothing (con ex) ||
+                        con ex == Just (Arg escSym)) = 
 
-                con (AbsExpr _ z) ms = con z ms
+                    Just (Let escSym)
+
+                con (AbsExpr (Sym f) z) | f == sym = error "Fail"
+
+                con (AbsExpr _ z) = con z
 
                 --replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
-                con (JSExpr _) ms  = Nothing
+                con (JSExpr _)  = Nothing
+                
 ------------------------------------------------------------------------------

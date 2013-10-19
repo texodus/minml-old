@@ -34,13 +34,23 @@ instance HasKind (TypeVar Kind) where
 instance HasKind (TypeSym Kind) where
     kind (TypeSymT k _) = k
 
+-- | Constructs a well kinded type.
+
 toKind :: Kind -> Type () -> Type Kind
-toKind k (TypeSym (TypeSymP n)) = TypeSym (TypeSymT k n)
-toKind k (TypeVar (TypeVarP n)) = TypeVar (TypeVarT k n)
+
+toKind k (TypeSym (TypeSymP n)) =
+    TypeSym (TypeSymT k n)
+
+toKind k (TypeVar (TypeVarP n)) =
+    TypeVar (TypeVarT k n)
+
 toKind k (TypeApp f x) =
     TypeApp (toKind (Kfun Star k) f) (toKind Star x)
 
-toKind Star (TypeRec r) = TypeRec (toKind Star `fmap` r)
-toKind k (TypeRec r) = error $ "FATAL: Cannot construct " ++ fmt r ++ " of kind " ++ fmt k
+toKind Star (TypeRec r) =
+    TypeRec (toKind Star `fmap` r)
+
+toKind k (TypeRec r) = error $
+    "FATAL: Cannot construct " ++ fmt r ++ " of kind " ++ fmt k
 
 ------------------------------------------------------------------------------

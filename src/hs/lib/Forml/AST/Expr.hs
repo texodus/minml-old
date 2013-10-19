@@ -14,7 +14,6 @@ module Forml.AST.Expr (
 ) where
 
 import Control.Arrow
-import qualified Data.Map as M
 import Language.Javascript.JMacro
 import Text.PrettyPrint.Leijen.Text
 
@@ -31,7 +30,7 @@ import Forml.Utils
 --   function literal (function abstraction)
 
 data Expr where
-    LetExpr :: Sym -> Expr -> Expr -> Expr
+    LetExpr :: Sym  -> Expr -> Expr -> Expr
     AppExpr :: Expr -> Expr -> Expr
     AbsExpr :: Sym  -> Expr -> Expr
     VarExpr :: Val  -> Expr
@@ -44,7 +43,7 @@ data Expr where
     deriving (Eq, Ord, Show)
 
 instance Replace String Expr where
-    replace sym  = replace sym . ValPatt . SymVal . Sym
+    replace sym = replace sym . ValPatt . SymVal . Sym 
 
 instance Replace Expr Expr where
 
@@ -79,10 +78,10 @@ instance Replace Expr Expr where
 
 instance Replace Sym Expr where
 
-    replace f x t @ (LetExpr (Sym f') a b) | f == f' =
+    replace f x (LetExpr (Sym f') a b) | f == f' =
         LetExpr x (replace f (VarExpr (SymVal x)) a) (replace f (VarExpr (SymVal x)) b)
 
-    replace f ex t @ (LetExpr f' a b) =
+    replace f ex (LetExpr f' a b) =
         LetExpr f' (replace f ex a) (replace f ex b)
 
     replace f ex (AppExpr a b) =

@@ -31,7 +31,11 @@
 {-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE GADTs              #-}
 
-module Forml.TypeCheck.Generalize where
+module Forml.TypeCheck.Generalize(
+    generalize,
+    freshInst,
+    quantify
+) where
 
 import           Control.Applicative
 import           Control.Monad.State
@@ -52,6 +56,8 @@ quantify vars typ = TypeAbsT kinds (apply subs typ)
         kinds = map kind qVars
         subs  = zip qVars (map TypeGen [ 0 .. ])
 
+-- | Creates a TypeAbs from a Type
+
 generalize :: [Ass] -> Type Kind -> TypeCheck (TypeAbs Kind)
 generalize as valT = do
 
@@ -60,6 +66,8 @@ generalize as valT = do
 
     where
         getS x = (getVars .) . apply $ x
+
+-- | Creates a new instance of a Type from a TypeAbs
 
 freshInst :: TypeAbs Kind -> TypeCheck (Type Kind)
 freshInst (TypeAbsT ks qt) = do
@@ -72,4 +80,4 @@ freshInst (TypeAbsT ks qt) = do
         inst ts (TypeGen n) = ts !! n
         inst _ t = t
 
-------------------------------------------------------------------------------`
+------------------------------------------------------------------------------

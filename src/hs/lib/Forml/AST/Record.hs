@@ -4,6 +4,7 @@
 
 ------------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveFunctor    #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -22,13 +23,12 @@ import Forml.Utils
 -- | A record is simply a map of key / a pairs.  Used for both
 --   record tpes and record expressions
 
-newtype Record a = Record (M.Map String a) deriving (Eq, Show, Ord)
+newtype Record a =
+    Record (M.Map String a) 
+    deriving (Eq, Functor, Show, Ord)
 
 instance (Fmt a) => Fmt (Record a) where
     fmt (Record m) = "{" ++ showRec m ++ "}"
-
-instance Functor Record where
-    fmap f (Record m) = Record (f `fmap` m)
 
 showRec :: (Fmt a) => M.Map String a -> String 
 showRec = L.intercalate ", " . map showPair . M.toList

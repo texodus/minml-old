@@ -44,7 +44,6 @@ exprP =
         <|> recExprP
         <|> absExprP absExpr
         <|> matExprP
-      --  <|> try letExprP
         <|> try typExprP
         <|> appExprP
 
@@ -55,40 +54,36 @@ letMacroP = do
     reservedOp "`" 
     reservedOp "="
     ms  <- def <$> withCont exprP
-    macros %= mappend (Macro [ms])
+    macros %= flip mappend (MacroList [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
-macroP = use macros >>= tryChild
-
+macroP = use macros >>= merge
     where
-        --tryChild (Macro (Token "λ" ex : exs)) =
-        --    (reserved "λ" >> tryChild ex) <|> tryChild (Macro exs)
+        merge (MacroList ms) = foldl (<|>) parserZero (fmap tryChild ms)
 
-        --tryChild (Macro (Token "\\" ex : exs)) =
-        --    (reservedOp "\\" >> tryChild ex) <|> tryChild (Macro exs)
+        tryChild :: Macro Expr -> Parser Expr Expr
 
-        tryChild (Macro (Token x ex : exs)) =
-            (reserved x >> tryChild ex) <|> tryChild (Macro exs)
+        --tryChild (MacroTerm (Token "λ") exs) =
+        --    reservedOp "λ" >> merge exs
 
-        tryChild (Macro (Let a ex : exs)) = try (do
-            arg  <- symP
-            rest <- tryChild ex
-            return (replace a arg rest)) <|> tryChild (Macro exs)
+        --tryChild (MacroTerm (Token "\\") exs) =
+        --    reservedOp "\\" >> merge exs
 
-        tryChild (Macro (Arg a ex : exs)) = try (do
-            arg  <- exprP
-            rest <- tryChild ex
-            return (replace a arg rest)) <|> tryChild (Macro exs)
+        tryChild (MacroTerm (Token x) exs) =
+            reserved x >> merge exs
 
-        tryChild (Macro (Sep ex : exs)) =
-            withSep (tryChild ex) <|> tryChild (Macro exs)
+        tryChild (MacroTerm (Let a) exs) =
+            try (replace a <$> symP <*> merge exs) 
 
-        tryChild (Macro (Leaf x : _)) =
+        tryChild (MacroTerm (Arg a) exs) =
+            try (replace a <$> exprP <*> merge exs) 
+
+        tryChild (MacroTerm Sep exs) =
+            withSep (merge exs)
+
+        tryChild (MacroLeaf x) =
             return x
-
-        tryChild (Macro []) =
-            parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -129,19 +124,6 @@ caseP = (,) <$> pattP <* toOp <*> exprP
 
 toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
-
---letExprP :: Parser Expr Expr
---letExprP =
---    pure LetExpr
---        <*  optional (reserved "let")
---        <*> symP
---        <*> (valLetP <|> absExprP (return ()))
---        <*> withSep exprP
---        <?> "Let Expression"
- 
---valLetP :: Parser Expr Expr
---valLetP =
---    reservedOp "=" >> withCont exprP
 
 recExprP :: Parser Expr Expr
 recExprP =
