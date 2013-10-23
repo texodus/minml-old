@@ -43,6 +43,7 @@ getReserved (MacroList (_ : ys)) = getReserved (MacroList ys)
 
 getReserved (MacroList []) = []
 
+getReserved' :: MacroCell -> [String]
 getReserved' (Token x) = [x]
 getReserved' _ = []
 

@@ -16,7 +16,9 @@ module Forml.AST.Macro(
     MacroList(..)
 ) where
 
+import Control.Monad
 import Data.Monoid
+import Data.Maybe
 
 ------------------------------------------------------------------------------
 
@@ -48,23 +50,30 @@ newtype MacroList a =
 instance (Show a) => Monoid (MacroList a) where
     mempty = MacroList []
     mappend (MacroList ms1) (MacroList ms2) =
-        MacroList $ foldl insert ms1 ms2
+        MacroList $ fromMaybe
+            (error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2))
+            (foldM insert ms1 ms2)
 
 -- | Used by mappend to merge two `Macro a`s, one `MacroCell a` at a time.
 --   There are some errors emitted by this function, might want to move
 --   these at some point.
 
-insert :: (Show a) => [Macro a] -> Macro a -> [Macro a]    
-insert (MacroTerm cell1 ms1 : ms) (MacroTerm cell2 ms2)
-    | cell1 == cell2 = MacroTerm cell1 (ms1 <> ms2) : ms
+insert :: [Macro a] -> Macro a -> Maybe [Macro a]    
+insert (MacroTerm cell1 (MacroList ms1) : ms) (MacroTerm cell2 (MacroList ms2))
+    | cell1 == cell2 = do
+        merged <- foldM insert ms1 ms2
+        return $ MacroTerm cell1 (MacroList merged) : ms
 
 insert (MacroTerm cell ms1 : ms2) mt =
-    MacroTerm cell ms1 : insert ms2 mt
+    (MacroTerm cell ms1 :) `fmap` insert ms2 mt
+
+insert (MacroLeaf ex : []) t @ (MacroTerm _ _) =
+    insert [t] (MacroLeaf ex)
 
 insert [] mt =
-    [mt]
+    Just [mt]
 
-insert x y = 
-    error ("Invalid Macro :: " ++ show x ++ " ;;; " ++ show y)
+insert _ _ = 
+    Nothing
 
 ------------------------------------------------------------------------------

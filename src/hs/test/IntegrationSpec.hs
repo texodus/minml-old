@@ -46,7 +46,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"let\", identifier, Javascript, Record Expression, Abstraction, Match Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"fun\", \"\\955\", \"\\\\\", \"let\", identifier, Javascript, Record Expression, Match Expression, Type Kind Expression or Application")
 
             it "should compile & run anonymous functions and application" $ assertNode
 

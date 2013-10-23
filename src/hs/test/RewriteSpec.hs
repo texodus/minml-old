@@ -312,5 +312,24 @@ spec =
                     "2\n"
 
 
+                --it "should compile & run infix replacements" $ [q|
+                  
+                --    Cons: a -> List a -> List a         
+                --    Nil: List a
+
+                --    merge a b = 0                        
+                                                        
+                --    `(a) U (b)` =
+
+                --        match a with
+                --            Con x xs = Con x ()     
+
+                --    check prop size of (Cons 1 (Cons 2 Nil)) 
+
+                -- |] ===
+
+                --    "2\n"
+
+
 
  

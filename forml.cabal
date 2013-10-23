@@ -14,7 +14,10 @@ Library
   hs-source-dirs: src/hs/lib
   Build-depends:
     base           ,
-    parsec,    
+    bytestring,
+    file-embed     == 0.0.5,
+    parsec,
+    utf8-string,    
     mtl            >= 2.1 && <= 2.2,
     jmacro         >= 0.6.3 && <0.7,
     containers     >= 0.5 && < 0.6,
@@ -28,7 +31,7 @@ Library
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
     -funfolding-use-threshold=16 -fexcess-precision
-    -optc-O3 -optc-ffast-math        
+    -optc-O3 -optc-ffast-math       
   exposed-modules:  
     Forml.AST,
     Forml.AST.Expr,
@@ -62,6 +65,7 @@ Library
     Forml.Parse.Token,
     Forml.Parse.Type,
     Forml.Parse.Val,
+    Forml.Prelude,
     Forml.RenderText,
     Forml.TypeCheck,
     Forml.TypeCheck.Ass,

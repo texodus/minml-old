@@ -9,6 +9,8 @@ module Forml.Parse.Notation (
 ) where
 
 import Control.Applicative
+import Control.Arrow
+import Control.Monad
 import qualified Data.Set as S
 import Data.Maybe
 
@@ -19,12 +21,12 @@ import qualified Forml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------
 
--- | Parses a notation string.  This returns a `MacroCell Expr` constructor,
+-- | Parses a notation string.  This returns a `MacroCell Expr` inferCellRecstructor,
 --   once the body of the notation block has been parsed.
 
 notationP :: Parser Expr (Expr -> Macro Expr)
 notationP = 
-    term <|> capture <|> sep <|> lastTerm
+    (inferScope .) <$> (term <|> capture <|> sep <|> lastTerm)
     where
         term = do
             f <- M.identifier <|> M.operator <|> (M.reserved "λ" >> return "λ")
@@ -32,86 +34,104 @@ notationP =
         
         capture = do
             sym <- M.parens M.identifier
-            (toArg sym .) <$> notationP
+            (inferCell sym .) <$> notationP
 
         sep = semi >> (toMac Sep .) <$> notationP
 
         lastTerm = return MacroLeaf
 
-        toMac :: MacroCell -> Macro Expr -> Macro Expr
-        toMac cell = MacroTerm cell . MacroList . (:[])
 
-        toArg :: String -> Macro Expr -> Macro Expr
-        toArg sym expr = 
-            toMac (con' (fromCell expr)) . replace sym escSym $ expr
-            where
-                escSym = '*' : sym
+inferScope :: Macro Expr -> Macro Expr
+inferScope (MacroTerm (Let x) (MacroList xs)) =
+    MacroTerm (Let x) (MacroList (applyScope . inferScope <$> xs))
 
-                fromCell :: Macro Expr -> Expr
-                fromCell (MacroTerm _ (MacroList [x])) = fromCell x
-                fromCell (MacroLeaf x) = x
+inferScope (MacroTerm x (MacroList xs)) =
+    MacroTerm x (MacroList (inferScope <$> xs))
 
-                con' :: Expr -> MacroCell
-                con' as = fromMaybe (Arg escSym) (con as)
+inferScope x = x
 
-                equate as | types as < 2 =
-                    head (fmap con as)
+applyScope :: Macro Expr -> Macro Expr
+applyScope ex = case findSep ex of
+    Just (ys, zs) -> MacroTerm (Scope ys) zs
+    Nothing -> ex
 
-                equate as =
-                    error (show as++" possible derivations for "++show sym)
+findSep :: Macro Expr -> Maybe ([MacroCell], MacroList Expr)
+findSep (MacroLeaf _) = Nothing  -- TODO emit warning for inconcistent scope
+findSep (MacroTerm Sep xs) = Just ([Sep], xs)
+findSep (MacroTerm cell (MacroList xs)) =
+    case head <$> forM xs findSep of
+        Nothing -> Nothing
+        Just (ys, zs) -> Just (cell : ys, zs)
 
-                types :: [Expr] -> Int
-                types = S.size . S.fromList . catMaybes . fmap con
+toMac :: MacroCell -> Macro Expr -> Macro Expr
+toMac cell = MacroTerm cell . MacroList . (:[])
 
-                equate2 ps as | S.size 
-                    (S.fromList (catMaybes (con `fmap` as)) 
-                        `S.union` S.fromList (catMaybes (patt `fmap` ps))) < 2 =
+inferCell :: String -> Macro Expr -> Macro Expr
+inferCell sym = 
+    
+    uncurry ($) . (inferCell' &&& replace sym escSym)
+    
+    where
+        escSym = '*' : sym
 
-                    con (head as)
+        fromMac :: Macro Expr -> Expr
+        fromMac (MacroTerm _ (MacroList [x])) = fromMac x
+        fromMac (MacroLeaf x) = x
+        fromMac _ = undefined
 
-                equate2 _ as = error (show as++" possible derivations for "++show sym)
+        inferCell' :: Macro Expr -> Macro Expr -> Macro Expr
+        inferCell' = toMac . fromMaybe (Arg escSym) . inferCellRec . fromMac
 
-                patt (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat escSym)
+        equate as | types as < 2 =
+            head (fmap inferCellRec as)
 
-                patt _ = Nothing
+        equate as =
+            error (show as++" possible derivations for "++show sym)
 
-                con :: Expr -> Maybe MacroCell
-                con (LetExpr (Sym f) a b) 
-                    | f == sym && (
-                        isNothing (equate [a, b]) ||
-                        equate [a, b] == Just (Arg escSym)) = 
+        types :: [Expr] -> Int
+        types = S.size . S.fromList . catMaybes . fmap inferCellRec
 
-                        Just (Let escSym)
+        equate2 ps as | S.size 
+            (S.fromList (catMaybes (inferCellRec `fmap` as)) 
+                `S.union` S.fromList (catMaybes (patt `fmap` ps))) < 2 =
 
-                   -- | f /= sym && (
-                   --     isJust (con a) ||
-                   --     equate [a, b] == Just (Arg escSym)) = 
+            inferCellRec (head as)
 
-                   --     Just (Let escSym)
+        equate2 _ as = error (show as++" possible derivations for "++show sym)
 
-                con (LetExpr _ a b) = equate [a, b]
+        patt (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat escSym)
 
-                con (AppExpr a b) = equate [a, b]
+        patt _ = Nothing
 
-                con (VarExpr (SymVal (Sym f))) | f == sym = Just (Arg escSym)
-                con (VarExpr _) = Nothing
+        inferCellRec :: Expr -> Maybe MacroCell
+        inferCellRec (LetExpr (Sym f) a b) 
+            | f == sym && maybe True (== Arg escSym) (equate [a, b]) =
+                Just (Let escSym)
 
-                con (MatExpr e xs) = equate2 (map fst xs) (e : map snd xs)
+            | otherwise = equate [a, b]
 
-                con (TypExpr a b e) = con e
+        inferCellRec (AppExpr a b) = equate [a, b]
 
-                con (AbsExpr (Sym f) ex)
-                    | f == sym && (
-                        isNothing (con ex) ||
-                        con ex == Just (Arg escSym)) = 
+        inferCellRec (VarExpr (SymVal (Sym f))) | f == sym = Just (Arg escSym)
+        inferCellRec (VarExpr _) = Nothing
 
-                    Just (Let escSym)
+        inferCellRec (MatExpr e xs) = equate2 (map fst xs) (e : map snd xs)
 
-                con (AbsExpr (Sym f) z) | f == sym = error "Fail"
+        inferCellRec (TypExpr _ _ e) = inferCellRec e
 
-                con (AbsExpr _ z) = con z
+        inferCellRec (AbsExpr (Sym f) ex)
+            | f == sym && (
+                isNothing (inferCellRec ex) ||
+                inferCellRec ex == Just (Arg escSym)) = 
 
-                --replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
-                con (JSExpr _)  = Nothing
+            Just (Let escSym)
+
+        inferCellRec (AbsExpr (Sym f) _) | f == sym = error "Unimplemented"
+
+        inferCellRec (AbsExpr _ z) = inferCellRec z
+
+        inferCellRec (JSExpr _)  = Nothing
+
+        inferCellRec _ = error "Unimplemented"
                 
 ------------------------------------------------------------------------------

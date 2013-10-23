@@ -8,7 +8,7 @@ import Forml.Parse.Val
 import Utils
 
 spec :: Spec
-spec = do
+spec =
 
     describe "Forml.Parse.Val" $ do
 
@@ -21,7 +21,7 @@ spec = do
                 "lett" $ Right (Sym "lett")
 
             it "should fail to parse keywords" $ assertParse symP
-                "fun" $ Left (Err "(line 1, column 4):\nunexpected reserved word \"fun\"\nexpecting letter, digit or \"_\"")
+                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting letter, digit or \"_\"")
 
             it "should fail to parse integers" $ assertParse symP
                 "NotASym" $ Left (Err "(line 1, column 1):\nunexpected \"N\"\nexpecting identifier")
@@ -41,5 +41,5 @@ spec = do
                 "x" $ Right (SymVal (Sym "x"))
 
             it "should fail to parse keywords" $ assertParse valP
-                "fun" $ Left (Err "(line 1, column 4):\nunexpected reserved word \"fun\"\nexpecting letter, digit or \"_\"")
+                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting letter, digit or \"_\"")
 

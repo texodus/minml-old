@@ -42,6 +42,7 @@ ohmlDef :: LanguageDef (MacroState a)
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = "=" : concat ops ,
+    T.commentLine     = "--",
     T.identStart      = lowerP <|> char '_',
     T.identLetter     = letterP <|> digit <|> char '_',
     T.opStart         = oneOf "`:!#$%&*+./<=>?@\\^|-~",

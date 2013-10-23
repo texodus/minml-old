@@ -21,10 +21,6 @@
 -- Let's make things complicated by using some extensions!
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 ------------------------------------------------------------------------------
@@ -44,6 +40,7 @@ import Forml.Parse
 import Forml.TypeCheck
 import Forml.Javascript
 import Forml.RenderText
+import Forml.Prelude
 
 ------------------------------------------------------------------------------
 
@@ -56,7 +53,7 @@ import Forml.RenderText
 -- function composition.  
 
 compile :: String -> Either Err String
-compile = parseForml >=> typeCheck >=> generateJs >=> renderText
+compile = appendPrelude >=> parseForml >=> typeCheck >=> generateJs >=> renderText
 
 exec :: IO ()
 exec = do

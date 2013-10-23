@@ -42,7 +42,6 @@ exprP =
         <|> try macroP
         <|> jsExprP
         <|> recExprP
-        <|> absExprP absExpr
         <|> matExprP
         <|> try typExprP
         <|> appExprP
@@ -64,12 +63,6 @@ macroP = use macros >>= merge
 
         tryChild :: Macro Expr -> Parser Expr Expr
 
-        --tryChild (MacroTerm (Token "λ") exs) =
-        --    reservedOp "λ" >> merge exs
-
-        --tryChild (MacroTerm (Token "\\") exs) =
-        --    reservedOp "\\" >> merge exs
-
         tryChild (MacroTerm (Token x) exs) =
             reserved x >> merge exs
 
@@ -79,11 +72,33 @@ macroP = use macros >>= merge
         tryChild (MacroTerm (Arg a) exs) =
             try (replace a <$> exprP <*> merge exs) 
 
+        tryChild (MacroTerm (Scope scs) exs) = do
+            inner <- withCont (parseScope scs)
+            try (inner <$> withSep (merge exs)) 
+
         tryChild (MacroTerm Sep exs) =
             withSep (merge exs)
 
         tryChild (MacroLeaf x) =
             return x
+
+        tryChild _ = error "Unimplemented"
+
+        parseScope :: [MacroCell] -> Parser Expr (Expr -> Expr)
+        parseScope (Token x : xs) = reserved x >> parseScope xs
+        parseScope (Let x : xs) = try $ do
+            s <- symP
+            cont <- parseScope xs
+            return (replace x s . cont)
+
+        parseScope (Arg x : xs) = try $ do
+            s <- exprP
+            cont <- parseScope xs
+            return (replace x s . cont)
+
+        parseScope (Sep : []) = return id
+
+        parseScope [] = parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -98,17 +113,6 @@ jsExprP =
                 Left x  -> parserFail (show x)
                 Right x -> return (JSExpr x)
 
-absExprP :: Parser Expr () -> Parser Expr Expr
-absExprP f =
-    pure (AbsExpr (Sym "_match"))
-        <*  f
-        <*> (pure (MatExpr (VarExpr (SymVal (Sym "_match"))) . (:[])) <*> caseP)
-        <?> "Abstraction"
-
-absExpr :: Parser Expr ()
-absExpr =
-    reserved "fun" <|> reservedOp "\\" <|> reservedOp "λ"
-
 matExprP :: Parser Expr Expr
 matExprP =
     pure MatExpr
@@ -118,9 +122,6 @@ matExprP =
         <*  indented
         <*> withScope (try ((,) <$> pattP <* toOp <*> exprP) `sepEndBy` sep)
         <?> "Match Expression"
-
-caseP :: Parser Expr (Patt, Expr)
-caseP = (,) <$> pattP <* toOp <*> exprP
 
 toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
