@@ -124,33 +124,37 @@ spec =
 
     	describe "run" $ do
 
-            it "should compile & run a trivial example " $ assertNode
+            it "should compile & run a trivial example " $ [q|
               
-                "   True: Bool                                  \n\
-                \   False: Bool                                 \n\
-                \                                               \n\
-                \   `if (a) then (d) else (c)` = match a with   \n\
-                \       True = d                                \n\
-                \       False = c                               \n\
-                \                                               \n\
-                \   if False then 3 else 4                      \n"
+                True: Bool                               
+                False: Bool                              
+                                                         
+                `if (a) then (d) else (c)` = match a with
+                    True = d                             
+                    False = c                            
+                                                         
+                if False then 3 else 4                   
 
-                (Right "4\n")
+            |] ===
 
-            it "should compile & run nested macros" $ assertNode
+                "4\n"
+
+            it "should compile & run nested macros" $ [q|
               
-                "   True: Bool                                  \n\
-                \   False: Bool                                 \n\
-                \                                               \n\
-                \   `if (a) then (d) else (c)` = match a with   \n\
-                \       True = d                                \n\
-                \       False = c                               \n\
-                \                                               \n\
-                \   if True                                     \n\
-                \       then if False then 3 else 5             \n\
-                \       else 4                                  \n"
+                True: Bool                               
+                False: Bool                              
+                                                         
+                `if (a) then (d) else (c)` = match a with
+                    True = d                             
+                    False = c                            
+                                                         
+                if True                                  
+                    then if False then 3 else 5          
+                    else 4                               
 
-                (Right "5\n")
+            |] === 
+
+                "5\n"
 
 
 
@@ -312,23 +316,16 @@ spec =
                     "2\n"
 
 
-                --it "should compile & run infix replacements" $ [q|
+            describe "Regression tests" $
+
+                it "Should run programs with 2 arguments" $ [q|
                   
-                --    Cons: a -> List a -> List a         
-                --    Nil: List a
+                    f a b = a + b
+                    f 1 2
 
-                --    merge a b = 0                        
-                                                        
-                --    `(a) U (b)` =
+                |] ===
 
-                --        match a with
-                --            Con x xs = Con x ()     
-
-                --    check prop size of (Cons 1 (Cons 2 Nil)) 
-
-                -- |] ===
-
-                --    "2\n"
+                    "3\n"
 
 
 

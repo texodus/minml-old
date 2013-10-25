@@ -11,7 +11,9 @@ module Forml.Parse.Notation (
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
+import Data.Monoid
 import qualified Data.Set as S
+import qualified Data.Map as P
 import Data.Maybe
 
 import Forml.AST
@@ -52,16 +54,16 @@ inferScope x = x
 
 applyScope :: Macro Expr -> Macro Expr
 applyScope ex = case findSep ex of
-    Just (ys, zs) -> MacroTerm (Scope ys) zs
-    Nothing -> ex
+    [(ys, zs)] -> MacroTerm (Scope ys) zs
+    [] -> ex
 
-findSep :: Macro Expr -> Maybe ([MacroCell], MacroList Expr)
-findSep (MacroLeaf _) = Nothing  -- TODO emit warning for inconcistent scope
-findSep (MacroTerm Sep xs) = Just ([Sep], xs)
+findSep :: Macro Expr -> [([MacroCell], MacroList Expr)]
+findSep (MacroLeaf _) = []  -- TODO emit warning for inconcistent scope
+findSep (MacroTerm Sep xs) = [([Sep], xs)]
 findSep (MacroTerm cell (MacroList xs)) =
-    case head <$> forM xs findSep of
-        Nothing -> Nothing
-        Just (ys, zs) -> Just (cell : ys, zs)
+    first (cell:) <$> concatMap findSep xs
+        -- [] -> []
+        --Just (x, y) -> Just (cell : x, y)
 
 toMac :: MacroCell -> Macro Expr -> Macro Expr
 toMac cell = MacroTerm cell . MacroList . (:[])
@@ -126,12 +128,16 @@ inferCell sym =
 
             Just (Let escSym)
 
-        inferCellRec (AbsExpr (Sym f) _) | f == sym = error "Unimplemented"
+        inferCellRec (AbsExpr (Sym f) _) | f == sym = error "Unimplemented fox"
 
         inferCellRec (AbsExpr _ z) = inferCellRec z
 
-        inferCellRec (JSExpr _)  = Nothing
+        inferCellRec (JSExpr _) = Nothing
 
-        inferCellRec _ = error "Unimplemented"
-                
+        inferCellRec (RecExpr (Record xs)) =
+            case catMaybes (fmap inferCellRec (P.elems xs)) of
+                [x] -> Just x
+                []  -> Nothing
+                _   -> error "Too many futzpahs"
+
 ------------------------------------------------------------------------------

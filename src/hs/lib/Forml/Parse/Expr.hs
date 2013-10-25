@@ -53,7 +53,7 @@ letMacroP = do
     reservedOp "`" 
     reservedOp "="
     ms  <- def <$> withCont exprP
-    macros %= flip mappend (MacroList [ms])
+    macros %= mappend (MacroList [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
@@ -72,9 +72,8 @@ macroP = use macros >>= merge
         tryChild (MacroTerm (Arg a) exs) =
             try (replace a <$> exprP <*> merge exs) 
 
-        tryChild (MacroTerm (Scope scs) exs) = do
-            inner <- withCont (parseScope scs)
-            try (inner <$> withSep (merge exs)) 
+        tryChild (MacroTerm (Scope scs) exs) =
+            withCont (parseScope scs) <*> withSep (merge exs)
 
         tryChild (MacroTerm Sep exs) =
             withSep (merge exs)
@@ -85,20 +84,21 @@ macroP = use macros >>= merge
         tryChild _ = error "Unimplemented"
 
         parseScope :: [MacroCell] -> Parser Expr (Expr -> Expr)
-        parseScope (Token x : xs) = reserved x >> parseScope xs
-        parseScope (Let x : xs) = try $ do
-            s <- symP
-            cont <- parseScope xs
-            return (replace x s . cont)
 
-        parseScope (Arg x : xs) = try $ do
-            s <- exprP
-            cont <- parseScope xs
-            return (replace x s . cont)
+        parseScope (Token x : xs) =
+            reserved x >> parseScope xs
 
-        parseScope (Sep : []) = return id
+        parseScope (Let x : xs) =
+            try (((.) . replace x) <$> symP <*> parseScope xs)
 
-        parseScope [] = parserZero
+        parseScope (Arg x : xs) =
+            try (((.) . replace x) <$> exprP <*> parseScope xs)
+
+        parseScope (Sep : []) =
+            return id
+
+        parseScope [] =
+            parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =

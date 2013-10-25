@@ -18,6 +18,7 @@ module Forml.Parse (
 
 import Control.Applicative
 import Control.Arrow
+import Control.Lens
 import Data.Monoid
 import Text.Parsec hiding ((<|>), many)
 import Text.Parsec.Pos
@@ -38,26 +39,24 @@ bootstrap :: MacroList Expr
 bootstrap = foldl1 mappend 
 
     -- Let
-    [ parseNote "fun (x) -> (y)" (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "fun (x) = (y)"  (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "λ (x) -> (y)"   (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "λ (x) = (y)"    (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "\\ (x) -> (y)"  (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "\\ (x) = (y)"   (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+    [ parseNote "fun (x) -> (y)"       (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+    , parseNote "let (a) = (b); (c)"   (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c"))))
+    ]
 
-    , parseNote "let (a) = (b); (c)"     (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c"))))
-    , parseNote "let (a) (b) = (c); (d)" (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
-    , parseNote "(a) = (b); (c)"         (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (VarExpr (SymVal (Sym "c")))) 
-    , parseNote "(a) (b) = (c); (d)"     (LetExpr (Sym "a") (AbsExpr (Sym "b") (VarExpr (SymVal (Sym "c")))) (VarExpr (SymVal (Sym "d"))))
-            
-        -- Fun
-       ]
     where
         parseNote a = case runParser notationP (MacroState (initialPos "") mempty) "" a of
             Left x  -> error . show $ x
             Right x -> MacroList . (:[]) . x
 
 grammar :: Parser Expr Expr
-grammar = spaces *> withScope exprP <* eof
+grammar = do
+    whiteSpace 
+    withScope $ do
+        exprP
+        s <- use macros
+        error . show $ s
+
+
+    undefined -- eof
 
 ------------------------------------------------------------------------------

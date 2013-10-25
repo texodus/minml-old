@@ -348,6 +348,6 @@ spec =
                     \       {x: x} = x   \n\
                     \       _ = 0        \n"
 
-                    (Right (LetExpr (Sym "f") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 3.0)))]))) (MatExpr (VarExpr (SymVal (Sym "f"))) [(RecPatt (Record (M.fromList [("x",ValPatt (SymVal (Sym "x")))])),VarExpr (SymVal (Sym "x"))),(ValPatt (SymVal (Sym "_")),VarExpr (LitVal (NumLit 0.0)))])))
+                    (Right (LetExpr (Sym "f") (RecExpr (Record (M.fromList [("x", VarExpr (LitVal (NumLit 3.0)))]))) (MatExpr (VarExpr (SymVal (Sym "f"))) [(RecPatt (Record (M.fromList [("x",ValPatt (SymVal (Sym "x")))])),VarExpr (SymVal (Sym "x"))),(ValPatt (SymVal (Sym "_")),VarExpr (LitVal (NumLit 0.0)))])))
 
 ------------------------------------------------------------------------------
