@@ -49,14 +49,16 @@ bootstrap = foldl1 mappend
             Right x -> MacroList . (:[]) . x
 
 grammar :: Parser Expr Expr
-grammar = do
-    whiteSpace 
-    withScope $ do
-        exprP
-        s <- use macros
-        error . show $ s
+grammar = whiteSpace *> withScope exprP <* eof
+
+  --do
+  --  whiteSpace 
+  --  withScope $ do
+  --      exprP
+  --      s <- use macros
+  --      error . show $ s
 
 
-    undefined -- eof
+  --  undefined -- eof
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

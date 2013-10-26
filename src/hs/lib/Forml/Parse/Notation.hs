@@ -45,25 +45,23 @@ notationP =
 
 inferScope :: Macro Expr -> Macro Expr
 inferScope (MacroTerm (Let x) (MacroList xs)) =
-    MacroTerm (Let x) (MacroList (applyScope . inferScope <$> xs))
+    MacroTerm (Let x) (MacroList (applyScope 0 . inferScope <$> xs))
 
 inferScope (MacroTerm x (MacroList xs)) =
     MacroTerm x (MacroList (inferScope <$> xs))
 
 inferScope x = x
 
-applyScope :: Macro Expr -> Macro Expr
-applyScope ex = case findSep ex of
-    [(ys, zs)] -> MacroTerm (Scope ys) zs
-    [] -> ex
+applyScope :: Int -> Macro Expr -> Macro Expr
+applyScope n y =
+    applyScope' n y
+    where
+        applyScope' 0 x @ (MacroTerm Sep _) = MacroTerm Scope (MacroList [y])
+        applyScope' n (MacroTerm Sep (MacroList [x])) = applyScope' (n - 1) x
+        applyScope' n (MacroTerm Scope (MacroList [x])) = applyScope' (n + 1) x
+        applyScope' n (MacroTerm _ (MacroList [x])) = applyScope' n x
+        applyScope' _ _ = y
 
-findSep :: Macro Expr -> [([MacroCell], MacroList Expr)]
-findSep (MacroLeaf _) = []  -- TODO emit warning for inconcistent scope
-findSep (MacroTerm Sep xs) = [([Sep], xs)]
-findSep (MacroTerm cell (MacroList xs)) =
-    first (cell:) <$> concatMap findSep xs
-        -- [] -> []
-        --Just (x, y) -> Just (cell : x, y)
 
 toMac :: MacroCell -> Macro Expr -> Macro Expr
 toMac cell = MacroTerm cell . MacroList . (:[])

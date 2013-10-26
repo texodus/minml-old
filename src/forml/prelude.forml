@@ -26,5 +26,6 @@
 
 `(a) = (b); (c)`             = let a = b; c
 `(a) (b) = (c); (d)`         = let a = fun b -> c; d
+`(a) (b) (c) = (d); (e)` = let a = fun b -> fun c -> d; e
 
 

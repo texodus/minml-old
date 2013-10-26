@@ -72,32 +72,36 @@ macroP = use macros >>= merge
         tryChild (MacroTerm (Arg a) exs) =
             try (replace a <$> exprP <*> merge exs) 
 
-        tryChild (MacroTerm (Scope scs) exs) =
-            withCont (parseScope scs) <*> withSep (merge exs)
+        tryChild (MacroTerm Scope exs) = try $ do
+            (ap, cont) <- withCont (merge' exs)
+            ap <$> withSep (merge cont)
 
         tryChild (MacroTerm Sep exs) =
-            withSep (merge exs)
+            try (withSep (merge exs))
 
         tryChild (MacroLeaf x) =
             return x
 
         tryChild _ = error "Unimplemented"
 
-        parseScope :: [MacroCell] -> Parser Expr (Expr -> Expr)
+        merge' (MacroList ms) = foldl (<|>) parserZero (fmap parseScope ms)
 
-        parseScope (Token x : xs) =
-            reserved x >> parseScope xs
+        parseScope :: Macro Expr -> Parser Expr (Expr -> Expr, MacroList Expr)
 
-        parseScope (Let x : xs) =
-            try (((.) . replace x) <$> symP <*> parseScope xs)
+        parseScope (MacroTerm (Token x) xs) =
+            reserved x >> merge' xs
 
-        parseScope (Arg x : xs) =
-            try (((.) . replace x) <$> exprP <*> parseScope xs)
+        parseScope (MacroTerm (Arg x) xs) =
+            try (first . (.) . replace x <$> exprP <*> merge' xs)
 
-        parseScope (Sep : []) =
-            return id
+        parseScope (MacroTerm Sep xs) =
+            return (id, xs)
 
-        parseScope [] =
+        parseScope (MacroTerm Scope xs) = try $ do
+            (ap, cont)   <- withCont (merge' xs)
+            first (ap .) <$> withSep (merge' cont)
+
+        parseScope _ =
             parserZero
 
 jsExprP :: Parser Expr Expr

@@ -29,7 +29,7 @@ data MacroCell where
     Arg   :: String -> MacroCell
     Let   :: String -> MacroCell
     Pat   :: String -> MacroCell
-    Scope :: [MacroCell] -> MacroCell
+    Scope :: MacroCell
     Sep   :: MacroCell
 
     deriving (Eq, Ord, Show)

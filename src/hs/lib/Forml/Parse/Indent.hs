@@ -34,7 +34,7 @@ withScope parser = do
     pos <- getPosition
     sourcePos .= pos
     res <- parser
-   -- setState st
+    setState st
     return res
 
 -- | Fails if the cursor is not within the current scope
