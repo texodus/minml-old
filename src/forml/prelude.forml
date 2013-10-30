@@ -11,21 +11,17 @@
 -- `if (a) { (b) } else { (c) }` = if a then b else c
 -- `if (a) { (b) } else (c)`     = if a then b else c
 -- `if (a); (b) else (c)`        = if a then b else c
--- 
--- if True then if False { 1 } else 2 else 3
-
 
 `fun (x) = (y)` = fun x -> y
 `λ (x) -> (y)`  = fun x -> y
 `λ (x) = (y)`   = fun x -> y
-` \ (x) -> (y)` = fun x -> y
-` \ (x) = (y)`  = fun x -> y
+`\ (x) -> (y)` = fun x -> y
+`\ (x) = (y)`  = fun x -> y
 
 `let (a) (b) = (c); (d)`     = let a = fun b -> c; d 
 `let (a) (b) (c) = (d); (e)` = let a = fun b -> fun c -> d; e
 
 `(a) = (b); (c)`             = let a = b; c
 `(a) (b) = (c); (d)`         = let a = fun b -> c; d
-`(a) (b) (c) = (d); (e)` = let a = fun b -> fun c -> d; e
-
+`(a) (b) (c) = (d); (e)`     = let a = fun b -> fun c -> d; e
 

@@ -19,10 +19,11 @@ appendPrelude src =
 unindent :: String -> String
 unindent src = unlines $ fmap (drop (findLevel (lines src))) $ lines src
 
-	where
-		findLevel (x : xs) 
-		    | trim x == "" = findLevel xs
-		    | otherwise    = length x - length (dropWhile isSpace x)
+    where
+        findLevel (x : xs) 
+            | trim x == "" = findLevel xs
+            | otherwise    = length x - length (dropWhile isSpace x)
+        findLevel [] = error "Empty sourcefile"
 
 
 trim :: String -> String

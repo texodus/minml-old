@@ -51,14 +51,4 @@ bootstrap = foldl1 mappend
 grammar :: Parser Expr Expr
 grammar = whiteSpace *> withScope exprP <* eof
 
-  --do
-  --  whiteSpace 
-  --  withScope $ do
-  --      exprP
-  --      s <- use macros
-  --      error . show $ s
-
-
-  --  undefined -- eof
-
 --------------------------------------------------------------------------------

@@ -10,8 +10,6 @@ module Forml.Parse.Notation (
 
 import Control.Applicative
 import Control.Arrow
-import Control.Monad
-import Data.Monoid
 import qualified Data.Set as S
 import qualified Data.Map as P
 import Data.Maybe
@@ -56,11 +54,17 @@ applyScope :: Int -> Macro Expr -> Macro Expr
 applyScope n y =
     applyScope' n y
     where
-        applyScope' 0 x @ (MacroTerm Sep _) = MacroTerm Scope (MacroList [y])
-        applyScope' n (MacroTerm Sep (MacroList [x])) = applyScope' (n - 1) x
-        applyScope' n (MacroTerm Scope (MacroList [x])) = applyScope' (n + 1) x
-        applyScope' n (MacroTerm _ (MacroList [x])) = applyScope' n x
+        applyScope' 0 (MacroTerm Sep _) = skipTokens y
+        applyScope' m (MacroTerm Sep (MacroList [x])) = applyScope' (m - 1) x
+        applyScope' m (MacroTerm Scope (MacroList [x])) = applyScope' (m + 1) x
+        applyScope' m (MacroTerm _ (MacroList [x])) = applyScope' m x
         applyScope' _ _ = y
+
+        skipTokens (MacroTerm (Token c) (MacroList [x])) =
+            MacroTerm (Token c) (MacroList [skipTokens x])
+
+        skipTokens x =
+            MacroTerm Scope (MacroList [x])
 
 
 toMac :: MacroCell -> Macro Expr -> Macro Expr

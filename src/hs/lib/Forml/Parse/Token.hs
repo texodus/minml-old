@@ -45,8 +45,8 @@ ohmlDef = emptyDef {
     T.commentLine     = "--",
     T.identStart      = lowerP <|> char '_',
     T.identLetter     = letterP <|> digit <|> char '_',
-    T.opStart         = oneOf "`:!#$%&*+./<=>?@\\^|-~",
-    T.opLetter        = oneOf "`:!#$%&*+./<=>?@\\^|-~"
+    T.opStart         = oneOf ":!#$%&*+./<=>?@\\^|-~",
+    T.opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
 }
 
 instance MonadState st (Parsec tok st) where
@@ -59,6 +59,12 @@ data MacroState a = MacroState {
 }
 
 makeLenses ''MacroState
+
+antiQuote :: Parser a ()
+antiQuote = try $ do
+    _ <- string "`"
+    notFollowedBy (string "`")
+    whiteSpace
 
 type Parser a = Parsec String (MacroState a)
 

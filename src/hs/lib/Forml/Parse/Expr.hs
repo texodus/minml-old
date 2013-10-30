@@ -47,62 +47,43 @@ exprP =
         <|> appExprP
 
 letMacroP :: Parser Expr Expr
-letMacroP = do
-    reservedOp "`" 
+letMacroP = withScope $ do
+    antiQuote 
     def <- notationP
-    reservedOp "`" 
+    antiQuote 
     reservedOp "="
-    ms  <- def <$> withCont exprP
+    ms <- def <$> withCont exprP
     macros %= mappend (MacroList [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
-macroP = use macros >>= merge
+macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
     where
-        merge (MacroList ms) = foldl (<|>) parserZero (fmap tryChild ms)
+        merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
 
-        tryChild :: Macro Expr -> Parser Expr Expr
+        rootP (MacroTerm Sep xs) = try (withSep (merge rootP xs))
+        rootP (MacroLeaf x) = return (const x, undefined)
+        rootP x = bothP rootP x
 
-        tryChild (MacroTerm (Token x) exs) =
-            reserved x >> merge exs
+        scopeP (MacroTerm Sep xs) = return (id, xs)
+        scopeP (MacroLeaf _) = parserZero
+        scopeP x = bothP scopeP x
 
-        tryChild (MacroTerm (Let a) exs) =
-            try (replace a <$> symP <*> merge exs) 
+        bothP m (MacroTerm Scope xs) = try $ do
+            (ap, cont)   <-  withCont (merge scopeP xs)
+            first (ap .) <$> withSep (merge m cont)
 
-        tryChild (MacroTerm (Arg a) exs) =
-            try (replace a <$> exprP <*> merge exs) 
+        bothP m (MacroTerm (Token x) exs) =
+            reserved x >> merge m exs
 
-        tryChild (MacroTerm Scope exs) = try $ do
-            (ap, cont) <- withCont (merge' exs)
-            ap <$> withSep (merge cont)
+        bothP m (MacroTerm (Let a) exs) =
+            try (first . (.) . replace a <$> symP <*> merge m exs) 
 
-        tryChild (MacroTerm Sep exs) =
-            try (withSep (merge exs))
+        bothP m (MacroTerm (Arg a) exs) =
+            try (first . (.) . replace a <$> exprP <*> merge m exs) 
 
-        tryChild (MacroLeaf x) =
-            return x
+        bothP _ _ = error "Unimplemented"
 
-        tryChild _ = error "Unimplemented"
-
-        merge' (MacroList ms) = foldl (<|>) parserZero (fmap parseScope ms)
-
-        parseScope :: Macro Expr -> Parser Expr (Expr -> Expr, MacroList Expr)
-
-        parseScope (MacroTerm (Token x) xs) =
-            reserved x >> merge' xs
-
-        parseScope (MacroTerm (Arg x) xs) =
-            try (first . (.) . replace x <$> exprP <*> merge' xs)
-
-        parseScope (MacroTerm Sep xs) =
-            return (id, xs)
-
-        parseScope (MacroTerm Scope xs) = try $ do
-            (ap, cont)   <- withCont (merge' xs)
-            first (ap .) <$> withSep (merge' cont)
-
-        parseScope _ =
-            parserZero
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -123,9 +104,10 @@ matExprP =
         <*  reserved "match"
         <*> exprP
         <*  reserved "with"
-        <*  indented
-        <*> withScope (try ((,) <$> pattP <* toOp <*> exprP) `sepEndBy` sep)
+        <*> withCont (try caseP `sepEndBy` sep)
         <?> "Match Expression"
+    where
+        caseP = (,) <$> pattP <* toOp <*> withCont exprP 
 
 toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="

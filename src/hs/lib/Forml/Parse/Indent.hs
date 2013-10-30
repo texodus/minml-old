@@ -39,8 +39,8 @@ withScope parser = do
 
 -- | Fails if the cursor is not within the current scope
 
-inScope :: Parser s ()
-inScope = condSep sourceLine (>) "in scope" >> condSep sourceColumn (>=) "in scope"
+inScope :: (Int -> Int -> Bool) -> Parser s ()
+inScope comp = condSep sourceLine (>) "in scope" >> condSep sourceColumn comp "in scope"
 
 -- | Fails if the cursor is not indented, or on the same line
 
@@ -51,18 +51,18 @@ indented = condSep sourceColumn (>) "indented"
 
 withSep :: Parser s a -> Parser s a
 withSep parser =
-    (semi >> parser) <|> (inScope >> withScope parser)
+    (semi >> withScope parser) <|> (inScope (==) >> withScope parser)
 
 -- | Same as withSep, but without a semi
 
 withCont :: Parser s a -> Parser s a
 withCont parser =
-    (condSep sourceLine (==) "inline" >> parser) <|> (inScope >> withScope parser)
+    (condSep sourceLine (==) "inline" >> parser) <|> (inScope (>=) >> withScope parser)
 
 -- | Line separator parser
 
 sep :: Parser s ()
-sep = void semi <|> inScope
+sep = void semi <|> inScope (==)
 
 -- | Optionally parse a separator in-scope
 

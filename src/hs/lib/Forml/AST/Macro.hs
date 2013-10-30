@@ -17,6 +17,7 @@ module Forml.AST.Macro(
 ) where
 
 import Control.Monad
+import qualified Data.List as L
 import Data.Monoid
 import Data.Maybe
 
@@ -34,6 +35,8 @@ data MacroCell where
 
     deriving (Eq, Ord, Show)
 
+-- instance Ord MacroCell where compare = undefined
+
 -- | Since the n-tree representing a `Macro a` has no root, `Macro a` is
 --   newtype'd `[MacroCell a]`.  `Macro a`s are `Functor`s, `Monoid`s, 
 --   and `Replace`s
@@ -41,16 +44,23 @@ data MacroCell where
 data Macro a where
     MacroTerm :: MacroCell -> MacroList a -> Macro a
     MacroLeaf :: a -> Macro a
-    deriving (Functor, Show)
+    deriving (Eq, Functor, Show)
+
+instance Eq a => Ord (Macro a) where
+    compare (MacroTerm c _) (MacroTerm d _) = compare c d
+    compare (MacroTerm _ _) _ = GT
+    compare _ (MacroTerm _ _) = LT
+    compare _ _ = EQ
+
 
 newtype MacroList a =
     MacroList [Macro a] 
-    deriving (Functor, Show)
+    deriving (Eq, Functor, Show)
 
-instance (Show a) => Monoid (MacroList a) where
+instance (Show a, Eq a) => Monoid (MacroList a) where
     mempty = MacroList []
     mappend (MacroList ms1) (MacroList ms2) =
-        MacroList $ fromMaybe
+        MacroList $ L.sort $ fromMaybe
             (error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2))
             (foldM insert ms1 ms2)
 
@@ -58,11 +68,11 @@ instance (Show a) => Monoid (MacroList a) where
 --   There are some errors emitted by this function, might want to move
 --   these at some point.
 
-insert :: [Macro a] -> Macro a -> Maybe [Macro a]    
+insert :: (Eq a) => [Macro a] -> Macro a -> Maybe [Macro a]    
 insert (MacroTerm cell1 (MacroList ms1) : ms) (MacroTerm cell2 (MacroList ms2))
     | cell1 == cell2 = do
         merged <- foldM insert ms1 ms2
-        return $ MacroTerm cell1 (MacroList merged) : ms
+        return $ MacroTerm cell1 (MacroList (L.sort merged)) : ms
 
 insert (MacroTerm cell ms1 : ms2) mt =
     (MacroTerm cell ms1 :) `fmap` insert ms2 mt
