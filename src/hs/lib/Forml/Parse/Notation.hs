@@ -73,7 +73,7 @@ toMac cell = MacroTerm cell . MacroList . (:[])
 inferCell :: String -> Macro Expr -> Macro Expr
 inferCell sym = 
     
-    uncurry ($) . (inferCell' &&& replace sym escSym)
+    uncurry ($) . (inferCell' &&& replace sym (ValPatt (SymVal (Sym escSym))) . replace sym escSym)
     
     where
         escSym = '*' : sym
@@ -96,10 +96,10 @@ inferCell sym =
         types = S.size . S.fromList . catMaybes . fmap inferCellRec
 
         equate2 ps as | S.size 
-            (S.fromList (catMaybes (inferCellRec `fmap` as)) 
-                `S.union` S.fromList (catMaybes (patt `fmap` ps))) < 2 =
+            (S.fromList (catMaybes (patt `fmap` ps)) 
+                `S.union` S.fromList (catMaybes (inferCellRec `fmap` as))) < 2 =
 
-            inferCellRec (head as)
+            head (patt `fmap` ps)
 
         equate2 _ as = error (show as++" possible derivations for "++show sym)
 

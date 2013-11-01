@@ -43,7 +43,48 @@ data Expr where
     deriving (Eq, Ord, Show)
 
 instance Replace String Expr where
-    replace sym = replace sym . ValPatt . SymVal . Sym 
+
+    -- Lets are special cases to handle recursion
+
+    replace f t (LetExpr (Sym f') a b) | f == f' =
+        LetExpr (Sym t) (replace f t . replace f (VarExpr (SymVal (Sym t))) $ a) 
+                    (replace f t . replace f (VarExpr (SymVal (Sym t))) $ b)
+
+    --replace sym patt (LetExpr (Sym sym') a b) | sym == sym' =
+    --    MatExpr (replace sym patt a) [(patt, replace sym patt b)] 
+
+    replace f t (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr (Sym t) (replace f t . replace f (VarExpr (SymVal (Sym t))) $ ex)
+
+    replace f _  (LetExpr (Sym f') a b) | f == f' = 
+        LetExpr (Sym f') a b
+
+    replace f ex (LetExpr f' a b) =
+        LetExpr f' (replace f ex a) (replace f ex b)
+
+    replace f ex (AppExpr a b) =
+        AppExpr (replace f ex a) (replace f ex b)
+
+    replace f t (VarExpr (SymVal (Sym f'))) | f == f' =
+        VarExpr (SymVal (Sym t))
+
+    replace _ _  (VarExpr x) =
+        VarExpr x
+
+    replace f ex (MatExpr e xs) =
+        MatExpr (replace f ex e) (fmap (second (replace f ex)) xs)
+
+    replace f ex (TypExpr a b e) =
+        TypExpr a b $ replace f ex e
+
+    replace f _ (AbsExpr (Sym f') ex) | f == f' =
+        AbsExpr (Sym f') ex
+
+    replace f x (AbsExpr y z) =
+        AbsExpr y (replace f x z)
+
+    replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
+    replace _ _ (JSExpr x) = JSExpr x
 
 instance Replace Expr Expr where
 
@@ -105,23 +146,7 @@ instance Replace Sym Expr where
     replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
     replace _ _ (JSExpr x)   = JSExpr x
 
-
 instance Replace Patt Expr where
-
-    -- Lets are special cases to handle recursion
-
-    replace f t @ (ValPatt (SymVal f'')) (LetExpr (Sym f') a b) | f == f' =
-        LetExpr f'' (replace f t . replace f (VarExpr (SymVal f'')) $ a) 
-                    (replace f t . replace f (VarExpr (SymVal f'')) $ b)
-
-    replace sym patt (LetExpr (Sym sym') a b) | sym == sym' =
-        MatExpr (replace sym patt a) [(patt, replace sym patt b)] 
-
-    replace f t @ (ValPatt (SymVal f'')) (AbsExpr (Sym f') ex) | f == f' =
-        AbsExpr f'' (replace f t . replace f (VarExpr (SymVal f'')) $ ex)
-
-    replace f _  (LetExpr (Sym f') a b) | f == f' = 
-        LetExpr (Sym f') a b
 
     replace f ex (LetExpr f' a b) =
         LetExpr f' (replace f ex a) (replace f ex b)
@@ -129,20 +154,14 @@ instance Replace Patt Expr where
     replace f ex (AppExpr a b) =
         AppExpr (replace f ex a) (replace f ex b)
 
-    replace f (ValPatt (SymVal f'')) (VarExpr (SymVal (Sym f'))) | f == f' =
-        VarExpr (SymVal f'')
-
     replace _ _  (VarExpr x) =
         VarExpr x
 
     replace f ex (MatExpr e xs) =
-        MatExpr (replace f ex e) (fmap (second (replace f ex)) xs)
+        MatExpr (replace f ex e) (fmap (first (replace f ex) . second (replace f ex)) xs)
 
     replace f ex (TypExpr a b e) =
         TypExpr a b $ replace f ex e
-
-    replace f _ (AbsExpr (Sym f') ex) | f == f' =
-        AbsExpr (Sym f') ex
 
     replace f x (AbsExpr y z) =
         AbsExpr y (replace f x z)

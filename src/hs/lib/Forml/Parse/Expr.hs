@@ -82,6 +82,9 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
         bothP m (MacroTerm (Arg a) exs) =
             try (first . (.) . replace a <$> exprP <*> merge m exs) 
 
+        bothP m (MacroTerm (Pat a) exs) =
+            try (first . (.) . replace a <$> pattP <*> merge m exs) 
+
         bothP _ _ = error "Unimplemented"
 
 

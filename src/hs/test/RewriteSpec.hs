@@ -295,6 +295,20 @@ spec =
 
 
 
+                it "should compile & run pattern replacements" $ [q|
+                  
+                    Cons: a -> List a -> List a         
+                    Nil: List a   
+                    
+                    `bind (a) to (b); (c)` =
+                        match a with 
+                        b -> c                     
+                                              
+                    bind Cons 1 Nil to   Cons x y
+                    x + 1     
+
+                |] === "2\n"
+
                 it "should compile & run recursive references bound to let replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
