@@ -15,6 +15,7 @@ import Forml.Parse.Record
 import Forml.Parse.Token
 import Forml.Parse.Type
 import Forml.Parse.Val
+import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
@@ -23,12 +24,20 @@ import Forml.Parse.Val
 pattP :: Parser s Patt
 pattP =
 
-    valPattP <|> conPattP <|> parens conPatsP <|> recPattP
+    conPatsP <|> valPattP <|> parens pattP <|> recPattP
 
     where
         valPattP = ValPatt <$> valP
-        conPattP = flip ConPatt [] <$> typSymP
-        conPatsP = ConPatt <$> typSymP <*> many pattP <|> pattP
         recPattP = RecPatt <$> recordP pattP
+        conPatsP = do
+            tSym <- typSymP
+            exs  <- many (indented >> inner)
+            return $ case exs of
+                [] -> ValPatt . ConVal . TypeSym $ tSym
+                _ -> ConPatt tSym exs
+
+        inner =
+            valPattP <|> parens pattP <|> recPattP
+
 
 ------------------------------------------------------------------------------

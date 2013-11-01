@@ -18,10 +18,10 @@ module Forml.Parse (
 
 import Control.Applicative
 import Control.Arrow
-import Control.Lens
 import Data.Monoid
 import Text.Parsec hiding ((<|>), many)
 import Text.Parsec.Pos
+import Text.Parsec.Error
 
 import Forml.AST
 import Forml.Parse.Token
@@ -33,7 +33,11 @@ import Forml.Parse.Notation
 
 parseForml :: String -> Either Err Expr
 parseForml =
-    left (Err . show) . runParser grammar (MacroState (initialPos "") bootstrap) "Parsing Forml"
+    left printError . runParser grammar (MacroState (initialPos "") bootstrap) "Parsing Forml"
+
+printError :: ParseError -> Err
+printError err =
+    Err . show $ setErrorPos (newPos "Parsing Forml" (sourceLine (errorPos err) - 29) (sourceColumn (errorPos err) + 3)) err
 
 bootstrap :: MacroList Expr
 bootstrap = foldl1 mappend 

@@ -294,7 +294,6 @@ spec =
                     "13\n"
 
 
-
                 it "should compile & run pattern replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
@@ -304,7 +303,7 @@ spec =
                         match a with 
                         b -> c                     
                                               
-                    bind Cons 1 Nil to   Cons x y
+                    bind Cons 1 Nil to Cons x y
                     x + 1     
 
                 |] === "2\n"

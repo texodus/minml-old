@@ -39,11 +39,11 @@ exprP :: Parser Expr Expr
 exprP =
 
     letMacroP
-        <|> try macroP
+        <|> macroP
         <|> jsExprP
         <|> recExprP
         <|> matExprP
-        <|> try typExprP
+        <|> typExprP
         <|> appExprP
 
 letMacroP :: Parser Expr Expr
@@ -61,7 +61,7 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
     where
         merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
 
-        rootP (MacroTerm Sep xs) = try (withSep (merge rootP xs))
+        rootP (MacroTerm Sep xs) = withSep (merge rootP xs)
         rootP (MacroLeaf x) = return (const x, undefined)
         rootP x = bothP rootP x
 
@@ -69,7 +69,7 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
         scopeP (MacroLeaf _) = parserZero
         scopeP x = bothP scopeP x
 
-        bothP m (MacroTerm Scope xs) = try $ do
+        bothP m (MacroTerm Scope xs) = do
             (ap, cont)   <-  withCont (merge scopeP xs)
             first (ap .) <$> withSep (merge m cont)
 
@@ -77,13 +77,13 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
             reserved x >> merge m exs
 
         bothP m (MacroTerm (Let a) exs) =
-            try (first . (.) . replace a <$> symP <*> merge m exs) 
+            try $ first . (.) . replace a <$> symP <*> merge m exs
 
         bothP m (MacroTerm (Arg a) exs) =
-            try (first . (.) . replace a <$> exprP <*> merge m exs) 
+            first . (.) . replace a <$> exprP <*> merge m exs
 
         bothP m (MacroTerm (Pat a) exs) =
-            try (first . (.) . replace a <$> pattP <*> merge m exs) 
+            first . (.) . replace a <$> pattP <*>  merge m exs
 
         bothP _ _ = error "Unimplemented"
 
@@ -124,8 +124,8 @@ typExprP :: Parser Expr Expr
 typExprP =
     pure TypExpr
         <*  optional (reserved "data")
-        <*> typSymP
-        <*  reserved ":"
+        <*> try (typSymP
+        <*  reserved ":")
         <*> typAbsP
         <*> withSep exprP
         <?> "Type Kind Expression"
