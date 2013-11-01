@@ -71,7 +71,7 @@ instance ToJExpr Match where
     |]
 
 getBindings val (ValPatt (SymVal (Sym s))) = [(s, val)]
-getBindings val (ConPatt (TypeSymP _) []) = []
+getBindings _   (ConPatt (TypeSymP _) []) = []
 getBindings val (ConPatt (TypeSymP _) ps) = getConds (++) getBindings val ps
 getBindings val (RecPatt (Record (unzip . M.toList -> (ks, ps)))) =
     getGenConds ks (++) getBindings val ps

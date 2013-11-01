@@ -73,20 +73,14 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
             (ap, cont)   <-  withCont (merge scopeP xs)
             first (ap .) <$> withSep (merge m cont)
 
-        bothP m (MacroTerm (Token x) exs) =
-            reserved x >> merge m exs
-
-        bothP m (MacroTerm (Let a) exs) =
-            try $ first . (.) . replace a <$> symP <*> merge m exs
-
-        bothP m (MacroTerm (Arg a) exs) =
-            first . (.) . replace a <$> exprP <*> merge m exs
-
-        bothP m (MacroTerm (Pat a) exs) =
-            first . (.) . replace a <$> pattP <*>  merge m exs
+        bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
+        bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
+        bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
+        bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
 
         bothP _ _ = error "Unimplemented"
 
+        wrap p a m exs = first . (.) . replace a <$> p <*> merge m exs
 
 jsExprP :: Parser Expr Expr
 jsExprP =

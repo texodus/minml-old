@@ -104,6 +104,7 @@ inferCell sym =
         equate2 _ as = error (show as++" possible derivations for "++show sym)
 
         patt (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat escSym)
+        patt (ConPatt _ xs) = equate2 xs []
 
         patt _ = Nothing
 

@@ -294,19 +294,6 @@ spec =
                     "13\n"
 
 
-                it "should compile & run pattern replacements" $ [q|
-                  
-                    Cons: a -> List a -> List a         
-                    Nil: List a   
-                    
-                    `bind (a) to (b); (c)` =
-                        match a with 
-                        b -> c                     
-                                              
-                    bind Cons 1 Nil to Cons x y
-                    x + 1     
-
-                |] === "2\n"
 
                 it "should compile & run recursive references bound to let replacements" $ [q|
                   
@@ -328,6 +315,40 @@ spec =
 
                     "2\n"
 
+
+            describe "Pattern Replacements" $ do
+
+
+                it "should compile & run pattern replacements" $ [q|
+                  
+                    Cons: a -> List a -> List a         
+                    Nil: List a   
+                    
+                    `bind (a) to (b); (c)` =
+                        match a with 
+                        b -> c                     
+                                              
+                    bind Cons 1 Nil to Cons x y
+                    x + 1     
+
+                |] === "2\n"
+
+
+                it "should compile & run nested pattern replacements" $ [q|
+                  
+                    Cons: a -> List a -> List a         
+                    Nil: List a   
+                    
+                    `bind first (a) to (b); (c)` =
+                        match a with 
+                        Cons b y -> c
+                        z -> 0
+
+                                              
+                    bind first Cons 1 (Cons 2 Nil) to 1
+                    2     
+
+                |] === "2\n"
 
             describe "Regression tests" $
 

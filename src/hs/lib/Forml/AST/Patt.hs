@@ -39,6 +39,7 @@ instance Fmt Patt where fmt = show
 instance Replace Patt Patt where
 
     replace f patt (ValPatt (SymVal (Sym t))) | f == t = patt
+    replace f patt (ConPatt g xs) = ConPatt g (replace f patt `fmap` xs)
     replace _ _ p = p
 
 ------------------------------------------------------------------------------
