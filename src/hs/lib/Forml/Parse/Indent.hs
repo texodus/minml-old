@@ -34,7 +34,9 @@ withScope parser = do
     pos <- getPosition
     sourcePos .= pos
     res <- parser
+    tm  <- use tailMacros
     setState st
+    tailMacros .= tm
     return res
 
 -- | Fails if the cursor is not within the current scope

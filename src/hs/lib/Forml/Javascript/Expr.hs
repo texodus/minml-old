@@ -99,4 +99,9 @@ instance ToStat Expr where
         return `(x)`;
     |]
 
+instance ToStat (Maybe Expr) where
+
+    toStat (Just x) = toStat x
+    toStat Nothing = error "Unimplemented honey badger"
+
 ------------------------------------------------------------------------------

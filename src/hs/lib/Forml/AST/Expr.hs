@@ -4,24 +4,27 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE GADTs                #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Forml.AST.Expr (
     Expr(..)
 ) where
 
 import Control.Arrow
+import Data.Monoid
 import Language.Javascript.JMacro
 import Text.PrettyPrint.Leijen.Text
 
 import Forml.AST.Patt
-import Forml.AST.Type
-import Forml.AST.Val
 import Forml.AST.Record
 import Forml.AST.Replace
+import Forml.AST.Type
+import Forml.AST.Val
 import Forml.Utils
 
 ------------------------------------------------------------------------------
@@ -30,7 +33,7 @@ import Forml.Utils
 --   function literal (function abstraction)
 
 data Expr where
-    LetExpr :: Sym  -> Expr -> Expr -> Expr
+    LetExpr :: Sym  -> Expr -> Maybe Expr -> Expr
     AppExpr :: Expr -> Expr -> Expr
     AbsExpr :: Sym  -> Expr -> Expr
     VarExpr :: Val  -> Expr
@@ -38,25 +41,36 @@ data Expr where
     RecExpr :: Record Expr -> Expr
     JSExpr  :: JExpr -> Expr
 
-    TypExpr :: TypeSym () -> TypeAbs () -> Expr -> Expr
+    TypExpr :: TypeSym () -> TypeAbs () -> Maybe Expr -> Expr
 
     deriving (Eq, Ord, Show)
+
+instance Monoid (Maybe Expr) where
+
+    mempty = Nothing
+
+    mappend (Just (LetExpr a b c)) x = Just (LetExpr a b (c `mappend` x))
+    mappend (Just (TypExpr a b c)) x = Just (TypExpr a b (c `mappend` x))
+    mappend (Just _) _ = error "Cannot append terminal parses"
+    mappend Nothing Nothing = error "WEird"
+    mappend _ y = y 
+
 
 instance Replace String Expr where
 
     -- Lets are special cases to handle recursion
 
     replace f t (LetExpr (Sym f') a b) | f == f' =
-        LetExpr (Sym t) (replace f t . replace f (VarExpr (SymVal (Sym t))) $ a) 
+        LetExpr (Sym t) (replace f t . replace f (VarExpr (SymVal (Sym t))) $ a)
                     (replace f t . replace f (VarExpr (SymVal (Sym t))) $ b)
 
     --replace sym patt (LetExpr (Sym sym') a b) | sym == sym' =
-    --    MatExpr (replace sym patt a) [(patt, replace sym patt b)] 
+    --    MatExpr (replace sym patt a) [(patt, replace sym patt b)]
 
     replace f t (AbsExpr (Sym f') ex) | f == f' =
         AbsExpr (Sym t) (replace f t . replace f (VarExpr (SymVal (Sym t))) $ ex)
 
-    replace f _  (LetExpr (Sym f') a b) | f == f' = 
+    replace f _  (LetExpr (Sym f') a b) | f == f' =
         LetExpr (Sym f') a b
 
     replace f ex (LetExpr f' a b) =
@@ -171,7 +185,7 @@ instance Replace Patt Expr where
 
 instance Fmt Expr where
 
-    fmt (LetExpr binding ex cont) =
+    fmt (LetExpr binding ex (Just cont)) =
         "let " ++ fmt binding ++ " = " ++ fmt ex ++ "; " ++ fmt cont
 
     fmt (AppExpr f x) =
@@ -183,7 +197,7 @@ instance Fmt Expr where
     fmt (MatExpr x cs) =
         "match " ++ fmt x ++ " with " ++ fmt cs
 
-    fmt (TypExpr name def cont) =
+    fmt (TypExpr name def (Just cont)) =
         "data " ++ fmt name ++ " = " ++ fmt def ++ "; " ++ fmt cont
 
     fmt (JSExpr js) =

@@ -5,25 +5,31 @@
 
 module RewriteSpec where
 
+import Control.Applicative
+import Control.Monad
 import Test.Hspec
 import Test.HUnit
 import Text.InterpolatedString.Perl6
+import Text.Parsec.Pos
 
 import Forml.AST
+import Forml.Config
 import Forml.Exec
 import Forml.Parse
+import Forml.Parse.Token
+import Forml.Prelude
 
 import Utils hiding (assertParse)
 
 assertNode :: String -> Either Err String -> Assertion
 assertNode a b = do
-    res <- case compile a of 
+    res <- case compile defaultConfig [a] of 
         Left x -> return $ Left x
         Right x -> Right `fmap` node x
     assertEqual "" b res
 
 assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = assertEqual "" b (parseForml a)
+assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [prelude, a])
 
 class Assert a b | b -> a, a -> b where
 
@@ -48,7 +54,6 @@ spec =
 
 
         describe "parse" $ do
-
 
 
             it "should parse a trivial example " $ [q|
@@ -111,16 +116,7 @@ spec =
                 \                                 \n\
                 \   bind x to 12 in x + 1         \n"
 
-                (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0))))))
-
-            it "should parse repeating args" $ pendingWith "TODO figure out syntax"
-            --assertParse
-              
-            --    "   `[ (a*) ]` = ``a``                          \n\
-            --    \                                               \n\
-            --    \   [ 3; 4; 5 ] == [ 3; 4; 5 ]                  \n"
-
-            --    (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
+                (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0)))))))
 
     	describe "run" $ do
 

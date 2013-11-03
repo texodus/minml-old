@@ -121,8 +121,13 @@ typExprP =
         <*> try (typSymP
         <*  reserved ":")
         <*> typAbsP
-        <*> withSep exprP
+        <*> ((Just <$> withSep exprP) <|> captureMacros)
         <?> "Type Kind Expression"
+
+captureMacros = do
+    ms <- use macros
+    tailMacros .= ms
+    return Nothing
 
 appExprP :: Parser Expr Expr
 appExprP = buildExpressionParser opPs termP <?> "Application"

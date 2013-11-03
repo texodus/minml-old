@@ -20,27 +20,37 @@
 -- We can accomplish this in Haskell '98 - but it's not fun!
 -- Let's make things complicated by using some extensions!
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
+{-# OPTIONS_GHC -fno-warn-missing-fields #-}
 
 ------------------------------------------------------------------------------
 
 -- There is one module.  We'll need a few elements from `System` for
 -- handling the plumbing aspects, and a handful of elements from the
--- `containers` and `mtl` libraries. 
+-- `containers` and `mtl` libraries.
 
 module Forml.Exec where
 
 import Control.Applicative
+import Control.Arrow
+import Control.Lens
 import Control.Monad
-import System.Environment
+import Data.Maybe
+import Data.Monoid
+import System.Console.CmdLib
+import Text.Parsec.Pos
 
 import Forml.AST
-import Forml.Parse
-import Forml.TypeCheck
+import Forml.Config
 import Forml.Javascript
-import Forml.RenderText
+import Forml.Parse
+import Forml.Parse.Token
 import Forml.Prelude
+import Forml.RenderText
+import Forml.TypeCheck
 
 ------------------------------------------------------------------------------
 
@@ -50,17 +60,39 @@ import Forml.Prelude
 -- ==========================
 
 -- The structure of compilation can be expressed as a simple
--- function composition.  
-
-compile :: String -> Either Err String
-compile = appendPrelude >=> parseForml >=> typeCheck >=> generateJs >=> renderText
+-- function composition.
 
 exec :: IO ()
 exec = do
-    file   <- head <$> getArgs
-    source <- readFile file
-    case compile source of
+    args   <- getArgs
+    config <- executeR Config {} args
+    srcs   <- mapM readFile (config ^. sourceFiles)
+    case compile config srcs of
         Left  e  -> print e
         Right js -> putStrLn js
+
+compile :: Config -> [String] -> Either Err String
+compile config srcs = do
+
+    let srcs' =
+            if config ^. implicitPrelude
+            then prelude : srcs 
+            else srcs
+
+    (asts, _) <- foldM parse initialState srcs'
+    let ast = fromMaybe undefined (foldl1 (<>) (Just <$> asts))
+
+    (config ^. shouldTypeCheck) `when` void (typeCheck ast)
+
+    js <- generateJs ast
+    renderText js
+
+    
+initialState :: ([Expr], MacroState Expr)
+initialState = ([], emptyState)
+
+parse :: ([Expr], MacroState Expr) -> String -> Either Err ([Expr], MacroState Expr)
+parse (xs, MacroState _ _ ms) src =
+    first ((xs ++) . (:[])) <$> parseForml src (MacroState (initialPos "") ms ms)
 
 ------------------------------------------------------------------------------

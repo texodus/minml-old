@@ -14,6 +14,7 @@ import Language.Javascript.JMacro
 
 import Forml.AST
 import Forml.Parse.Token
+import Forml.Prelude
 import Forml.RenderText
 
 
@@ -38,7 +39,7 @@ instance Arbitrary Expr where
     arbitrary = sized expr'
         where
             expr' 0 = VarExpr `fmap` arbitrary
-            expr' n = oneof [ liftM3 LetExpr arbitrary subExpr subExpr
+            expr' n = oneof [ liftM3 LetExpr arbitrary subExpr (Just `fmap` subExpr)
                             , liftM2 AppExpr subExpr subExpr
                             , liftM2 AbsExpr arbitrary subExpr
                             , liftM  VarExpr arbitrary ]
@@ -48,7 +49,7 @@ instance Arbitrary Expr where
 assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
 assertParse p a b = assertEqual "" b parseResult
 	where
-		parseResult = case runParser p (MacroState (initialPos "") mempty) "" a of
+		parseResult = case runParser p emptyState "" a of
 			Left x -> Left . Err . show $ x
 			Right x -> Right x
 

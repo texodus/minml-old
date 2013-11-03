@@ -8,13 +8,13 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
@@ -24,18 +24,20 @@ module Forml.Parse.Token where
 
 import           Control.Lens
 import           Control.Monad.State
+import           Data.Monoid
 import           Text.Parsec
 import           Text.Parsec.Language
+import           Text.Parsec.Pos
 import qualified Text.Parsec.Token    as T
 
 import Forml.AST
 
 ------------------------------------------------------------------------------
 
-letterP = 
+letterP =
     lowerP <|> oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
 
-lowerP = 
+lowerP =
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
 
 ohmlDef :: LanguageDef (MacroState a)
@@ -54,8 +56,9 @@ instance MonadState st (Parsec tok st) where
     put = setState
 
 data MacroState a = MacroState {
-    _sourcePos :: SourcePos,
-    _macros    :: MacroList a
+    _sourcePos  :: SourcePos,
+    _macros     :: MacroList a,
+    _tailMacros :: MacroList a
 }
 
 makeLenses ''MacroState

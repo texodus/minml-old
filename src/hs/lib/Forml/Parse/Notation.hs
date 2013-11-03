@@ -109,7 +109,7 @@ inferCell sym =
         patt _ = Nothing
 
         inferCellRec :: Expr -> Maybe MacroCell
-        inferCellRec (LetExpr (Sym f) a b) 
+        inferCellRec (LetExpr (Sym f) a (Just b)) 
             | f == sym && maybe True (== Arg escSym) (equate [a, b]) =
                 Just (Let escSym)
 
@@ -122,7 +122,7 @@ inferCell sym =
 
         inferCellRec (MatExpr e xs) = equate2 (map fst xs) (e : map snd xs)
 
-        inferCellRec (TypExpr _ _ e) = inferCellRec e
+        inferCellRec (TypExpr _ _ (Just e)) = inferCellRec e
 
         inferCellRec (AbsExpr (Sym f) ex)
             | f == sym && (

@@ -27,11 +27,11 @@ import Data.Maybe
 
 data MacroCell where 
     Token :: String -> MacroCell
+    Scope :: MacroCell
+    Sep   :: MacroCell
     Arg   :: String -> MacroCell
     Let   :: String -> MacroCell
     Pat   :: String -> MacroCell
-    Scope :: MacroCell
-    Sep   :: MacroCell
 
     deriving (Eq, Ord, Show)
 
@@ -52,10 +52,9 @@ instance Eq a => Ord (Macro a) where
     compare _ (MacroTerm _ _) = LT
     compare _ _ = EQ
 
-
 newtype MacroList a =
     MacroList [Macro a] 
-    deriving (Eq, Functor, Show)
+    deriving (Eq, Functor, Ord, Show)
 
 instance (Show a, Eq a) => Monoid (MacroList a) where
     mempty = MacroList []

@@ -89,14 +89,14 @@ exprCheck _ (VarExpr (ConVal t)) =
 exprCheck as (RecExpr (Record (unzip . M.toList -> (ks, vs)))) =
     liftM (TypeRec . Record . M.fromList . zip ks) (mapM (exprCheck as) vs)
 
-exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) expr) =
+exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) (Just expr)) =
     exprCheck (name :>: typKAbs : as) expr
 
     where
         typK = toKind Star typ
         typKAbs = quantify (getVars typK) typK
 
-exprCheck as (LetExpr (Sym sym) val expr) = do
+exprCheck as (LetExpr (Sym sym) val (Just expr)) = do
     symT <- newTypeVar Star
     valT <- exprCheck ((sym :>: TypeAbsT [] symT) : as) val
     unify valT symT

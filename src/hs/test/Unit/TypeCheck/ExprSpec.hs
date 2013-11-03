@@ -15,9 +15,9 @@ assertCheck a b = assertEqual "" b checked
             Right _ -> Nothing
 
 spec :: Spec
-spec = do
+spec =
 
-    describe "Forml.type checkr" $ do
+    describe "Forml.type check" $
 
     	describe "type checkOhml" $ do
 
@@ -43,11 +43,11 @@ spec = do
 
                 (LetExpr (Sym "x")
                          (VarExpr (LitVal (NumLit 1.0)))
-                         (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                         (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                            (AppExpr (AppExpr (VarExpr (SymVal (Sym "+")))
                                                              (VarExpr (SymVal (Sym "x"))))
                                                     (VarExpr (LitVal (NumLit 1.0)))))
-                                  (VarExpr (LitVal (NumLit 2.0)))))
+                                  (VarExpr (LitVal (NumLit 2.0))))))
 
                 Nothing
 
@@ -70,10 +70,10 @@ spec = do
                                   (AppExpr (AppExpr (VarExpr (SymVal (Sym "+")))
                                                     (VarExpr (SymVal (Sym "x"))))
                                            (VarExpr (LitVal (NumLit 4.0))))) 
-                         (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                         (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                            (AppExpr (VarExpr (SymVal (Sym "g")))
                                                     (VarExpr (LitVal (NumLit 2.0)))))
-                                  (VarExpr (LitVal (NumLit 6.0)))))
+                                  (VarExpr (LitVal (NumLit 6.0))))))
 
                 Nothing
 
@@ -93,8 +93,8 @@ spec = do
                                                                                               (AppExpr (AppExpr (VarExpr (SymVal (Sym "-")))
                                                                                                                 (VarExpr (SymVal (Sym "n"))))
                                                                                                        (VarExpr (LitVal (NumLit 2.0))))))]))
-                         (AppExpr (VarExpr (SymVal (Sym "fib")))
-                                  (VarExpr (LitVal (NumLit 7.0)))))
+                         (Just (AppExpr (VarExpr (SymVal (Sym "fib")))
+                                  (VarExpr (LitVal (NumLit 7.0))))))
 
                 Nothing
 
@@ -117,10 +117,10 @@ spec = do
                                                                        (TypeVar (TypeVarP "a"))))
                                                      (TypeApp (TypeSym (TypeSymP "List"))
                                                               (TypeVar (TypeVarP "a"))))))
-                         (TypExpr (TypeSymP "Nil")
+                         (Just (TypExpr (TypeSymP "Nil")
                                   (TypeAbsP (TypeApp (TypeSym (TypeSymP "List"))
                                                      (TypeVar (TypeVarP "a"))))
-                                  (LetExpr (Sym "length")
+                                  (Just (LetExpr (Sym "length")
                                            (AbsExpr (Sym "n")
                                                     (MatExpr (VarExpr (SymVal (Sym "n")))
                                                              [ (ValPatt (ConVal (TypeSym (TypeSymP "Nil"))), VarExpr (LitVal (NumLit 0.0)))
@@ -131,12 +131,12 @@ spec = do
                                                                                 (VarExpr (LitVal (NumLit 1.0))))
                                                                        (AppExpr (VarExpr (SymVal (Sym "length")))
                                                                                 (VarExpr (SymVal (Sym "xs")))))]))
-                                           (AppExpr (VarExpr (SymVal (Sym "length")))
+                                           (Just (AppExpr (VarExpr (SymVal (Sym "length")))
                                                     (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons"))))
                                                                       (VarExpr (LitVal (NumLit 1.0))))
                                                              (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons"))))
                                                                                (VarExpr (LitVal (NumLit 2.0))))
-                                                                      (VarExpr (ConVal (TypeSym (TypeSymP "Nil"))))))))))
+                                                                      (VarExpr (ConVal (TypeSym (TypeSymP "Nil")))))))))))))
 
                 Nothing
 
@@ -147,12 +147,12 @@ spec = do
                                                      (TypeVar (TypeVarP "a")))
                                             (TypeApp (TypeSym (TypeSymP "Maybe"))
                                                      (TypeVar (TypeVarP "a")))))
-                         (TypExpr (TypeSymP "None")
+                         (Just (TypExpr (TypeSymP "None")
                                   (TypeAbsP (TypeApp (TypeSym (TypeSymP "Maybe"))
                                                      (TypeVar (TypeVarP "a"))))
-                                  (MatExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Just"))))
+                                  (Just (MatExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Just"))))
                                                     (VarExpr (LitVal (NumLit 5.0))))
-                                           [ (ConPatt (TypeSymP "Just") [ValPatt (LitVal (StrLit "blammo"))], VarExpr (SymVal (Sym "false")))])))
+                                           [ (ConPatt (TypeSymP "Just") [ValPatt (LitVal (StrLit "blammo"))], VarExpr (SymVal (Sym "false")))])))))
 
                 $ Just (Err "Types do not unify\n  String and Double")
 
@@ -160,13 +160,13 @@ spec = do
 
                 (LetExpr (Sym "letly")
                          (VarExpr (LitVal (NumLit 4.0)))
-                         (LetExpr (Sym "func")
+                         (Just (LetExpr (Sym "func")
                                   (AbsExpr (Sym "x")
                                            (AppExpr (AppExpr (VarExpr (SymVal (Sym "+")))
                                                              (VarExpr (SymVal (Sym "x"))))
                                                     (VarExpr (LitVal (NumLit 2.0)))))
-                                  (AppExpr (VarExpr (SymVal (Sym "func")))
-                                           (VarExpr (SymVal (Sym "letly"))))))
+                                  (Just (AppExpr (VarExpr (SymVal (Sym "func")))
+                                           (VarExpr (SymVal (Sym "letly"))))))))
 
                 Nothing
 
@@ -174,17 +174,17 @@ spec = do
 
                 (LetExpr (Sym "x") 
                          (VarExpr (LitVal (NumLit 3.0)))
-                         (LetExpr (Sym "f") 
+                         (Just (LetExpr (Sym "f") 
                                   (AbsExpr (Sym "y") 
                                            (AppExpr (AppExpr (VarExpr (SymVal (Sym "+")))
                                                              (VarExpr (SymVal (Sym "y"))))
                                                     (VarExpr (SymVal (Sym "x")))))
-                                  (LetExpr (Sym "x")
+                                  (Just (LetExpr (Sym "x")
                                            (VarExpr (LitVal (NumLit 2.0)))
-                                           (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                           (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                                              (AppExpr (VarExpr (SymVal (Sym "f")))
                                                                       (VarExpr (LitVal (NumLit 3.0)))))
-                                                    (VarExpr (LitVal (NumLit 6.0)))))))
+                                                    (VarExpr (LitVal (NumLit 6.0))))))))))
 
                 Nothing
 
@@ -193,7 +193,7 @@ spec = do
                 (LetExpr (Sym "x")
                          (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                       , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
-                         (VarExpr (SymVal (Sym "x"))))
+                         (Just (VarExpr (SymVal (Sym "x")))))
 
                 Nothing
 
@@ -203,12 +203,12 @@ spec = do
                 (LetExpr (Sym "x")
                          (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                       , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
-                         (LetExpr (Sym "y")
+                         (Just (LetExpr (Sym "y")
                                   (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                                , ("z", VarExpr (LitVal (NumLit 3.0))) ])))
-                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                  (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                                     (VarExpr (SymVal (Sym "x")))) 
-                                           (VarExpr (SymVal (Sym "y"))))))
+                                           (VarExpr (SymVal (Sym "y"))))))))
 
                 $ Just (Err "Types do not unify\n  {x: Double, y: Double} and {x: Double, z: Double}")
 
@@ -217,12 +217,12 @@ spec = do
                 (LetExpr (Sym "x")
                          (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                       , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
-                         (LetExpr (Sym "y")
+                         (Just (LetExpr (Sym "y")
                                   (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                                , ("y", VarExpr (LitVal (NumLit 3.0))) ])))
-                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                  (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                                     (VarExpr (SymVal (Sym "x")))) 
-                                           (VarExpr (SymVal (Sym "y"))))))
+                                           (VarExpr (SymVal (Sym "y"))))))))
 
                 Nothing
 
@@ -231,12 +231,12 @@ spec = do
                 (LetExpr (Sym "x")
                          (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                       , ("y", VarExpr (LitVal (NumLit 6.0))) ])))
-                         (LetExpr (Sym "y")
+                         (Just (LetExpr (Sym "y")
                                   (RecExpr (Record (M.fromList [ ("x", VarExpr (LitVal (NumLit 4.0)))
                                                                , ("y", VarExpr (LitVal (NumLit 3.0))) ])))
-                                  (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
+                                  (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "==")))
                                                     (VarExpr (SymVal (Sym "x")))) 
-                                           (VarExpr (SymVal (Sym "y"))))))
+                                           (VarExpr (SymVal (Sym "y"))))))))
 
                 Nothing
 
