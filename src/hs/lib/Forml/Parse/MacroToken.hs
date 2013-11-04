@@ -33,7 +33,7 @@ lowerP =
 macroDef :: LanguageDef (FT.MacroState a)
 macroDef = emptyDef {
     T.reservedNames   = keywords,
-    T.reservedOpNames = concat ops,
+  --  T.reservedOpNames = concat ops,
     T.identStart      = lowerP <|> letterP <|> char '_',
     T.identLetter     = letterP <|> lowerP <|> digit <|> char '_',
     T.opStart         = oneOf ":!#$%&*+./{}<=>?@\\^|-~",

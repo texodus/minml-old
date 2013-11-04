@@ -29,10 +29,10 @@ data MacroCell where
     Token :: String -> MacroCell
     Scope :: MacroCell
     Sep   :: MacroCell
-    Arg   :: String -> MacroCell
     Let   :: String -> MacroCell
+    Arg   :: String -> MacroCell
     Pat   :: String -> MacroCell
-
+  
     deriving (Eq, Ord, Show)
 
 -- instance Ord MacroCell where compare = undefined

@@ -48,7 +48,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
+                $ Left (Err "\"Test Case\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
 
             it "should compile & run anonymous functions and application" $ assertNode
 
@@ -148,7 +148,7 @@ spec = do
                     "   parseInt  \n\
                     \   4         "
 
-                    $ Left (Err "\"Parsing Forml\" (line 2, column 4):\nunexpected '4'\nexpecting operator or end of input\nStatement indented (introduced at \"Parsing Forml\" (line 1, column 4))")
+                    $ Left (Err "\"Test Case\" (line 2, column 4):\nunexpected '4'\nexpecting operator or end of input\nStatement indented (introduced at \"Test Case\" (line 1, column 4))")
 
                 it "should compile & run function application on separate lines indented" $ assertNode
 

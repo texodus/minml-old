@@ -68,16 +68,18 @@ macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
 
         scopeP (MacroTerm Sep xs) = return (id, xs)
         scopeP (MacroLeaf _) = parserZero
-        scopeP x = bothP scopeP x
+        scopeP x = try $ bothP scopeP x
 
         bothP m (MacroTerm Scope xs) = do
             (ap, cont)   <-  withCont (merge scopeP xs)
             first (ap .) <$> withSep (merge m cont)
 
+        bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
+        bothP m (MacroTerm (Token "</") exs) = reservedOp "</" >> merge m exs
         bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
         bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
-        bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
         bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
+        bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
 
         bothP _ _ = error "Unimplemented"
 

@@ -181,7 +181,7 @@ spec =
 
                 `when (a) { (b) } else { (c) }` = when a then b else c
                 `when (a) { (b) } else (c)`     = when a then b else c
-                `when (a); (b); (c)`        = when a then b else c
+                `when (a); (b); (c)`            = when a then b else c
 
                 when True then when False { 1 } else 2 else 3
 
@@ -334,11 +334,45 @@ spec =
                         Cons b y -> c
                         z -> 0
 
-                                              
                     bind first Cons 1 (Cons 2 Nil) to 1
                     2     
 
                 |] === "2\n"
+
+                it "should compile & run pattern replacements when they collide with let" $ [q|
+                  
+                    Box: a -> Box a
+                    let unbox (Box x) = x
+                    unbox (Box 5) == 5    
+
+                |] === "true\n"
+
+            describe "XML tests" $
+
+                it "Should run simple XML" $ [q|
+ 
+                    Xml: String -> String -> String
+                    `<(a)> (b) </(c)>` = Xml a b
+                 
+                    <"div"> 
+                        <"a">"test"</"a">
+                    </"div">
+
+                |] ===
+
+                    "{ '0': 'div', '1': { '0': 'a', '1': 'test' } }\n"
+
+            describe "Javascript replacements" $
+
+                it "Should run simple javascript replacements" $ [q|
+ 
+                    `add (x) to (y)` = x + y
+                    add 4 to 4
+
+                |] ===
+
+                    "8\n"
+
 
             describe "Regression tests" $
 

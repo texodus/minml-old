@@ -56,7 +56,7 @@ spec =
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
+                $ Left (Err "\"Test Case\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
 
             it "should parse anonymous functions and application" $ assertParse
 
@@ -91,7 +91,7 @@ spec =
                 \       n -> fib (n - 1) + fib (n - 2);     \
                 \   fib 7                                   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 223):\nunexpected \"7\"\nexpecting \"->\" or \"=\"")
+                $ Left (Err "\"Test Case\" (line 1, column 223):\nunexpected \"7\"\nexpecting \"->\" or \"=\"")
 
             it "should parse match mixed semicolon with newlines" $ assertParse
 
@@ -174,7 +174,7 @@ spec =
                     "   f       \n\
                     \   4         "
 
-                    $ Left (Err "\"Parsing Forml\" (line 2, column 4):\nunexpected '4'\nexpecting operator or end of input\nStatement indented (introduced at \"Parsing Forml\" (line 1, column 4))")
+                    $ Left (Err "\"Test Case\" (line 2, column 4):\nunexpected '4'\nexpecting operator or end of input\nStatement indented (introduced at \"Test Case\" (line 1, column 4))")
 
                 it "should parse function application on separate lines indented" $ assertParse
 

@@ -34,7 +34,7 @@ parseForml name src state =
 
 printError :: ParseError -> Err
 printError err =
-    Err . show $ err -- setErrorPos (newPos "Parsing Forml" (sourceLine (errorPos err) - 29) (sourceColumn (errorPos err) + 3)) err
+    Err . show $ err -- setErrorPos (newPos "Test Case" (sourceLine (errorPos err) - 29) (sourceColumn (errorPos err) + 3)) err
 
 grammar :: Parser Expr (Expr, MacroState Expr)
 grammar = do
