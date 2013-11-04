@@ -24,10 +24,8 @@ module Forml.Parse.Token where
 
 import           Control.Lens
 import           Control.Monad.State
-import           Data.Monoid
 import           Text.Parsec
 import           Text.Parsec.Language
-import           Text.Parsec.Pos
 import qualified Text.Parsec.Token    as T
 
 import Forml.AST

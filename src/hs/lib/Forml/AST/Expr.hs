@@ -52,7 +52,6 @@ instance Monoid (Maybe Expr) where
     mappend (Just (LetExpr a b c)) x = Just (LetExpr a b (c `mappend` x))
     mappend (Just (TypExpr a b c)) x = Just (TypExpr a b (c `mappend` x))
     mappend (Just _) _ = error "Cannot append terminal parses"
-    mappend Nothing Nothing = error "WEird"
     mappend _ y = y 
 
 

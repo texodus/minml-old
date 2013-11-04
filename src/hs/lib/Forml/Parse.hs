@@ -28,9 +28,9 @@ import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
-parseForml :: String -> MacroState Expr -> Either Err (Expr, MacroState Expr)
-parseForml src state =
-    left printError $ runParser grammar state "Parsing Forml" src
+parseForml :: String -> String -> MacroState Expr -> Either Err (Expr, MacroState Expr)
+parseForml name src state =
+    left printError $ runParser grammar state name src
 
 printError :: ParseError -> Err
 printError err =

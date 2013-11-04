@@ -20,11 +20,11 @@
 -- We can accomplish this in Haskell '98 - but it's not fun!
 -- Let's make things complicated by using some extensions!
 
+{-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
-{-# OPTIONS_GHC -fno-warn-missing-fields #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 ------------------------------------------------------------------------------
 
@@ -32,13 +32,10 @@
 -- handling the plumbing aspects, and a handful of elements from the
 -- `containers` and `mtl` libraries.
 
-module Forml.Exec where
+module Forml.Config where
 
 import Control.Lens
 import System.Console.CmdLib
-
-import Forml.Compile
-import Forml.Config
 
 ------------------------------------------------------------------------------
 
@@ -50,13 +47,41 @@ import Forml.Config
 -- The structure of compilation can be expressed as a simple
 -- function composition.
 
-exec :: IO ()
-exec = do
-    args   <- getArgs
-    config <- executeR Config {} args
-    srcs   <- mapM readFile (config ^. sourceFiles)
-    case compile config ((config ^. sourceFiles) `zip` srcs) of
-        Left  e  -> print e
-        Right js -> putStrLn js
+data Config = Config {
+    _implicitPrelude :: Bool,
+    _sourceFiles     :: [String],
+    _shouldTypeCheck :: Bool
+} deriving (Eq, Show, Data, Typeable)
+
+makeLenses ''Config
+
+defaultConfig :: Config
+defaultConfig = Config True [] True
+
+instance Attributes Config where
+    attributes _ = group "Options" [
+        _implicitPrelude %> [
+            Short "p",
+            Long ["prelude"],
+            Default True,
+            Help "Insert prelude in type checking and code gen"
+        ],
+
+        _sourceFiles %> [
+            Default ([] :: [String]),
+            Extra True,
+            Help "Delicious source files"
+        ],
+
+        _shouldTypeCheck %> [
+            Short "t",
+            Long ["typecheck"],
+            Default True,
+            Help "Type check the sources"
+        ]]
+
+instance RecordCommand Config where
+     mode_summary _ = "Welcome to the FORML Programming language.\n"
+     run' = undefined
 
 ------------------------------------------------------------------------------

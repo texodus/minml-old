@@ -7,14 +7,14 @@ import Test.Hspec
 import Test.HUnit
 import Text.Parsec.Pos
 
-import Forml.Exec
+import Forml.Compile
 import Forml.Parse
 import Forml.AST
 import Forml.Prelude
 import Forml.Parse.Token
 
 assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [prelude, a])
+assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)])
 
 spec :: Spec
 spec =
@@ -56,7 +56,7 @@ spec =
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"\\\\\", \"fun\", \"let\", \"\\955\", identifier, Javascript, Record Expression, Match Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
 
             it "should parse anonymous functions and application" $ assertParse
 

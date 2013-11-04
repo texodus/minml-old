@@ -5,7 +5,7 @@ import Test.HUnit
 
 import Forml.AST
 import Forml.Config
-import Forml.Exec
+import Forml.Compile
 import Forml.Parse
 import Forml.Prelude
 
@@ -13,7 +13,7 @@ import Utils
 
 assertNode :: String -> Either Err String -> Assertion
 assertNode a b = do
-    res <- case compile defaultConfig [a] of 
+    res <- case compile defaultConfig [("Test Case", a)] of 
         Left x -> return $ Left x
         Right x -> Right `fmap` node x
     flip (assertEqual "") res b
@@ -48,7 +48,7 @@ spec = do
 
                 "   let x = 1;   "
 
-                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting \"`\", \"\\\\\", \"fun\", \"let\", \"\\955\", identifier, Javascript, Record Expression, Match Expression, Type Kind Expression or Application")
+                $ Left (Err "\"Parsing Forml\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
 
             it "should compile & run anonymous functions and application" $ assertNode
 

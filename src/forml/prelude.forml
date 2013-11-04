@@ -1,16 +1,16 @@
 
 
 
--- True:  Bool
--- False: Bool
--- 
--- `if (a) then (b) else (c)` = match a with
--- 	True  = b
--- 	False = c
--- 
--- `if (a) { (b) } else { (c) }` = if a then b else c
--- `if (a) { (b) } else (c)`     = if a then b else c
--- `if (a); (b) else (c)`        = if a then b else c
+True:  Bool
+False: Bool
+
+`if (a) then (b) else (c)` = match a with
+	True  = b
+	False = c
+
+`if (a) { (b) } else { (c) }` = if a then b else c
+`if (a) { (b) } else (c)`     = if a then b else c
+`if (a); (b) else (c)`        = if a then b else c
 
 `fun (x) = (y)` = fun x -> y
 `λ (x) -> (y)`  = fun x -> y

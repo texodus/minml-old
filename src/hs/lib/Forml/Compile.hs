@@ -24,21 +24,30 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-{-# OPTIONS_GHC -fno-warn-missing-fields #-}
-
 ------------------------------------------------------------------------------
 
 -- There is one module.  We'll need a few elements from `System` for
 -- handling the plumbing aspects, and a handful of elements from the
 -- `containers` and `mtl` libraries.
 
-module Forml.Exec where
+module Forml.Compile where
 
+import Control.Applicative
+import Control.Arrow
 import Control.Lens
-import System.Console.CmdLib
+import Control.Monad
+import Data.Maybe
+import Data.Monoid
+import Text.Parsec.Pos
 
-import Forml.Compile
+import Forml.AST
 import Forml.Config
+import Forml.Javascript
+import Forml.Parse
+import Forml.Parse.Token
+import Forml.Prelude
+import Forml.RenderText
+import Forml.TypeCheck
 
 ------------------------------------------------------------------------------
 
@@ -50,13 +59,28 @@ import Forml.Config
 -- The structure of compilation can be expressed as a simple
 -- function composition.
 
-exec :: IO ()
-exec = do
-    args   <- getArgs
-    config <- executeR Config {} args
-    srcs   <- mapM readFile (config ^. sourceFiles)
-    case compile config ((config ^. sourceFiles) `zip` srcs) of
-        Left  e  -> print e
-        Right js -> putStrLn js
+compile :: Config -> [(String, String)] -> Either Err String
+compile config srcs = do
+
+    let srcs' =
+            if config ^. implicitPrelude
+            then ("Prelude", prelude) : srcs 
+            else srcs
+
+    (asts, _) <- foldM parse initialState srcs'
+    let ast = fromMaybe undefined (foldl1 (<>) (Just <$> asts))
+
+    (config ^. shouldTypeCheck) `when` void (typeCheck ast)
+
+    js <- generateJs ast
+    renderText js
+
+    
+initialState :: ([Expr], MacroState Expr)
+initialState = ([], emptyState)
+
+parse :: ([Expr], MacroState Expr) -> (String, String) -> Either Err ([Expr], MacroState Expr)
+parse (xs, MacroState _ _ ms) (name, src) =
+    first ((xs ++) . (:[])) <$> parseForml name src (MacroState (initialPos "") ms ms)
 
 ------------------------------------------------------------------------------

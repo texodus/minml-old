@@ -14,7 +14,7 @@ import Text.Parsec.Pos
 
 import Forml.AST
 import Forml.Config
-import Forml.Exec
+import Forml.Compile
 import Forml.Parse
 import Forml.Parse.Token
 import Forml.Prelude
@@ -23,13 +23,13 @@ import Utils hiding (assertParse)
 
 assertNode :: String -> Either Err String -> Assertion
 assertNode a b = do
-    res <- case compile defaultConfig [a] of 
+    res <- case compile defaultConfig [("Test Case", a)] of 
         Left x -> return $ Left x
         Right x -> Right `fmap` node x
     assertEqual "" b res
 
 assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [prelude, a])
+assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)])
 
 class Assert a b | b -> a, a -> b where
 
@@ -175,18 +175,15 @@ spec =
 
             it "should compile & run a complicated nested macro" $ [q|
 
-                True:  Bool
-                False: Bool
-
-                `if (a) then (b) else (c)` = match a with
+                `when (a) then (b) else (c)` = match a with
                     True  = b
                     False = c
 
-                `if (a) { (b) } else { (c) }` = if a then b else c
-                `if (a) { (b) } else (c)`     = if a then b else c
-                `if (a); (b); (c)`        = if a then b else c
+                `when (a) { (b) } else { (c) }` = when a then b else c
+                `when (a) { (b) } else (c)`     = when a then b else c
+                `when (a); (b); (c)`        = when a then b else c
 
-                if True then if False { 1 } else 2 else 3
+                when True then when False { 1 } else 2 else 3
 
             |] ===
 
@@ -196,9 +193,6 @@ spec =
 
             it "should compile & run nested definitions" $ [q|
               
-                True: Bool                                  
-                False: Bool                                 
-                                                            
                 `do (b)` =                                  
                     `bind (a) to (b) in (c)` =              
                          c                                  

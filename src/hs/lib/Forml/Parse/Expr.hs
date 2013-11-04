@@ -45,6 +45,7 @@ exprP =
         <|> matExprP
         <|> typExprP
         <|> appExprP
+        <?> "Expression"
 
 letMacroP :: Parser Expr Expr
 letMacroP = withScope $ do
@@ -121,10 +122,11 @@ typExprP =
         <*> try (typSymP
         <*  reserved ":")
         <*> typAbsP
-        <*> ((Just <$> withSep exprP) <|> captureMacros)
+        <*> capture (withSep exprP)
         <?> "Type Kind Expression"
 
-captureMacros = do
+capture :: Parser Expr Expr -> Parser Expr (Maybe Expr)
+capture prsr = Just <$> prsr <|> do
     ms <- use macros
     tailMacros .= ms
     return Nothing
