@@ -362,11 +362,31 @@ spec =
 
                     "{ '0': 'div', '1': { '0': 'a', '1': 'test' } }\n"
 
+            describe "Infix tests" $ do
+
+                it "Should run simple infix expressions" $ [q|
+ 
+                    `(a) +++ (b)` = a + b
+                    2 +++ 2
+
+                |] ===
+
+                    "4\n"
+
+                it "Should run nested infix expressions" $ [q|
+ 
+                    `(a) +++ (b)` = a + b
+                    2 +++ 2 +++ 2 +++ 2
+
+                |] ===
+
+                    "8\n"
+
             describe "Javascript replacements" $
 
                 it "Should run simple javascript replacements" $ [q|
  
-                    `add (x) to (y)` = x + y
+                    `add (x) to (y)` = ``x + y``
                     add 4 to 4
 
                 |] ===

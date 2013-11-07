@@ -18,6 +18,7 @@ module Forml.Parse.Expr (
 import Control.Applicative
 import Control.Arrow
 import Control.Lens
+import Control.Monad.Identity
 import Data.Monoid
 import Language.Javascript.JMacro
 import Text.Parsec                hiding (many, (<|>), optional)
@@ -32,6 +33,7 @@ import Forml.Parse.Record
 import Forml.Parse.Token
 import Forml.Parse.Type
 import Forml.Parse.Val
+import Forml.Javascript.Expr
 
 ------------------------------------------------------------------------------
 
@@ -58,32 +60,38 @@ letMacroP = withScope $ do
     withSep exprP
 
 macroP :: Parser Expr Expr
-macroP = ($ undefined) . fst <$> (use macros >>= merge rootP)
-    where
-        merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
+macroP = ($ undefined) . fst <$> (use macros >>= merge rootP . filterP)
 
-        rootP (MacroTerm Sep xs) = withSep (merge rootP xs)
-        rootP (MacroLeaf x) = return (const x, undefined)
-        rootP x = bothP rootP x
+filterP :: MacroList Expr -> MacroList Expr
+filterP (MacroList (MacroTerm (Arg _) _ : ms)) = filterP (MacroList ms)
+filterP (MacroList (x : ms)) =
+    case filterP (MacroList ms) of (MacroList mss) -> MacroList (x : mss)
+filterP x = x
 
-        scopeP (MacroTerm Sep xs) = return (id, xs)
-        scopeP (MacroLeaf _) = parserZero
-        scopeP x = try $ bothP scopeP x
+merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
 
-        bothP m (MacroTerm Scope xs) = do
-            (ap, cont)   <-  withCont (merge scopeP xs)
-            first (ap .) <$> withSep (merge m cont)
+rootP (MacroTerm Sep xs) = withSep (merge rootP xs)
+rootP (MacroLeaf x) = return (const x, undefined)
+rootP x = bothP rootP x
 
-        bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
-        bothP m (MacroTerm (Token "</") exs) = reservedOp "</" >> merge m exs
-        bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
-        bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
-        bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
-        bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
+scopeP (MacroTerm Sep xs) = return (id, xs)
+scopeP (MacroLeaf _) = parserZero
+scopeP x = try $ bothP scopeP x
 
-        bothP _ _ = error "Unimplemented"
+bothP m (MacroTerm Scope xs) = do
+    (ap, cont)   <-  withCont (merge scopeP xs)
+    first (ap .) <$> withSep (merge m cont)
 
-        wrap p a m exs = first . (.) . replace a <$> p <*> merge m exs
+bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
+bothP m (MacroTerm (Token "</") exs) = reservedOp "</" >> merge m exs
+bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
+bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
+bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
+bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
+
+bothP _ _ = error "Unimplemented"
+
+wrap p a m exs = first . (.) . replace a <$> p <*> merge m exs
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -134,12 +142,15 @@ capture prsr = Just <$> prsr <|> do
     return Nothing
 
 appExprP :: Parser Expr Expr
-appExprP = buildExpressionParser opPs termP <?> "Application"
+appExprP = do
+    macs <- use macros
+    buildExpressionParser (opPs macs) termP <?> "Application"
 
     where
-        opPs =
+        opPs (MacroList ms) =
             [ Infix ap AssocLeft ]
                 : toInfixTerm opConst AssocLeft (tail ops)
+                ++ [macOps ms]
 
         toInfixTerm optr assoc =
             fmap . fmap $
@@ -152,5 +163,16 @@ appExprP = buildExpressionParser opPs termP <?> "Application"
         valExprP = VarExpr <$> valP <?> "Value"
         termP = valExprP <|> matExprP <|> macroP <|> parens exprP
         opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
+
+        macOps = foldl fff []
+
+        fff :: [Operator String (MacroState Expr) Identity Expr] -> Macro Expr -> [Operator String (MacroState Expr) Identity Expr]
+        fff ops (MacroTerm (Arg x) (MacroList ys)) = ops ++ [ggg x ys]
+        fff ops _ = ops
+
+        ggg st (MacroTerm (Token y) ms : _) = Postfix $ do
+            reservedOp y
+            cont <- merge rootP ms
+            return (\x -> replace st x . ($ undefined) . fst $ cont)
 
 ------------------------------------------------------------------------------

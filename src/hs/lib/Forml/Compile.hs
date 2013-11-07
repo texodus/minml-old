@@ -26,10 +26,6 @@
 
 ------------------------------------------------------------------------------
 
--- There is one module.  We'll need a few elements from `System` for
--- handling the plumbing aspects, and a handful of elements from the
--- `containers` and `mtl` libraries.
-
 module Forml.Compile where
 
 import Control.Applicative
@@ -56,10 +52,10 @@ import Forml.TypeCheck
 -- 2. Compiler "Architecture"
 -- ==========================
 
--- The structure of compilation can be expressed as a simple
--- function composition.
+type SourceCode = String
+type CompiledJS = String
 
-compile :: Config -> [(String, String)] -> Either Err String
+compile :: Config -> [(SourceName, SourceCode)] -> Either Err CompiledJS
 compile config srcs = do
 
     let srcs' =
@@ -75,11 +71,12 @@ compile config srcs = do
     js <- generateJs ast
     renderText js
 
+type ParseArtifact = ([Expr], MacroState Expr)
     
-initialState :: ([Expr], MacroState Expr)
+initialState :: ParseArtifact
 initialState = ([], emptyState)
 
-parse :: ([Expr], MacroState Expr) -> (String, String) -> Either Err ([Expr], MacroState Expr)
+parse :: ParseArtifact -> (SourceName, SourceCode) -> Either Err ParseArtifact
 parse (xs, MacroState _ _ ms) (name, src) =
     first ((xs ++) . (:[])) <$> parseForml name src (MacroState (initialPos "") ms ms)
 
