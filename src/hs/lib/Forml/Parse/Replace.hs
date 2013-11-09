@@ -12,7 +12,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Forml.Parse.Replace(
-	module Forml.AST.Replace
+    module Forml.AST.Replace
 ) where
 
 
@@ -65,8 +65,11 @@ instance Replace Expr Expr where
     replace f x (AbsExpr y z) =
         AbsExpr y (replace f x z)
 
-    replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
-    replace f x (JSExpr y) = JSExpr (replace f x y)
+    replace f x (RecExpr xs) = 
+        RecExpr (fmap (replace f x) xs)
+
+    replace f x (JSExpr y) = 
+        JSExpr (replace f x y)
 
 instance Replace Sym Expr where
 
@@ -120,8 +123,11 @@ instance Replace Patt Expr where
     replace f x (AbsExpr y z) =
         AbsExpr y (replace f x z)
 
-    replace f x (RecExpr xs) = RecExpr (fmap (replace f x) xs)
-    replace f x (JSExpr y) = JSExpr y
+    replace f x (RecExpr xs) =
+        RecExpr (fmap (replace f x) xs)
+
+    replace _ _ (JSExpr y) =
+        JSExpr y
 
 
 ------------------------------------------------------------------------------

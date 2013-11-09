@@ -13,7 +13,7 @@ spec = do
 
     describe "Forml.Parser.Patt" $ do
 
-    	describe "pattP" $ do
+        describe "pattP" $ do
 
             it "should parse Cons" $ assertParse pattP
                 "True" $ 
@@ -38,7 +38,7 @@ spec = do
             it "should parse nested" $ assertParse pattP
                 "(Cons 1 (Cons 2 Nil))" $ 
                 Right (ConPatt (TypeSymP "Cons") 
-                	           [ ValPatt (LitVal (NumLit 1.0))
-                	           , ConPatt (TypeSymP "Cons") 
-                	                     [ ValPatt (LitVal (NumLit 2.0))
-                	                     , ValPatt (ConVal (TypeSym (TypeSymP "Nil")))]])
+                               [ ValPatt (LitVal (NumLit 1.0))
+                               , ConPatt (TypeSymP "Cons") 
+                                         [ ValPatt (LitVal (NumLit 2.0))
+                                         , ValPatt (ConVal (TypeSym (TypeSymP "Nil")))]])

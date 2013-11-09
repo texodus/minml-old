@@ -21,19 +21,20 @@ import Control.Lens
 import Control.Monad.Identity
 import Data.Monoid
 import Language.Javascript.JMacro
-import Text.Parsec                hiding (many, (<|>), optional)
 import Text.Parsec.Expr
+
+import Text.Parsec hiding (many, optional, (<|>))
 
 import Forml.AST
 import Forml.AST.Replace
 import Forml.Parse.Indent
 import Forml.Parse.Notation
+import Forml.Parse.Macro
 import Forml.Parse.Patt
 import Forml.Parse.Record
 import Forml.Parse.Token
 import Forml.Parse.Type
 import Forml.Parse.Val
-import Forml.Javascript.Expr
 
 ------------------------------------------------------------------------------
 
@@ -51,47 +52,16 @@ exprP =
 
 letMacroP :: Parser Expr Expr
 letMacroP = withScope $ do
-    antiQuote 
+    antiQuote
     def <- notationP
-    antiQuote 
+    antiQuote
     reservedOp "="
     ms <- def <$> withCont exprP
     macros %= mappend (MacroList [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
-macroP = ($ undefined) . fst <$> (use macros >>= merge rootP . filterP)
-
-filterP :: MacroList Expr -> MacroList Expr
-filterP (MacroList (MacroTerm (Arg _) _ : ms)) = filterP (MacroList ms)
-filterP (MacroList (x : ms)) =
-    case filterP (MacroList ms) of (MacroList mss) -> MacroList (x : mss)
-filterP x = x
-
-merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
-
-rootP (MacroTerm Sep xs) = withSep (merge rootP xs)
-rootP (MacroLeaf x) = return (const x, undefined)
-rootP x = bothP rootP x
-
-scopeP (MacroTerm Sep xs) = return (id, xs)
-scopeP (MacroLeaf _) = parserZero
-scopeP x = try $ bothP scopeP x
-
-bothP m (MacroTerm Scope xs) = do
-    (ap, cont) <- withCont (merge scopeP xs)
-    first (ap .) <$> withSep (merge m cont)
-
-bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
-bothP m (MacroTerm (Token "</") exs) = reservedOp "</" >> merge m exs
-bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
-bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
-bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
-bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
-
-bothP _ _ = error "Unimplemented"
-
-wrap p a m exs = first . (.) . replace a <$> p <*> merge m exs
+macroP = ($ undefined) . fst <$> (use macros >>= macroPRec exprP . filterP)
 
 jsExprP :: Parser Expr Expr
 jsExprP =
@@ -99,12 +69,12 @@ jsExprP =
         (reservedOp "``" >> (anyChar `manyTill` reservedOp "``"))
         <?> "Javascript"
     where
-        unwrap :: Parser Expr String -> Parser Expr Expr
-        unwrap f = do
-            f' <- f
-            case parseJME f' of
-                Left x  -> parserFail (show x)
-                Right x -> return (JSExpr x)
+    unwrap :: Parser Expr String -> Parser Expr Expr
+    unwrap f = do
+        f' <- f
+        case parseJME f' of
+            Left x  -> parserFail (show x)
+            Right x -> return (JSExpr x)
 
 matExprP :: Parser Expr Expr
 matExprP =
@@ -115,7 +85,7 @@ matExprP =
         <*> withCont (try caseP `sepEndBy` sep)
         <?> "Match Expression"
     where
-        caseP = (,) <$> pattP <* toOp <*> withCont exprP 
+    caseP = (,) <$> pattP <* toOp <*> withCont exprP
 
 toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
@@ -147,32 +117,36 @@ appExprP = do
     buildExpressionParser (opPs macs) termP <?> "Application"
 
     where
-        opPs (MacroList ms) =
-            [ Infix ap AssocLeft ]
-                : toInfixTerm opConst AssocLeft (tail ops)
-                ++ [macOps ms]
+    opPs (MacroList ms) =
+        [ Infix appl AssocLeft ]
+            : toInfixTerm opConst AssocLeft (tail ops)
+            ++ [foldl macOps [] ms]
 
-        toInfixTerm optr assoc =
-            fmap . fmap $
-                flip Infix assoc
-                <<< uncurry (*>)
-                <<< reservedOp
-                &&& return . optr
+    toInfixTerm optr assoc =
+        fmap . fmap $
+            flip Infix assoc
+            <<< uncurry (*>)
+            <<< reservedOp
+            &&& return . optr
 
-        ap = indented >> return AppExpr
-        valExprP = VarExpr <$> valP <?> "Value"
-        termP = valExprP <|> matExprP <|> macroP <|> parens exprP
-        opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
+    appl = indented >> return AppExpr
+    valExprP = VarExpr <$> valP <?> "Value"
+    termP = valExprP <|> matExprP <|> macroP <|> parens exprP
+    opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
-        macOps = foldl fff []
+type OpTable = [Operator String (MacroState Expr) Identity Expr]
 
-        fff :: [Operator String (MacroState Expr) Identity Expr] -> Macro Expr -> [Operator String (MacroState Expr) Identity Expr]
-        fff ops (MacroTerm (Arg x) (MacroList ys)) = ops ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
-        fff ops _ = ops
+macOps :: OpTable -> Macro Expr -> OpTable
+macOps opss (MacroTerm (Arg x) (MacroList ys)) =
+    opss ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
+    where
+    ggg st (MacroTerm (Token y) ms) = do
+        reservedOp y
+        cont <- macroPRec exprP ms
+        return (\z -> replace st z . ($ undefined) . fst $ cont)
 
-        ggg st (MacroTerm (Token y) ms) = do
-            reservedOp y
-            cont <- merge rootP ms
-            return (\x -> replace st x . ($ undefined) . fst $ cont)
+    ggg _ _ = error "PARADOX: This should not be"
 
+macOps opss _ = opss
+    
 ------------------------------------------------------------------------------

@@ -15,14 +15,12 @@ module Forml.AST.Expr (
     Expr(..)
 ) where
 
-import Control.Arrow
 import Data.Monoid
 import Language.Javascript.JMacro
 import Text.PrettyPrint.Leijen.Text
 
 import Forml.AST.Patt
 import Forml.AST.Record
-import Forml.AST.Replace
 import Forml.AST.Type
 import Forml.AST.Val
 import Forml.Utils
@@ -54,11 +52,14 @@ instance Monoid (Maybe Expr) where
     mappend (Just _) _ = error "Cannot append terminal parses"
     mappend _ y = y
 
+instance Fmt (Maybe Expr) where
+    fmt (Just ex) = "; " ++ fmt ex
+    fmt Nothing = ""
 
 instance Fmt Expr where
 
-    fmt (LetExpr binding ex (Just cont)) =
-        "let " ++ fmt binding ++ " = " ++ fmt ex ++ "; " ++ fmt cont
+    fmt (LetExpr binding ex cont) =
+        "let " ++ fmt binding ++ " = " ++ fmt ex ++ fmt cont
 
     fmt (AppExpr f x) =
         "(" ++ fmt f ++ " " ++ fmt x ++ ")"
@@ -69,8 +70,8 @@ instance Fmt Expr where
     fmt (MatExpr x cs) =
         "match " ++ fmt x ++ " with " ++ fmt cs
 
-    fmt (TypExpr name def (Just cont)) =
-        "data " ++ fmt name ++ " = " ++ fmt def ++ "; " ++ fmt cont
+    fmt (TypExpr name def cont) =
+        "data " ++ fmt name ++ " = " ++ fmt def ++ fmt cont
 
     fmt (JSExpr js) =
         "`" ++ (show . renderOneLine . renderJs) js ++ "`"

@@ -118,7 +118,7 @@ spec =
 
                 (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0)))))))
 
-    	describe "run" $ do
+        describe "run" $ do
 
             it "should compile & run a trivial example " $ [q|
               

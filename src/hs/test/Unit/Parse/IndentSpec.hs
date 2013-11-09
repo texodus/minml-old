@@ -31,7 +31,7 @@ spec = do
                 "    test\n    test"
                 (Left (Err "(line 2, column 5):\nunexpected \"t\"\nStatement indented (introduced at (line 1, column 5))"))
 
-    	describe "withSep" $ do
+        describe "withSep" $ do
 
             it "should respect semicolons" $ assertParse
 

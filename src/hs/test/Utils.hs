@@ -2,13 +2,11 @@
 
 module Utils where
 
-import Data.Monoid
 import System.IO
 import System.Process
 import System.Exit
 import Test.HUnit
 import Text.Parsec
-import Text.Parsec.Pos
 import Test.QuickCheck
 import Language.Javascript.JMacro
 
@@ -48,10 +46,10 @@ instance Arbitrary Expr where
 
 assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
 assertParse p a b = assertEqual "" b parseResult
-	where
-		parseResult = case runParser p emptyState "" a of
-			Left x -> Left . Err . show $ x
-			Right x -> Right x
+    where
+        parseResult = case runParser p emptyState "" a of
+            Left x -> Left . Err . show $ x
+            Right x -> Right x
 
 assertGenerate :: (ToJExpr a) => a -> Either Err String -> Assertion
 assertGenerate a = assertEqual "" gen

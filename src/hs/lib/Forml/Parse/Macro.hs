@@ -7,35 +7,63 @@
 {-# LANGUAGE GADTs #-}
 
 module Forml.Parse.Macro(
-    module Forml.Parse.Macro.Scope,
-    toMac,
-    inferCell
+    macroPRec,
+    filterP
 ) where
 
 import Control.Arrow
-import Data.Maybe
+import Control.Applicative
+import Text.Parsec hiding ((<|>), many)
 
 import Forml.AST
+import Forml.Parse.Indent
+import Forml.Parse.Val
+import Forml.Parse.Patt
+import Forml.Parse.Token
 import Forml.Parse.Replace
-import Forml.Parse.Macro.Scope
-import Forml.Parse.Macro.MacroCell
 
 ------------------------------------------------------------------------------
 
-toMac :: MacroCell -> Macro Expr -> Macro Expr
-toMac cell = MacroTerm cell . MacroList . (:[])
+macroPRec :: Parser Expr Expr -> MacroList Expr -> Parser Expr (Expr -> Expr, MacroList Expr)
+macroPRec exprP = 
+    merge rootP
+    where
 
-inferCell :: String -> String -> Macro Expr -> Macro Expr
-inferCell uniq sym = 
-    uncurry ($) . (inferCell' (uniq ++ sym) &&& id) . replace sym (uniq ++ sym)
+    merge f (MacroList ms) = foldl (<|>) parserZero (fmap f ms)
 
-fromMac :: Macro Expr -> Expr
-fromMac (MacroTerm _ (MacroList [x])) = fromMac x
-fromMac (MacroLeaf x) = x
-fromMac _ = undefined
+    rootP (MacroTerm Sep xs) = withSep (merge rootP xs)
+    rootP (MacroLeaf x) = return (const x, undefined)
+    rootP x = bothP rootP x
 
-inferCell' :: String -> Macro Expr -> Macro Expr -> Macro Expr
-inferCell' sym = toMac . fromMaybe (Arg sym) . toMacroCell sym . fromMac
+    scopeP (MacroTerm Sep xs) = return (id, xs)
+    scopeP (MacroLeaf _) = parserZero
+    scopeP x = try $ bothP scopeP x
 
+    bothP m (MacroTerm Scope xs) = do
+        (ap, cont) <- withCont (merge scopeP xs)
+        first (ap .) <$> withSep (merge m cont)
+
+    bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
+    bothP m (MacroTerm (Token "</") exs) = reservedOp "</" >> merge m exs
+    bothP m (MacroTerm (Token x) exs) = reserved x >> merge m exs
+    bothP m (MacroTerm (Let a) exs) = try $ wrap symP a m exs
+    bothP m (MacroTerm (Pat a) exs) = wrap pattP a m exs
+    bothP m (MacroTerm (Arg a) exs) = wrap exprP a m exs
+
+    bothP _ _ = error "Unimplemented"
+
+    wrap p a m exs = first . (.) . replace a <$> p <*> merge m exs
+
+
+filterP :: MacroList Expr -> MacroList Expr
+
+filterP (MacroList (MacroTerm (Arg _) _ : ms)) =
+    filterP (MacroList ms)
+
+filterP (MacroList (x : ms)) =
+    case filterP (MacroList ms) of (MacroList mss) -> MacroList (x : mss)
+
+filterP x =
+    x
 
 ------------------------------------------------------------------------------

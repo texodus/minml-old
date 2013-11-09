@@ -12,7 +12,7 @@ spec = do
 
     describe "Forml.Javascript.Lit" $ do
 
-    	describe "toJExpr" $ do
+        describe "toJExpr" $ do
 
             it "should parse integers" $ assertGenerate
                 (NumLit 1) $ Right "1.0"

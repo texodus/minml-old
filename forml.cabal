@@ -63,6 +63,7 @@ Library
     Forml.Parse.Lit,
     Forml.Parse.Notation,
     Forml.Parse.Macro,
+    Forml.Parse.Macro.Infer,
     Forml.Parse.Macro.Scope,
     Forml.Parse.Macro.MacroCell,
     Forml.Parse.MacroToken,

@@ -19,7 +19,7 @@ spec =
 
     describe "Forml.type check" $
 
-    	describe "type checkOhml" $ do
+        describe "type checkOhml" $ do
 
             it "should type check a trivial example " $ assertCheck
               

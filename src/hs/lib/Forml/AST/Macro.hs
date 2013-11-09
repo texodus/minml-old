@@ -9,6 +9,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE GADTs #-}
 
 module Forml.AST.Macro(
@@ -70,24 +71,29 @@ instance (Show a, Eq a, Replace String a) => Monoid (MacroList a) where
 --   There are some errors emitted by this function, might want to move
 --   these at some point.
 
-insert :: (Eq a, Replace String a) => [Macro a] -> Macro a -> Maybe [Macro a]    
-insert (MacroTerm cell1 (MacroList ms1) : ms) (MacroTerm cell2 (MacroList ms2))
+insert :: (Eq a, Replace String a) => [Macro a] -> Macro a -> Maybe [Macro a]
+
+insert 
+    (MacroTerm cell1 (MacroList ms1) : ms)
+    (MacroTerm cell2 (MacroList ms2))
     | cell1 == cell2 = do
         merged <- foldM insert [] (ms1 ++ ms2)
         return $ MacroTerm cell1 (MacroList (L.sort merged)) : ms
 
-insert (MacroTerm (Arg cell1) (MacroList ms1) : ms) (MacroTerm (Arg cell2) (MacroList ms2)) = do
-    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
-    return $ MacroTerm (Arg cell2) (MacroList (L.sort merged)) : ms
+insert 
+    (MacroTerm (Pat cell1) (MacroList ms1) : ms)
+    (MacroTerm (Pat cell2) (MacroList ms2)) =
+        insertCommon Pat cell1 cell2 ms1 ms2 ms
 
-insert (MacroTerm (Pat cell1) (MacroList ms1) : ms) (MacroTerm (Pat cell2) (MacroList ms2)) = do
-    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
-    return $ MacroTerm (Arg cell2) (MacroList (L.sort merged)) : ms
+insert 
+    (MacroTerm (Arg cell1) (MacroList ms1) : ms)
+    (MacroTerm (Arg cell2) (MacroList ms2)) =
+        insertCommon Arg cell1 cell2 ms1 ms2 ms
 
-insert (MacroTerm (Let cell1) (MacroList ms1) : ms) (MacroTerm (Let cell2) (MacroList ms2)) = do
-    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
-    return $ MacroTerm (Let cell2) (MacroList merged) : ms
-
+insert 
+    (MacroTerm (Let cell1) (MacroList ms1) : ms)
+    (MacroTerm (Let cell2) (MacroList ms2)) =
+        insertCommon Let cell1 cell2 ms1 ms2 ms
 
 insert (MacroTerm cell ms1 : ms2) mt =
     (MacroTerm cell ms1 :) `fmap` insert ms2 mt
@@ -100,5 +106,19 @@ insert [] mt =
 
 insert _ _ = 
     Nothing
+
+insertCommon ::
+    (Eq a, Replace String a) => 
+        (String -> MacroCell) ->
+        String ->
+        String -> 
+        [Macro a] -> 
+        [Macro a] -> 
+        [Macro a] -> 
+        Maybe [Macro a]
+
+insertCommon f cell1 cell2 ms1 ms2 ms = do
+    merged <- foldM insert [] (ms2 ++ replace cell1 cell2 ms1)
+    return $ MacroTerm (f cell2) (MacroList merged) : ms 
 
 ------------------------------------------------------------------------------

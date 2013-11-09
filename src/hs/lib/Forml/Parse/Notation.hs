@@ -12,7 +12,8 @@ import Control.Applicative
 import Control.Lens
 
 import Forml.AST
-import Forml.Parse.Macro
+import Forml.Parse.Macro.Infer
+import Forml.Parse.Macro.Scope
 import Forml.Parse.Token
 import qualified Forml.Parse.MacroToken as M
 

@@ -50,8 +50,8 @@ instance ToMacroCell Expr where
     toMacroCell _ (VarExpr _) =
         Nothing
 
-    toMacroCell sym (MatExpr e xs) =
-        equ sym (map (Box . fst) xs ++ (map (Box . snd) xs))
+    toMacroCell sym (MatExpr _ xs) =
+        equ sym (map (Box . fst) xs ++ map (Box . snd) xs)
 
     toMacroCell sym (TypExpr _ _ (Just e)) =
        toMacroCell sym e
@@ -59,21 +59,20 @@ instance ToMacroCell Expr where
     toMacroCell sym (AbsExpr (Sym f) ex) =
         isArg f sym [ex]
 
-    toMacroCell sym (AbsExpr _ z) =
-        toMacroCell sym z
-
     toMacroCell _ (JSExpr _) =
         Nothing
 
     toMacroCell sym (RecExpr (Record xs)) =
         equ sym (P.elems xs)
 
+    toMacroCell _ _ = error "PARADOX: I should not be"
+
 equ :: (ToMacroCell a) => String -> [a] -> Maybe MacroCell
 equ n (catMaybes . fmap (toMacroCell n) -> xs) = 
     case S.size . S.fromList $ xs of
-        0 -> Nothing
-        1 -> Just $ head xs
-        _ -> error ("A macro argument is used in multiple contexts: " ++ show xs)
+    0 -> Nothing
+    1 -> Just $ head xs
+    _ -> error ("A macro argument is used in multiple contexts: " ++ show xs)
 
 isArg :: ToMacroCell a => String -> String -> [a] -> Maybe MacroCell
 isArg f sym xs

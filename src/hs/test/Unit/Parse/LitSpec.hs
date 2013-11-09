@@ -12,7 +12,7 @@ spec = do
 
     describe "Forml.Parser.Lit" $ do
 
-    	describe "litP" $ do
+        describe "litP" $ do
 
             it "should parse integers" $ assertParse litP
                 "1" $ Right (NumLit 1)

@@ -12,7 +12,7 @@ spec = do
 
     describe "Forml.Javascript.Val" $ do
 
-    	describe "toJExpr" $ do
+        describe "toJExpr" $ do
 
             it "should parse partial keywords" $ assertGenerate
                 (Sym "func")  $ Right "func"

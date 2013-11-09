@@ -12,7 +12,7 @@ spec =
 
     describe "Forml.Parse.Val" $ do
 
-    	describe "symP" $ do
+        describe "symP" $ do
 
             it "should parse non-keywords" $ assertParse symP
                 "func" $ Right (Sym "func")
