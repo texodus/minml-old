@@ -58,13 +58,13 @@ spec =
 
             it "should parse a trivial example " $ [q|
               
-                `if (a) then (d) else (c)` =
+                `if (a) than (d) else (c)` =
 
                     match a with
                         True  = d                             
                         False = c                            
                                                          
-                if False then 3 else 4                   
+                if False than 3 else 4                   
 
             |] ===
 
@@ -78,12 +78,12 @@ spec =
 
             it "should parse a trivial example with some odd whitespace" $ [q|
               
-                `if (a) then (d) else (c)` = match a with   
+                `if (a) than (d) else (c)` = match a with   
                     True = d                                
                     False = c                               
                                                             
                 if False                                    
-                    then 3                                  
+                    than 3                                  
                     else 4                                  
 
             |] ===
@@ -98,12 +98,12 @@ spec =
 
             it "should parse nested macros" $ assertParse
               
-                "   `if (a) then (d) else (c)` = match a with   \n\
+                "   `if (a) than (d) else (c)` = match a with   \n\
                 \       True = d                                \n\
                 \       False = c                               \n\
                 \                                               \n\
                 \   if False                                    \n\
-                \       then if True then 3 else 5              \n\
+                \       than if True than 3 else 5              \n\
                 \       else 4                                  \n"
 
                 (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
@@ -125,11 +125,11 @@ spec =
                 True: Bool                               
                 False: Bool                              
                                                          
-                `if (a) then (d) else (c)` = match a with
+                `if (a) than (d) else (c)` = match a with
                     True = d                             
                     False = c                            
                                                          
-                if False then 3 else 4                   
+                if False than 3 else 4                   
 
             |] ===
 
@@ -140,12 +140,12 @@ spec =
                 True: Bool                               
                 False: Bool                              
                                                          
-                `if (a) then (d) else (c)` = match a with
+                `if (a) than (d) else (c)` = match a with
                     True = d                             
                     False = c                            
                                                          
                 if True                                  
-                    then if False then 3 else 5          
+                    than if False than 3 else 5          
                     else 4                               
 
             |] === 
@@ -290,12 +290,12 @@ spec =
                     Cons: a -> List a -> List a         
                     Nil: List a                         
                                                         
-                    `check prop (a) of (b)` =
+                    `check prop (q) of (b)` =
 
                         a n =                     
                             match n with                    
-                                Nil = 0                     
-                                (Cons _ xs) = 1 + a xs 
+                            Nil = 0                     
+                            Cons _ xs = 1 + a xs 
                                                             
                         a b     
 
@@ -381,6 +381,15 @@ spec =
                 |] ===
 
                     "8\n"
+
+                it "Should run nested triple infix expressions" $ [q|
+ 
+                    `(a) <- (b) -< (c)` = a + b + c
+                    2 <- 2 <- 2 -< 2 -< 2
+
+                |] ===
+
+                    "10\n"
 
             describe "Javascript replacements" $
 

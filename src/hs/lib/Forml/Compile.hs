@@ -77,7 +77,7 @@ initialState :: ParseArtifact
 initialState = ([], emptyState)
 
 parse :: ParseArtifact -> (SourceName, SourceCode) -> Either Err ParseArtifact
-parse (xs, MacroState _ _ ms) (name, src) =
-    first ((xs ++) . (:[])) <$> parseForml name src (MacroState (initialPos "") ms ms)
+parse (xs, MacroState _ _ ms y) (name, src) =
+    first ((xs ++) . (:[])) <$> parseForml name src (MacroState (initialPos "") ms ms y)
 
 ------------------------------------------------------------------------------

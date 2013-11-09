@@ -69,7 +69,7 @@ bootstrap = foldl1 mappend
             Right x -> MacroList . (:[]) . x
 
 emptyState :: MacroState Expr
-emptyState = MacroState (initialPos "") bootstrap bootstrap
+emptyState = MacroState (initialPos "") bootstrap bootstrap 0
 
 prelude :: String
 prelude = B.toString $(embedFile "/Users/slink/work/forml2/src/forml/prelude.forml")

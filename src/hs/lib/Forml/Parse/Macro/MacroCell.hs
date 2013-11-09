@@ -27,7 +27,7 @@ class ToMacroCell a where
 
 instance ToMacroCell Patt where
 
-    toMacroCell sym (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat (esc sym))
+    toMacroCell sym (ValPatt (SymVal (Sym f))) | f == sym = Just (Pat sym)
     toMacroCell sym (ConPatt _ xs) = equ sym xs
 
     toMacroCell _ _ = Nothing
@@ -45,13 +45,13 @@ instance ToMacroCell Expr where
 
     toMacroCell sym (VarExpr (SymVal (Sym f)))
         | f == sym =
-            Just (Arg (esc sym))
+            Just (Arg sym)
 
     toMacroCell _ (VarExpr _) =
         Nothing
 
     toMacroCell sym (MatExpr e xs) =
-        equ sym (map (Box . fst) xs ++ (Box e : map (Box . snd) xs))
+        equ sym (map (Box . fst) xs ++ (map (Box . snd) xs))
 
     toMacroCell sym (TypExpr _ _ (Just e)) =
        toMacroCell sym e
@@ -68,9 +68,6 @@ instance ToMacroCell Expr where
     toMacroCell sym (RecExpr (Record xs)) =
         equ sym (P.elems xs)
 
-esc :: String -> String
-esc = ('*':)
-
 equ :: (ToMacroCell a) => String -> [a] -> Maybe MacroCell
 equ n (catMaybes . fmap (toMacroCell n) -> xs) = 
     case S.size . S.fromList $ xs of
@@ -80,8 +77,8 @@ equ n (catMaybes . fmap (toMacroCell n) -> xs) =
 
 isArg :: ToMacroCell a => String -> String -> [a] -> Maybe MacroCell
 isArg f sym xs
-    | f == sym && maybe True (== Arg (esc sym)) (equ sym xs) =
-        Just (Let (esc sym))
+    | f == sym && maybe True (== Arg sym) (equ sym xs) =
+        Just (Let sym)
     | otherwise =
         equ sym xs
 

@@ -6,6 +6,7 @@
 
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GADTs #-}
@@ -21,6 +22,8 @@ import qualified Data.List as L
 import Data.Monoid
 import Data.Maybe
 
+import Forml.AST.Replace
+
 ------------------------------------------------------------------------------
 
 -- | A single child node on an n-tree
@@ -30,8 +33,8 @@ data MacroCell where
     Scope :: MacroCell
     Sep   :: MacroCell
     Let   :: String -> MacroCell
-    Arg   :: String -> MacroCell
     Pat   :: String -> MacroCell
+    Arg   :: String -> MacroCell
   
     deriving (Eq, Ord, Show)
 
@@ -56,22 +59,35 @@ newtype MacroList a =
     MacroList [Macro a] 
     deriving (Eq, Functor, Ord, Show)
 
-instance (Show a, Eq a) => Monoid (MacroList a) where
+instance (Show a, Eq a, Replace String a) => Monoid (MacroList a) where
     mempty = MacroList []
     mappend (MacroList ms1) (MacroList ms2) =
-        MacroList $ L.sort $ fromMaybe
+        MacroList $ fromMaybe
             (error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2))
-            (foldM insert ms1 ms2)
+            (foldM insert [] (ms2 ++ ms1))
 
 -- | Used by mappend to merge two `Macro a`s, one `MacroCell a` at a time.
 --   There are some errors emitted by this function, might want to move
 --   these at some point.
 
-insert :: (Eq a) => [Macro a] -> Macro a -> Maybe [Macro a]    
+insert :: (Eq a, Replace String a) => [Macro a] -> Macro a -> Maybe [Macro a]    
 insert (MacroTerm cell1 (MacroList ms1) : ms) (MacroTerm cell2 (MacroList ms2))
     | cell1 == cell2 = do
-        merged <- foldM insert ms1 ms2
+        merged <- foldM insert [] (ms1 ++ ms2)
         return $ MacroTerm cell1 (MacroList (L.sort merged)) : ms
+
+insert (MacroTerm (Arg cell1) (MacroList ms1) : ms) (MacroTerm (Arg cell2) (MacroList ms2)) = do
+    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
+    return $ MacroTerm (Arg cell2) (MacroList (L.sort merged)) : ms
+
+insert (MacroTerm (Pat cell1) (MacroList ms1) : ms) (MacroTerm (Pat cell2) (MacroList ms2)) = do
+    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
+    return $ MacroTerm (Arg cell2) (MacroList (L.sort merged)) : ms
+
+insert (MacroTerm (Let cell1) (MacroList ms1) : ms) (MacroTerm (Let cell2) (MacroList ms2)) = do
+    merged <- foldM insert [] (ms2 ++ (replace cell1 cell2 ms1))
+    return $ MacroTerm (Let cell2) (MacroList merged) : ms
+
 
 insert (MacroTerm cell ms1 : ms2) mt =
     (MacroTerm cell ms1 :) `fmap` insert ms2 mt

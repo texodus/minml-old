@@ -79,7 +79,7 @@ scopeP (MacroLeaf _) = parserZero
 scopeP x = try $ bothP scopeP x
 
 bothP m (MacroTerm Scope xs) = do
-    (ap, cont)   <-  withCont (merge scopeP xs)
+    (ap, cont) <- withCont (merge scopeP xs)
     first (ap .) <$> withSep (merge m cont)
 
 bothP m (MacroTerm (Token "<") exs) = reservedOp "<" >> merge m exs
@@ -167,10 +167,10 @@ appExprP = do
         macOps = foldl fff []
 
         fff :: [Operator String (MacroState Expr) Identity Expr] -> Macro Expr -> [Operator String (MacroState Expr) Identity Expr]
-        fff ops (MacroTerm (Arg x) (MacroList ys)) = ops ++ [ggg x ys]
+        fff ops (MacroTerm (Arg x) (MacroList ys)) = ops ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
         fff ops _ = ops
 
-        ggg st (MacroTerm (Token y) ms : _) = Postfix $ do
+        ggg st (MacroTerm (Token y) ms) = do
             reservedOp y
             cont <- merge rootP ms
             return (\x -> replace st x . ($ undefined) . fst $ cont)

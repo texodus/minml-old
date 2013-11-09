@@ -184,15 +184,15 @@ spec = do
 
                     (Right "2\n")
 
-            describe "let and function binding and implicit match" $ do
+            describe "let and function binding and implicit match" $
 
-                it "should compile & run basic unboxing" $ pending
+                it "should compile & run basic unboxing" $ assertNode
 
-                    -- "   data Just: a -> Maybe a     \n\
-                    -- \   unbox (Just x) = x          \n\
-                    -- \   unbox (Just 5)              \n"
+                     "   data Just: a -> Maybe a     \n\
+                     \   unbox (Just x) = x          \n\
+                     \   unbox (Just 5)              \n"
 
-                    -- (Right "5\n")
+                     (Right "5\n")
 
             describe "Antiquotes" $ do
 
