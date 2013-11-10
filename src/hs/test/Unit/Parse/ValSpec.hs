@@ -21,10 +21,10 @@ spec =
                 "lett" $ Right (Sym "lett")
 
             it "should fail to parse keywords" $ assertParse symP
-                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting letter, digit or \"_\"")
+                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting symbol")
 
             it "should fail to parse integers" $ assertParse symP
-                "NotASym" $ Left (Err "(line 1, column 1):\nunexpected \"N\"\nexpecting identifier")
+                "NotASym" $ Left (Err "(line 1, column 1):\nunexpected \"N\"\nexpecting symbol")
 
         describe "valP" $ do
 
@@ -41,5 +41,5 @@ spec =
                 "x" $ Right (SymVal (Sym "x"))
 
             it "should fail to parse keywords" $ assertParse valP
-                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting letter, digit or \"_\"")
+                "with" $ Left (Err "(line 1, column 5):\nunexpected reserved word \"with\"\nexpecting symbol")
 

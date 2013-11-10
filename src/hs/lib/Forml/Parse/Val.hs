@@ -29,9 +29,9 @@ import Forml.Parse.Type
 symP :: Parser s Sym
 symP = try $ do
     ars <- use macros
-    sym <- identifier
+    sym <- identifier <?> "symbol"
     if sym `elem` getReserved ars 
-        then parserFail ("symbol (`" ++ show sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
+        then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
         else return $ Sym sym
 
 getReserved :: MacroList a -> [String]

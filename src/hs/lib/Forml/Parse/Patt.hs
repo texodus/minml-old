@@ -5,7 +5,7 @@
 ------------------------------------------------------------------------------
 
 module Forml.Parse.Patt (
-    pattP
+    pattP, recPattP
 ) where
 
 import Control.Applicative
@@ -26,17 +26,16 @@ pattP =
 
     conPatsP <|> valPattP <|> parens pattP <|> recPattP
 
-    where
-        valPattP = ValPatt <$> valP
-        recPattP = RecPatt <$> recordP pattP
-        conPatsP = do
-            tSym <- typSymP
-            exs  <- many (indented >> inner)
-            return $ case exs of
-                [] -> ValPatt . ConVal . TypeSym $ tSym
-                _ -> ConPatt tSym exs
+valPattP = ValPatt <$> valP
+recPattP = RecPatt <$> recordP pattP
+conPatsP = do
+    tSym <- typSymP
+    exs  <- many (indented >> inner)
+    return $ case exs of
+        [] -> ValPatt . ConVal . TypeSym $ tSym
+        _ -> ConPatt tSym exs
 
-        inner =
-            valPattP <|> parens pattP <|> recPattP
+inner =
+    valPattP <|> parens pattP <|> recPattP
 
 ------------------------------------------------------------------------------

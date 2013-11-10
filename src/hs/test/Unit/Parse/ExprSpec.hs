@@ -340,7 +340,7 @@ spec =
 
                     $ Right (TypExpr (TypeSymP "Cons") (TypeAbsP (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeVar (TypeVarP "a"))) (TypeApp (TypeApp (TypeSym (TypeSymP "->")) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))))) (Just (TypExpr (TypeSymP "Nil") (TypeAbsP (TypeApp (TypeSym (TypeSymP "List")) (TypeVar (TypeVarP "a")))) (Just (LetExpr (Sym "length") (AbsExpr (Sym "n") (MatExpr (VarExpr (SymVal (Sym "n"))) [(ValPatt (ConVal (TypeSym (TypeSymP "Nil"))),VarExpr (LitVal (NumLit 0.0))),(ConPatt (TypeSymP "Cons") [ValPatt (SymVal (Sym "_")),ValPatt (SymVal (Sym "xs"))],AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (VarExpr (SymVal (Sym "length"))) (VarExpr (SymVal (Sym "xs")))))])) (Just (AppExpr (VarExpr (SymVal (Sym "length"))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 1.0)))) (AppExpr (AppExpr (VarExpr (ConVal (TypeSym (TypeSymP "Cons")))) (VarExpr (LitVal (NumLit 2.0)))) (VarExpr (ConVal (TypeSym (TypeSymP "Nil")))))))))))))
 
-            describe "Records" $
+            describe "Records" $ do
 
                 it "should compile & run basic record patterns" $ assertParse
 
@@ -350,5 +350,6 @@ spec =
                     \       _ = 0        \n"
 
                     $ Right (LetExpr (Sym "f") (RecExpr (Record (M.fromList [("x",VarExpr (LitVal (NumLit 3.0)))]))) (Just (MatExpr (VarExpr (SymVal (Sym "f"))) [(RecPatt (Record (M.fromList [("x",ValPatt (SymVal (Sym "x")))])),VarExpr (SymVal (Sym "x"))),(ValPatt (SymVal (Sym "_")),VarExpr (LitVal (NumLit 0.0)))])))
+
 
 ------------------------------------------------------------------------------

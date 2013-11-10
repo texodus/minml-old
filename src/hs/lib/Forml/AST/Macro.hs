@@ -30,12 +30,12 @@ import Forml.AST.Replace
 -- | A single child node on an n-tree
 
 data MacroCell where 
+    Let   :: String -> MacroCell
+    Arg   :: String -> MacroCell
     Token :: String -> MacroCell
     Scope :: MacroCell
     Sep   :: MacroCell
-    Let   :: String -> MacroCell
     Pat   :: String -> MacroCell
-    Arg   :: String -> MacroCell
   
     deriving (Eq, Ord, Show)
 
@@ -95,6 +95,16 @@ insert
     (MacroTerm (Let cell2) (MacroList ms2)) =
         insertCommon Let cell1 cell2 ms1 ms2 ms
 
+insert 
+    (MacroTerm (Pat cell1) (MacroList ms1) : ms)
+    (MacroTerm (Let cell2) (MacroList ms2)) =
+        error "FUCK"
+
+insert 
+    (MacroTerm (Let cell1) (MacroList ms1) : ms)
+    (MacroTerm (Pat cell2) (MacroList ms2)) =
+        error "FUCK"
+
 insert (MacroTerm cell ms1 : ms2) mt =
     (MacroTerm cell ms1 :) `fmap` insert ms2 mt
 
@@ -119,6 +129,6 @@ insertCommon ::
 
 insertCommon f cell1 cell2 ms1 ms2 ms = do
     merged <- foldM insert [] (ms2 ++ replace cell1 cell2 ms1)
-    return $ MacroTerm (f cell2) (MacroList merged) : ms 
+    return $ MacroTerm (f cell2) (MacroList (L.sort merged)) : ms 
 
 ------------------------------------------------------------------------------

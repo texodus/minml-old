@@ -342,16 +342,33 @@ spec =
                 it "should compile & run pattern replacements when they collide with let" $ [q|
                   
                     Box: a -> Box a
-                    let unbox (Box x) = x
+                    unbox (Box x) = x
                     unbox (Box 5) == 5    
 
                 |] === "true\n"
+
+                it "should compile & run complex pattern replacements when they collide with let" $ [q|
+                  
+                    Box: a -> Box a
+                    unbox z (Box x) = x + z
+                    unbox 2 (Box 5) == 7   
+
+                |] === "true\n"
+
+                it "should compile & run let-patterns" $ [q|
+                  
+                    Box: a -> Box a
+                    let (Box x) = Box 5
+                    x + 5    
+
+                |] === "10\n"
 
             describe "XML tests" $
 
                 it "Should run simple XML" $ [q|
  
                     Xml: String -> String -> String
+                   
                     `<(a)> (b) </(c)>` = Xml a b
                  
                     <"div"> 

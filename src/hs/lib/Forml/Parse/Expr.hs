@@ -85,7 +85,7 @@ matExprP =
         <*> withCont (try caseP `sepEndBy` sep)
         <?> "Match Expression"
     where
-    caseP = (,) <$> pattP <* toOp <*> withCont exprP
+        caseP = (,) <$> pattP <* toOp <*> withCont exprP
 
 toOp :: Parser Expr ()
 toOp  = reservedOp "->" <|> reservedOp "="
@@ -117,22 +117,22 @@ appExprP = do
     buildExpressionParser (opPs macs) termP <?> "Application"
 
     where
-    opPs (MacroList ms) =
-        [ Infix appl AssocLeft ]
-            : toInfixTerm opConst AssocLeft (tail ops)
-            ++ [foldl macOps [] ms]
+        opPs (MacroList ms) =
+            [ Infix appl AssocLeft ]
+                : toInfixTerm opConst AssocLeft (tail ops)
+                ++ [foldl macOps [] ms]
 
-    toInfixTerm optr assoc =
-        fmap . fmap $
-            flip Infix assoc
-            <<< uncurry (*>)
-            <<< reservedOp
-            &&& return . optr
+        toInfixTerm optr assoc =
+            fmap . fmap $
+                flip Infix assoc
+                <<< uncurry (*>)
+                <<< reservedOp
+                &&& return . optr
 
-    appl = indented >> return AppExpr
-    valExprP = VarExpr <$> valP <?> "Value"
-    termP = valExprP <|> matExprP <|> macroP <|> parens exprP
-    opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
+        appl = indented >> return AppExpr
+        valExprP = VarExpr <$> valP <?> "Value"
+        termP = valExprP <|> matExprP <|> macroP <|> parens exprP
+        opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
 type OpTable = [Operator String (MacroState Expr) Identity Expr]
 
@@ -140,12 +140,12 @@ macOps :: OpTable -> Macro Expr -> OpTable
 macOps opss (MacroTerm (Arg x) (MacroList ys)) =
     opss ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
     where
-    ggg st (MacroTerm (Token y) ms) = do
-        reservedOp y
-        cont <- macroPRec exprP ms
-        return (\z -> replace st z . ($ undefined) . fst $ cont)
+        ggg st (MacroTerm (Token y) ms) = do
+            reservedOp y
+            cont <- macroPRec exprP ms
+            return (\z -> replace st z . ($ undefined) . fst $ cont)
 
-    ggg _ _ = error "PARADOX: This should not be"
+        ggg _ _ = error "PARADOX: This should not be"
 
 macOps opss _ = opss
     

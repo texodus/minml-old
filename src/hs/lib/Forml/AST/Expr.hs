@@ -23,6 +23,7 @@ import Forml.AST.Patt
 import Forml.AST.Record
 import Forml.AST.Type
 import Forml.AST.Val
+import Forml.AST.Macro
 import Forml.Utils
 
 ------------------------------------------------------------------------------

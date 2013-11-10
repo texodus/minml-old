@@ -32,19 +32,13 @@ import Forml.AST
 
 ------------------------------------------------------------------------------
 
-letterP =
-    lowerP <|> oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" <?> "letter"
-
-lowerP =
-    oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
-
 ohmlDef :: LanguageDef (MacroState a)
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = "=" : concat ops ,
     T.commentLine     = "--",
-    T.identStart      = lowerP <|> char '_',
-    T.identLetter     = letterP <|> digit <|> char '_',
+    T.identStart      = lower <|> char '_',
+    T.identLetter     = upper <|> lower <|> digit <|> char '_',
     T.opStart         = oneOf ":!#$%&*+./<=>?@\\^|-~",
     T.opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
 }
