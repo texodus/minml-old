@@ -93,8 +93,8 @@ exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) (Just expr)) =
     exprCheck (name :>: typKAbs : as) expr
 
     where
-    typK = toKind Star typ
-    typKAbs = quantify (getVars typK) typK
+        typK = toKind Star typ
+        typKAbs = quantify (getVars typK) typK
 
 exprCheck as (LetExpr (Sym sym) val (Just expr)) = do
     symT <- newTypeVar Star
@@ -120,20 +120,20 @@ exprCheck as (MatExpr expr patts) = do
     argCheck exprT patts
 
     where
-    argCheck exprT ((patt, res):es) = do
-        (pattAs, pattT) <- pattCheck as patt
-        unify exprT pattT
-        argRecCheck exprT pattAs res es
+        argCheck exprT ((patt, res):es) = do
+            (pattAs, pattT) <- pattCheck as patt
+            unify exprT pattT
+            argRecCheck exprT pattAs res es
 
-    argCheck _ [] = error "FATAL: argCheck"
+        argCheck _ [] = error "FATAL: argCheck"
 
-    argRecCheck _ pattAs res [] =
-        exprCheck (pattAs ++ as) res
+        argRecCheck _ pattAs res [] =
+            exprCheck (pattAs ++ as) res
 
-    argRecCheck exprT pattAs res es = do
-        resT  <- exprCheck (pattAs ++ as) res
-        esT   <- argCheck exprT es
-        unify resT esT
-        return resT
+        argRecCheck exprT pattAs res es = do
+            resT  <- exprCheck (pattAs ++ as) res
+            esT   <- argCheck exprT es
+            unify resT esT
+            return resT
 
 ------------------------------------------------------------------------------

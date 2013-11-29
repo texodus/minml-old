@@ -12,14 +12,14 @@ import Control.Applicative
 import Control.Lens
 
 import Forml.AST
-import Forml.Parse.Macro.Infer
-import Forml.Parse.Macro.Scope
+import Forml.Macro.Infer
+import Forml.Macro.Scope
 import Forml.Parse.Token
 import qualified Forml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------
 
--- | Parses a notation string.  This returns a `MacroCell Expr` constructor,
+-- | Parses a notation string.  This returns a `Cell Expr` constructor,
 --   once the body of the notation block has been parsed.
 
 notationP :: Parser Expr (Expr -> Macro Expr)

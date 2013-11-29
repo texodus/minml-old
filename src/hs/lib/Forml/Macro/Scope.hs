@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------------
 
-module Forml.Parse.Macro.Scope where
+module Forml.Macro.Scope( inferScope ) where
 
 import Control.Applicative
 

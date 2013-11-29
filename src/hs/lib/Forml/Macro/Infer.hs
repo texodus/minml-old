@@ -6,7 +6,7 @@
 
 {-# LANGUAGE GADTs #-}
 
-module Forml.Parse.Macro.Infer(
+module Forml.Macro.Infer(
     toMac,
     inferCell
 ) where
@@ -15,12 +15,12 @@ import Control.Arrow
 import Data.Maybe
 
 import Forml.AST
-import Forml.Parse.Replace
-import Forml.Parse.Macro.MacroCell
+import Forml.Macro.Replace
+import Forml.Macro.Cell
 
 ------------------------------------------------------------------------------
 
-toMac :: MacroCell -> Macro Expr -> Macro Expr
+toMac :: Cell -> Macro Expr -> Macro Expr
 toMac cell = MacroTerm cell . MacroList . (:[])
 
 inferCell :: String -> String -> Macro Expr -> Macro Expr
@@ -33,7 +33,7 @@ fromMac (MacroLeaf x) = x
 fromMac _ = undefined
 
 inferCell' :: String -> Macro Expr -> Macro Expr -> Macro Expr
-inferCell' sym = toMac . fromMaybe (Arg sym) . toMacroCell sym . fromMac
+inferCell' sym = toMac . fromMaybe (Arg sym) . toCell sym . fromMac
 
 
 ------------------------------------------------------------------------------

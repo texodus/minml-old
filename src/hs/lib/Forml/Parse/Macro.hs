@@ -17,12 +17,12 @@ import Control.Applicative
 import Text.Parsec hiding ((<|>), many)
 
 import Forml.AST
+import Forml.Macro.LetPatt
+import Forml.Macro.Replace
 import Forml.Parse.Indent
 import Forml.Parse.Val
-import Forml.Parse.Macro.LetPatt
 import Forml.Parse.Patt
 import Forml.Parse.Token
-import Forml.Parse.Replace
 
 ------------------------------------------------------------------------------
 

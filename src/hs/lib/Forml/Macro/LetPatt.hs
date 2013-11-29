@@ -7,13 +7,13 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Forml.Parse.Macro.LetPatt where
+module Forml.Macro.LetPatt where
 
 import Control.Arrow
 import Control.Applicative
 
 import Forml.AST
-import Forml.Parse.Replace
+import Forml.Macro.Replace
 
 ------------------------------------------------------------------------------
 

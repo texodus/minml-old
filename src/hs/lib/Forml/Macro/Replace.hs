@@ -11,7 +11,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Forml.Parse.Replace(
+module Forml.Macro.Replace(
     module Forml.AST.Replace
 ) where
 
@@ -128,6 +128,5 @@ instance Replace Patt Expr where
 
     replace _ _ (JSExpr y) =
         JSExpr y
-
 
 ------------------------------------------------------------------------------
