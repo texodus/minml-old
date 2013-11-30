@@ -38,6 +38,6 @@ notationP =
 
         sep = semi >> (toMac Sep .) <$> notationP
 
-        lastTerm = return MacroLeaf
+        lastTerm = return Leaf
 
 ------------------------------------------------------------------------------

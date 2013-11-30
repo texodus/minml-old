@@ -34,14 +34,14 @@ symP = try $ do
         then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
         else return $ Sym sym
 
-getReserved :: MacroList a -> [String]
+getReserved :: MacList a -> [String]
 
-getReserved (MacroList (MacroTerm cell xs : ys)) =
-    getReserved' cell ++ getReserved xs ++ getReserved (MacroList ys)
+getReserved (MacList (Term cell xs : ys)) =
+    getReserved' cell ++ getReserved xs ++ getReserved (MacList ys)
 
-getReserved (MacroList (_ : ys)) = getReserved (MacroList ys)
+getReserved (MacList (_ : ys)) = getReserved (MacList ys)
 
-getReserved (MacroList []) = []
+getReserved (MacList []) = []
 
 getReserved' :: Cell -> [String]
 getReserved' (Token x) = [x]

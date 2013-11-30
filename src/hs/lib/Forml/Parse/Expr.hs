@@ -57,7 +57,7 @@ letMacroP = withScope $ do
     antiQuote
     reservedOp "="
     ms <- def <$> withCont exprP
-    macros %= mappend (MacroList [ms])
+    macros %= mappend (MacList [ms])
     withSep exprP
 
 macroP :: Parser Expr Expr
@@ -117,7 +117,7 @@ appExprP = do
     buildExpressionParser (opPs macs) termP <?> "Application"
 
     where
-        opPs (MacroList ms) =
+        opPs (MacList ms) =
             [ Infix appl AssocLeft ]
                 : toInfixTerm opConst AssocLeft (tail ops)
                 ++ [foldl macOps [] ms]
@@ -137,10 +137,10 @@ appExprP = do
 type OpTable = [Operator String (MacroState Expr) Identity Expr]
 
 macOps :: OpTable -> Macro Expr -> OpTable
-macOps opss (MacroTerm (Arg x) (MacroList ys)) =
+macOps opss (Term (Arg x) (MacList ys)) =
     opss ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
     where
-        ggg st (MacroTerm (Token y) ms) = do
+        ggg st (Term (Token y) ms) = do
             reservedOp y
             cont <- macroPRec exprP ms
             return (\z -> replace st z . ($ undefined) . fst $ cont)

@@ -13,11 +13,11 @@ import Forml.AST
 ------------------------------------------------------------------------------
 
 inferScope :: Macro Expr -> Macro Expr
-inferScope (MacroTerm (Let x) (MacroList xs)) =
-    MacroTerm (Let x) (MacroList (applyScope 0 . inferScope <$> xs))
+inferScope (Term (Let x) (MacList xs)) =
+    Term (Let x) (MacList (applyScope 0 . inferScope <$> xs))
 
-inferScope (MacroTerm x (MacroList xs)) =
-    MacroTerm x (MacroList (inferScope <$> xs))
+inferScope (Term x (MacList xs)) =
+    Term x (MacList (inferScope <$> xs))
 
 inferScope x = x
 
@@ -25,24 +25,24 @@ applyScope :: Int -> Macro Expr -> Macro Expr
 applyScope n y =
     applyScope' n y
     where
-        applyScope' 0 (MacroTerm Sep _) =
+        applyScope' 0 (Term Sep _) =
             skipTokens y
 
-        applyScope' m (MacroTerm Sep (MacroList [x])) =
+        applyScope' m (Term Sep (MacList [x])) =
             applyScope' (m - 1) x
 
-        applyScope' m (MacroTerm Scope (MacroList [x])) =
+        applyScope' m (Term Scope (MacList [x])) =
             applyScope' (m + 1) x
 
-        applyScope' m (MacroTerm _ (MacroList [x])) =
+        applyScope' m (Term _ (MacList [x])) =
             applyScope' m x
 
         applyScope' _ _ = y
 
-        skipTokens (MacroTerm (Token c) (MacroList [x])) =
-            MacroTerm (Token c) (MacroList [skipTokens x])
+        skipTokens (Term (Token c) (MacList [x])) =
+            Term (Token c) (MacList [skipTokens x])
 
         skipTokens x =
-            MacroTerm Scope (MacroList [x])
+            Term Scope (MacList [x])
 
 ------------------------------------------------------------------------------

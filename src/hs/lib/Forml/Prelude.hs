@@ -55,7 +55,7 @@ import Forml.Parse.Token
 -- The structure of compilation can be expressed as a simple
 -- function composition.
 
-bootstrap :: MacroList Expr
+bootstrap :: MacList Expr
 bootstrap = foldl1 mappend
 
     -- Let
@@ -66,7 +66,7 @@ bootstrap = foldl1 mappend
     where
         parseNote a = case runParser notationP emptyState "" a of
             Left x  -> error . show $ x
-            Right x -> MacroList . (:[]) . x
+            Right x -> MacList . (:[]) . x
 
 emptyState :: MacroState Expr
 emptyState = MacroState (initialPos "") bootstrap bootstrap 0

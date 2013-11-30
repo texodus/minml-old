@@ -21,15 +21,15 @@ import Forml.Macro.Cell
 ------------------------------------------------------------------------------
 
 toMac :: Cell -> Macro Expr -> Macro Expr
-toMac cell = MacroTerm cell . MacroList . (:[])
+toMac cell = Term cell . MacList . (:[])
 
 inferCell :: String -> String -> Macro Expr -> Macro Expr
 inferCell uniq sym = 
     uncurry ($) . (inferCell' (uniq ++ sym) &&& id) . replace sym (uniq ++ sym)
 
 fromMac :: Macro Expr -> Expr
-fromMac (MacroTerm _ (MacroList [x])) = fromMac x
-fromMac (MacroLeaf x) = x
+fromMac (Term _ (MacList [x])) = fromMac x
+fromMac (Leaf x) = x
 fromMac _ = undefined
 
 inferCell' :: String -> Macro Expr -> Macro Expr -> Macro Expr

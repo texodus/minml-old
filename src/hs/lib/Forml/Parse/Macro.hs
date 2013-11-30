@@ -26,54 +26,54 @@ import Forml.Parse.Token
 
 ------------------------------------------------------------------------------
 
-type PartMacro = (Expr -> Expr, MacroList Expr)
+type PartMacro = (Expr -> Expr, MacList Expr)
 
-macroPRec :: Parser Expr Expr -> MacroList Expr -> Parser Expr PartMacro
+macroPRec :: Parser Expr Expr -> MacList Expr -> Parser Expr PartMacro
 macroPRec exprP = 
     merge rootP
     where
 
-        merge f (MacroList ms) =
+        merge f (MacList ms) =
             foldl (<|>) parserZero (fmap f ms)
 
-        rootP (MacroTerm Sep xs) = 
+        rootP (Term Sep xs) = 
             withSep (merge rootP xs)
 
-        rootP (MacroLeaf x) = 
+        rootP (Leaf x) = 
             return (const x, undefined)
 
         rootP x = 
             bothP rootP x
 
-        scopeP (MacroTerm Sep xs) = 
+        scopeP (Term Sep xs) = 
             return (id, xs)
 
-        scopeP (MacroLeaf _) = 
+        scopeP (Leaf _) = 
             parserZero
 
         scopeP x = 
             bothP scopeP x
 
-        bothP m (MacroTerm Scope xs) = do
+        bothP m (Term Scope xs) = do
             (ap, cont) <- withCont (merge scopeP xs)
             first (ap .) <$> withSep (merge m cont)
 
-        bothP m (MacroTerm (Token "<") exs) =
+        bothP m (Term (Token "<") exs) =
             reservedOp "<" >> merge m exs
 
-        bothP m (MacroTerm (Token "</") exs) = 
+        bothP m (Term (Token "</") exs) = 
             reservedOp "</" >> merge m exs
 
-        bothP m (MacroTerm (Token x) exs) = 
+        bothP m (Term (Token x) exs) = 
             reserved x >> merge m exs
 
-        bothP m (MacroTerm (Pat a) exs) = 
+        bothP m (Term (Pat a) exs) = 
             wrap pattP a m exs
 
-        bothP m (MacroTerm (Arg a) exs) =
+        bothP m (Term (Arg a) exs) =
             wrap exprP a m exs
 
-        bothP m (MacroTerm (Let a) exs) =
+        bothP m (Term (Let a) exs) =
             try (wrap symP a m exs <|> wrap letPattP a m exs)
             where
                 letPattP = LetPatt <$> pattP <* indented
@@ -84,14 +84,14 @@ macroPRec exprP =
         wrap p a m exs = 
             first . (.) . replace a <$> p <*> merge m exs
 
-filterP :: MacroList Expr -> MacroList Expr
+filterP :: MacList Expr -> MacList Expr
 
-filterP (MacroList (MacroTerm (Arg _) _ : ms)) =
-    filterP (MacroList ms)
+filterP (MacList (Term (Arg _) _ : ms)) =
+    filterP (MacList ms)
 
-filterP (MacroList (x : ms)) =
-    case filterP (MacroList ms) of
-        (MacroList mss) -> MacroList (x : mss)
+filterP (MacList (x : ms)) =
+    case filterP (MacList ms) of
+        (MacList mss) -> MacList (x : mss)
 
 filterP x =
     x
