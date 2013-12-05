@@ -23,13 +23,13 @@ import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
-typSymP :: Parser s (TypeSym ())
+typSymP :: Parser (TypeSym ())
 typSymP = (TypeSymP .) . (:) <$> upper <*> identifier
 
-typAbsP :: Parser s (TypeAbs ())
+typAbsP :: Parser (TypeAbs ())
 typAbsP = TypeAbsP <$> typP <?> "Type (TypeAbs Kind)"
 
-typP :: Parser s (Type ())
+typP :: Parser (Type ())
 typP = buildExpressionParser opPs termP <?> "Type Symbol"
 
     where

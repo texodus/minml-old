@@ -44,7 +44,7 @@ instance Arbitrary Expr where
 
                 where subExpr = expr' (n `div` 10)
 
-assertParse :: (Eq a, Show a) => Parser Expr a -> String -> Either Err a -> Assertion
+assertParse :: (Eq a, Show a) => Parser a -> String -> Either Err a -> Assertion
 assertParse p a b = assertEqual "" b parseResult
     where
         parseResult = case runParser p emptyState "" a of

@@ -22,7 +22,7 @@ import qualified Forml.Parse.MacroToken as M
 -- | Parses a notation string.  This returns a `Cell Expr` constructor,
 --   once the body of the notation block has been parsed.
 
-notationP :: Parser Expr (Expr -> Macro Expr)
+notationP :: Parser (Expr -> Macro Expr)
 notationP =
     (inferScope .) <$> (term <|> capture <|> sep <|> lastTerm)
     where

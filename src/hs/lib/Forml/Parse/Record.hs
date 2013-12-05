@@ -22,7 +22,7 @@ import Forml.AST.Record
 
 -- | A parser for a Record literal
 
-recordP :: Parser s a -> Parser s (Record a)
+recordP :: Parser a -> Parser (Record a)
 recordP x =
 
     pure (Record . M.fromList)
@@ -31,7 +31,7 @@ recordP x =
         <*  reservedOp "}"
         <?> "Record"
  
-pair :: Parser s a -> Parser s (String, a)
+pair :: Parser a -> Parser (String, a)
 pair x = (,) <$> identifier <* reservedOp ":" <*> x
 
 ------------------------------------------------------------------------------

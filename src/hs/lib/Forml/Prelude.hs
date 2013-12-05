@@ -68,7 +68,7 @@ bootstrap = foldl1 mappend
             Left x  -> error . show $ x
             Right x -> MacList . (:[]) . x
 
-emptyState :: MacroState Expr
+emptyState :: MacroState
 emptyState = MacroState (initialPos "") bootstrap bootstrap 0
 
 prelude :: String

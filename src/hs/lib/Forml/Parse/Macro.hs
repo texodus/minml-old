@@ -28,7 +28,7 @@ import Forml.Parse.Token
 
 type PartMacro = (Expr -> Expr, MacList Expr)
 
-macroPRec :: Parser Expr Expr -> MacList Expr -> Parser Expr PartMacro
+macroPRec :: Parser Expr -> MacList Expr -> Parser PartMacro
 macroPRec exprP = 
     merge rootP
     where

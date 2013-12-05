@@ -26,7 +26,7 @@ import Forml.Parse.Type
 
 -- | Sym parser
 
-symP :: Parser s Sym
+symP :: Parser Sym
 symP = try $ do
     ars <- use macros
     sym <- identifier <?> "symbol"
@@ -34,7 +34,7 @@ symP = try $ do
         then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
         else return $ Sym sym
 
-getReserved :: MacList a -> [String]
+getReserved :: MacList Expr -> [String]
 
 getReserved (MacList (Term cell xs : ys)) =
     getReserved' cell ++ getReserved xs ++ getReserved (MacList ys)
@@ -49,7 +49,7 @@ getReserved' _ = []
 
 -- | Val parser
 
-valP :: Parser s Val
+valP :: Parser Val
 valP =
     (SymVal <$> symP)
         <|> (LitVal <$> litP)

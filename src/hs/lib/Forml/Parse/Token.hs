@@ -32,7 +32,7 @@ import Forml.AST
 
 ------------------------------------------------------------------------------
 
-ohmlDef :: LanguageDef (MacroState a)
+ohmlDef :: LanguageDef MacroState
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
     T.reservedOpNames = "=" : concat ops ,
@@ -47,22 +47,22 @@ instance MonadState st (Parsec tok st) where
     get = getState
     put = setState
 
-data MacroState a = MacroState {
+data MacroState = MacroState {
     _sourcePos  :: SourcePos,
-    _macros     :: MacList a,
-    _tailMacros :: MacList a,
+    _macros     :: MacList Expr,
+    _tailMacros :: MacList Expr,
     _uniqState  :: Int
 }
 
 makeLenses ''MacroState
 
-antiQuote :: Parser a ()
+antiQuote :: Parser ()
 antiQuote = try $ do
     _ <- string "`"
     notFollowedBy (string "`")
     whiteSpace
 
-type Parser a = Parsec String (MacroState a)
+type Parser = Parsec String MacroState
 
 T.TokenParser { .. } = T.makeTokenParser ohmlDef
 

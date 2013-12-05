@@ -6,8 +6,6 @@ import Test.HUnit
 import Forml.AST
 import Forml.Config
 import Forml.Compile
-import Forml.Parse
-import Forml.Prelude
 
 import Utils
 

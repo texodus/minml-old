@@ -71,7 +71,7 @@ compile config srcs = do
     js <- generateJs ast
     renderText js
 
-type ParseArtifact = ([Expr], MacroState Expr)
+type ParseArtifact = ([Expr], MacroState)
     
 initialState :: ParseArtifact
 initialState = ([], emptyState)

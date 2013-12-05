@@ -28,7 +28,7 @@ import Forml.Parse.Token
 --   most recent invocation of `withScope`, or `initialPos` if it has
 --   not been invoked.
 
-withScope :: Parser s a -> Parser s a
+withScope :: Parser a -> Parser a
 withScope parser = do
     st  <- get
     pos <- getPosition
@@ -41,34 +41,34 @@ withScope parser = do
 
 -- | Fails if the cursor is not within the current scope
 
-inScope :: (Int -> Int -> Bool) -> Parser s ()
+inScope :: (Int -> Int -> Bool) -> Parser ()
 inScope comp = condSep sourceLine (>) "in scope" >> condSep sourceColumn comp "in scope"
 
 -- | Fails if the cursor is not indented, or on the same line
 
-indented :: Parser s ()
+indented :: Parser ()
 indented = condSep sourceColumn (>) "indented"
 
 -- | Tries a parser as a continuation of an existing block
 
-withSep :: Parser s a -> Parser s a
+withSep :: Parser a -> Parser a
 withSep parser =
     (semi >> withScope parser) <|> (inScope (==) >> withScope parser)
 
 -- | Same as withSep, but without a semi
 
-withCont :: Parser s a -> Parser s a
+withCont :: Parser a -> Parser a
 withCont parser =
     (condSep sourceLine (==) "inline" >> parser) <|> (inScope (>=) >> withScope parser)
 
 -- | Line separator parser
 
-sep :: Parser s ()
+sep :: Parser ()
 sep = void semi <|> inScope (==)
 
 -- | Optionally parse a separator in-scope
 
-condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser s ()
+condSep :: (SourcePos -> Int) -> (Int -> Int -> Bool) -> String -> Parser ()
 condSep f cond name = do
     oldPos <- use sourcePos
     pos    <- getPosition

@@ -28,7 +28,7 @@ import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
-parseForml :: String -> String -> MacroState Expr -> Either Err (Expr, MacroState Expr)
+parseForml :: String -> String -> MacroState -> Either Err (Expr, MacroState)
 parseForml name src state =
     left printError $ runParser grammar state name src
 
@@ -36,7 +36,7 @@ printError :: ParseError -> Err
 printError err =
     Err . show $ err -- setErrorPos (newPos "Test Case" (sourceLine (errorPos err) - 29) (sourceColumn (errorPos err) + 3)) err
 
-grammar :: Parser Expr (Expr, MacroState Expr)
+grammar :: Parser (Expr, MacroState)
 grammar = do
     whiteSpace
     res <- withScope $ (,) <$> exprP <*> getState

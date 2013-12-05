@@ -21,18 +21,18 @@ import Forml.Parse.Indent
 
 -- | Pattern parser
 
-pattP :: Parser Expr Patt
+pattP :: Parser Patt
 pattP =
 
     conPatsP <|> valPattP <|> parens pattP <|> recPattP
 
-valPattP :: Parser Expr Patt
+valPattP :: Parser Patt
 valPattP = ValPatt <$> valP
 
-recPattP :: Parser Expr Patt
+recPattP :: Parser Patt
 recPattP = RecPatt <$> recordP pattP
 
-conPatsP :: Parser Expr Patt
+conPatsP :: Parser Patt
 conPatsP = do
     tSym <- typSymP
     exs  <- many (indented >> inner)
@@ -40,7 +40,7 @@ conPatsP = do
         [] -> ValPatt . ConVal . TypeSym $ tSym
         _ -> ConPatt tSym exs
 
-inner :: Parser Expr Patt
+inner :: Parser Patt
 inner =
     valPattP <|> parens pattP <|> recPattP
 

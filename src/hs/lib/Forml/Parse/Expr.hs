@@ -38,7 +38,7 @@ import Forml.Parse.Val
 
 ------------------------------------------------------------------------------
 
-exprP :: Parser Expr Expr
+exprP :: Parser Expr
 exprP =
 
     letMacroP
@@ -50,7 +50,7 @@ exprP =
         <|> appExprP
         <?> "Expression"
 
-letMacroP :: Parser Expr Expr
+letMacroP :: Parser Expr
 letMacroP = withScope $ do
     antiQuote
     def <- notationP
@@ -60,23 +60,23 @@ letMacroP = withScope $ do
     macros %= mappend (MacList [ms])
     withSep exprP
 
-macroP :: Parser Expr Expr
+macroP :: Parser Expr
 macroP = ($ undefined) . fst <$> (use macros >>= macroPRec exprP . filterP)
 
-jsExprP :: Parser Expr Expr
+jsExprP :: Parser Expr
 jsExprP =
     unwrap
         (reservedOp "``" >> (anyChar `manyTill` reservedOp "``"))
         <?> "Javascript"
     where
-    unwrap :: Parser Expr String -> Parser Expr Expr
+    unwrap :: Parser String -> Parser Expr
     unwrap f = do
         f' <- f
         case parseJME f' of
             Left x  -> parserFail (show x)
             Right x -> return (JSExpr x)
 
-matExprP :: Parser Expr Expr
+matExprP :: Parser Expr
 matExprP =
     pure MatExpr
         <*  reserved "match"
@@ -87,15 +87,15 @@ matExprP =
     where
         caseP = (,) <$> pattP <* toOp <*> withCont exprP
 
-toOp :: Parser Expr ()
+toOp :: Parser ()
 toOp  = reservedOp "->" <|> reservedOp "="
 
-recExprP :: Parser Expr Expr
+recExprP :: Parser Expr
 recExprP =
     RecExpr <$> recordP exprP
         <?> "Record Expression"
 
-typExprP :: Parser Expr Expr
+typExprP :: Parser Expr
 typExprP =
     pure TypExpr
         <*  optional (reserved "data")
@@ -105,13 +105,13 @@ typExprP =
         <*> capture (withSep exprP)
         <?> "Type Kind Expression"
 
-capture :: Parser Expr Expr -> Parser Expr (Maybe Expr)
+capture :: Parser Expr -> Parser (Maybe Expr)
 capture prsr = Just <$> prsr <|> do
     ms <- use macros
     tailMacros .= ms
     return Nothing
 
-appExprP :: Parser Expr Expr
+appExprP :: Parser Expr
 appExprP = do
     macs <- use macros
     buildExpressionParser (opPs macs) termP <?> "Application"
@@ -134,7 +134,7 @@ appExprP = do
         termP = valExprP <|> matExprP <|> macroP <|> parens exprP
         opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
-type OpTable = [Operator String (MacroState Expr) Identity Expr]
+type OpTable = [Operator String MacroState Identity Expr]
 
 macOps :: OpTable -> Macro Expr -> OpTable
 macOps opss (Term (Arg x) (MacList ys)) =

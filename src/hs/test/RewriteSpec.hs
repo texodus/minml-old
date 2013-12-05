@@ -10,13 +10,10 @@ import Control.Monad
 import Test.Hspec
 import Test.HUnit
 import Text.InterpolatedString.Perl6
-import Text.Parsec.Pos
 
 import Forml.AST
 import Forml.Config
 import Forml.Compile
-import Forml.Parse
-import Forml.Parse.Token
 import Forml.Prelude
 
 import Utils hiding (assertParse)

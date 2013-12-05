@@ -30,7 +30,7 @@ letterP =
 lowerP = 
     oneOf "abcdefghijklmnopqrstuvwxyz" <?> "lower cased letter"
 
-macroDef :: LanguageDef (FT.MacroState a)
+macroDef :: LanguageDef FT.MacroState
 macroDef = emptyDef {
     T.reservedNames   = keywords,
   --  T.reservedOpNames = concat ops,
