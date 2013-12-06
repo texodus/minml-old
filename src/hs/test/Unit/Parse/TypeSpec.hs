@@ -3,12 +3,20 @@ module Unit.Parse.TypeSpec where
 import Test.Hspec
 
 import Forml.AST
-import Forml.Parse.Type
+import Forml.Parse.Syntax
+import Forml.Parse.Token
+import Forml.Parse.Type()
 
 import Utils
 
+typSymP :: Parser (TypeSym ())
+typSymP = syntax
+
+typAbsP :: Parser (TypeAbs ())
+typAbsP = syntax
+
 spec :: Spec
-spec = do
+spec =
 
     describe "Forml.Parser.Lit" $ do
 

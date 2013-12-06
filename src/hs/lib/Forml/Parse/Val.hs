@@ -8,31 +8,32 @@
 
 ------------------------------------------------------------------------------
 
-module Forml.Parse.Val (
-    symP,
-    valP
-) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Forml.Parse.Val where
 
 import Control.Applicative
 import Control.Lens
 import Text.Parsec hiding ((<|>))
 
 import Forml.AST
-import Forml.Parse.Lit
+import Forml.Parse.Lit()
+import Forml.Parse.Syntax
 import Forml.Parse.Token
-import Forml.Parse.Type
+import Forml.Parse.Type()
 
 ------------------------------------------------------------------------------
 
 -- | Sym parser
 
-symP :: Parser Sym
-symP = try $ do
-    ars <- use macros
-    sym <- identifier <?> "symbol"
-    if sym `elem` getReserved ars 
-        then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
-        else return $ Sym sym
+instance Syntax Sym where
+
+    syntax = try $ do
+        ars <- use macros
+        sym <- identifier <?> "symbol"
+        if sym `elem` getReserved ars 
+            then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
+            else return $ Sym sym
 
 getReserved :: MacList Expr -> [String]
 
@@ -49,10 +50,9 @@ getReserved' _ = []
 
 -- | Val parser
 
-valP :: Parser Val
-valP =
-    (SymVal <$> symP)
-        <|> (LitVal <$> litP)
-        <|> ConVal . TypeSym <$> typSymP
+instance Syntax Val where
+    syntax = (SymVal <$> syntax)
+        <|> (LitVal <$> syntax)
+        <|> ConVal . TypeSym <$> syntax
 
 ------------------------------------------------------------------------------

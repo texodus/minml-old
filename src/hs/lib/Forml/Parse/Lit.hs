@@ -5,24 +5,28 @@
 
 ------------------------------------------------------------------------------
 
-module Forml.Parse.Lit (
-    litP
-) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Forml.Parse.Lit where
 
 import Control.Applicative
 
 import Forml.AST.Lit
 import Forml.Parse.Token
+import Forml.Parse.Syntax
 
 ------------------------------------------------------------------------------
 
-litP :: Parser Lit
-litP = stringL <|> numL
-    where
-        stringL = StrLit <$> stringLiteral
-        numL    = NumLit . toDouble <$> naturalOrFloat
+instance Syntax Lit where
+ 
+    syntax =
+        stringL <|> numL
+ 
+        where
+            stringL = StrLit <$> stringLiteral
+            numL    = NumLit . toDouble <$> naturalOrFloat
 
-        toDouble (Left i)  = fromInteger i
-        toDouble (Right f) = f
+            toDouble (Left i)  = fromInteger i
+            toDouble (Right f) = f
 
 ------------------------------------------------------------------------------

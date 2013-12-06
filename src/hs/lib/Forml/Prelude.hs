@@ -28,10 +28,6 @@
 
 ------------------------------------------------------------------------------
 
--- There is one module.  We'll need a few elements from `System` for
--- handling the plumbing aspects, and a handful of elements from the
--- `containers` and `mtl` libraries.
-
 module Forml.Prelude where
 
 import qualified Data.ByteString.UTF8 as B
@@ -43,6 +39,7 @@ import Text.Parsec.Pos
 
 import Forml.AST
 import Forml.Parse.Notation
+import Forml.Parse.Syntax
 import Forml.Parse.Token
 
 ------------------------------------------------------------------------------
@@ -58,15 +55,20 @@ import Forml.Parse.Token
 bootstrap :: MacList Expr
 bootstrap = foldl1 mappend
 
-    -- Let
-    [ parseNote "fun (x) -> (y)"       (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-    , parseNote "let (a) = (b); (c)"   (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (Just (VarExpr (SymVal (Sym "c")))))
+    [ parseNote 
+        "fun (x) -> (y)" 
+        (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+
+    , parseNote 
+        "let (a) = (b); (c)"  
+        (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (Just (VarExpr (SymVal (Sym "c")))))
+ 
     ]
 
     where
-        parseNote a = case runParser notationP emptyState "" a of
+        parseNote a = case runParser syntax emptyState "" a of
             Left x  -> error . show $ x
-            Right x -> MacList . (:[]) . x
+            Right (Notation x) -> MacList . (:[]) . x
 
 emptyState :: MacroState
 emptyState = MacroState (initialPos "") bootstrap bootstrap 0

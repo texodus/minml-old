@@ -4,6 +4,7 @@
 
 ------------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -20,16 +21,21 @@ import Forml.AST
 import Forml.Macro.LetPatt
 import Forml.Macro.Replace
 import Forml.Parse.Indent
-import Forml.Parse.Val
-import Forml.Parse.Patt
+import Forml.Parse.Syntax
+import Forml.Parse.Val()
+import Forml.Parse.Patt()
 import Forml.Parse.Token
 
 ------------------------------------------------------------------------------
 
-type PartMacro = (Expr -> Expr, MacList Expr)
+-- TODO this can be simplified alot
 
-macroPRec :: Parser Expr -> MacList Expr -> Parser PartMacro
-macroPRec exprP = 
+type PartMacro a = (a -> a, MacList a)
+
+macroPRec :: (Syntax a, Replace LetPatt a, Replace Sym a, Replace Expr a, Replace Patt a, Syntax Expr) => 
+    MacList a -> Parser (PartMacro a)
+
+macroPRec = 
     merge rootP
     where
 
@@ -68,15 +74,15 @@ macroPRec exprP =
             reserved x >> merge m exs
 
         bothP m (Term (Pat a) exs) = 
-            wrap pattP a m exs
+            wrap (syntax :: Parser Patt) a m exs
 
         bothP m (Term (Arg a) exs) =
-            wrap exprP a m exs
+            wrap (syntax :: Parser Expr) a m exs
 
         bothP m (Term (Let a) exs) =
-            try (wrap symP a m exs <|> wrap letPattP a m exs)
+            try (wrap (syntax :: Parser Sym) a m exs <|> wrap letPattP a m exs)
             where
-                letPattP = LetPatt <$> pattP <* indented
+                letPattP = LetPatt <$> syntax <* indented
 
         bothP _ _ = 
             error "Unimplemented"

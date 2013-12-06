@@ -4,14 +4,19 @@ import qualified Data.Map as M
 import Test.Hspec
 
 import Forml.AST
-import Forml.Parse.Patt
+import Forml.Parse.Patt()
+import Forml.Parse.Syntax
+import Forml.Parse.Token
 
 import Utils
 
-spec :: Spec
-spec = do
+pattP :: Parser Patt
+pattP = syntax
 
-    describe "Forml.Parser.Patt" $ do
+spec :: Spec
+spec =
+
+    describe "Forml.Parser.Patt" $
 
         describe "pattP" $ do
 

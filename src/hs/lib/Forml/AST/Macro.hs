@@ -70,6 +70,8 @@ instance (Show a, Eq a, Replace String a) => Monoid (MacList a) where
             err = error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2)
             merged = foldM insert [] (ms1 ++ ms2)
 
+
+
 insert :: (Show a, Eq a, Replace String a) =>
     [Macro a] -> Macro a -> Maybe [Macro a]
 

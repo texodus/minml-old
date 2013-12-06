@@ -23,7 +23,8 @@ import Text.Parsec hiding ((<|>), many)
 
 import Forml.AST
 import Forml.Parse.Token
-import Forml.Parse.Expr
+import Forml.Parse.Expr()
+import Forml.Parse.Syntax
 import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
@@ -39,7 +40,7 @@ printError err =
 grammar :: Parser (Expr, MacroState)
 grammar = do
     whiteSpace
-    res <- withScope $ (,) <$> exprP <*> getState
+    res <- withScope $ (,) <$> syntax <*> getState
     eof
     return res
 

@@ -3,9 +3,17 @@ module Unit.Parse.ValSpec where
 import Test.Hspec
 
 import Forml.AST
-import Forml.Parse.Val
+import Forml.Parse.Val()
+import Forml.Parse.Token
+import Forml.Parse.Syntax
 
 import Utils
+
+symP :: Parser Sym
+symP = syntax
+
+valP :: Parser Val
+valP = syntax
 
 spec :: Spec
 spec =

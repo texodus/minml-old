@@ -7,38 +7,40 @@
 
 ------------------------------------------------------------------------------
 
-module Forml.Parse.Type (
-    typSymP,
-    typAbsP,
-    typP
-) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+{-# LANGUAGE FlexibleInstances #-}
+
+module Forml.Parse.Type where
 
 import Control.Applicative
 import Text.Parsec         hiding (many, (<|>))
 import Text.Parsec.Expr
 
 import Forml.AST
+import Forml.Parse.Syntax
 import Forml.Parse.Token
 import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
-typSymP :: Parser (TypeSym ())
-typSymP = (TypeSymP .) . (:) <$> upper <*> identifier
+instance Syntax (TypeSym ()) where
+    syntax = (TypeSymP .) . (:) <$> upper <*> identifier
 
-typAbsP :: Parser (TypeAbs ())
-typAbsP = TypeAbsP <$> typP <?> "Type (TypeAbs Kind)"
+instance Syntax (TypeAbs ()) where
+    syntax = TypeAbsP <$> syntax <?> "Type (TypeAbs Kind)"
 
-typP :: Parser (Type ())
-typP = buildExpressionParser opPs termP <?> "Type Symbol"
+instance Syntax (Type ()) where
+    syntax =
+        buildExpressionParser opPs termP <?> "Type Symbol"
 
-    where
-        opPs =
-            [ [Infix (spaces >> indented >> return TypeApp) AssocLeft]
-            , [Infix (reservedOp "->" >> return (fnConst "->")) AssocRight] ]
+        where
+            opPs =
+                [ [Infix (spaces >> indented >> return TypeApp) AssocLeft]
+                , [Infix (reservedOp "->" >> return (fnConst "->")) AssocRight] ]
 
-        fnConst = (TypeApp .) . TypeApp . TypeSym . TypeSymP
-        termP   = typVarP <|> parens typP <|> TypeSym <$> typSymP
-        typVarP = TypeVar . TypeVarP <$> identifier <?> "Type Variable"
+            fnConst = (TypeApp .) . TypeApp . TypeSym . TypeSymP
+            termP   = typVarP <|> parens syntax <|> TypeSym <$> syntax
+            typVarP = TypeVar . TypeVarP <$> identifier <?> "Type Variable"
 
 ------------------------------------------------------------------------------

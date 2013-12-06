@@ -4,37 +4,37 @@
 
 ------------------------------------------------------------------------------
 
-module Forml.Parse.Patt (
-    pattP, recPattP
-) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Forml.Parse.Patt() where
 
 import Control.Applicative
 
 import Forml.AST
-import Forml.Parse.Record
+import Forml.Parse.Record()
+import Forml.Parse.Syntax
 import Forml.Parse.Token
-import Forml.Parse.Type
-import Forml.Parse.Val
+import Forml.Parse.Type()
+import Forml.Parse.Val()
 import Forml.Parse.Indent
 
 ------------------------------------------------------------------------------
 
 -- | Pattern parser
 
-pattP :: Parser Patt
-pattP =
+instance Syntax Patt where
 
-    conPatsP <|> valPattP <|> parens pattP <|> recPattP
+    syntax = conPatsP <|> valPattP <|> parens syntax <|> recPattP
 
 valPattP :: Parser Patt
-valPattP = ValPatt <$> valP
+valPattP = ValPatt <$> syntax
 
 recPattP :: Parser Patt
-recPattP = RecPatt <$> recordP pattP
+recPattP = RecPatt <$> syntax
 
 conPatsP :: Parser Patt
 conPatsP = do
-    tSym <- typSymP
+    tSym <- syntax
     exs  <- many (indented >> inner)
     return $ case exs of
         [] -> ValPatt . ConVal . TypeSym $ tSym
@@ -42,6 +42,6 @@ conPatsP = do
 
 inner :: Parser Patt
 inner =
-    valPattP <|> parens pattP <|> recPattP
+    valPattP <|> parens syntax <|> recPattP
 
 ------------------------------------------------------------------------------

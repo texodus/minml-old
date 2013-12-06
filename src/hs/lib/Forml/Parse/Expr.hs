@@ -11,9 +11,9 @@
 {-# LANGUAGE GADTs      #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Forml.Parse.Expr (
-    exprP
-) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module Forml.Parse.Expr where
 
 import Control.Applicative
 import Control.Arrow
@@ -30,18 +30,18 @@ import Forml.AST.Replace
 import Forml.Parse.Indent
 import Forml.Parse.Notation
 import Forml.Parse.Macro
-import Forml.Parse.Patt
-import Forml.Parse.Record
+import Forml.Parse.Patt()
+import Forml.Parse.Record()
+import Forml.Parse.Syntax
 import Forml.Parse.Token
-import Forml.Parse.Type
-import Forml.Parse.Val
+import Forml.Parse.Type()
+import Forml.Parse.Val()
 
 ------------------------------------------------------------------------------
 
-exprP :: Parser Expr
-exprP =
+instance Syntax Expr where
 
-    letMacroP
+    syntax = letMacroP
         <|> macroP
         <|> jsExprP
         <|> recExprP
@@ -53,15 +53,15 @@ exprP =
 letMacroP :: Parser Expr
 letMacroP = withScope $ do
     antiQuote
-    def <- notationP
+    Notation def <- syntax
     antiQuote
     reservedOp "="
-    ms <- def <$> withCont exprP
+    ms <- def <$> withCont syntax
     macros %= mappend (MacList [ms])
-    withSep exprP
+    withSep syntax
 
 macroP :: Parser Expr
-macroP = ($ undefined) . fst <$> (use macros >>= macroPRec exprP . filterP)
+macroP = ($ undefined) . fst <$> (use macros >>= macroPRec . filterP)
 
 jsExprP :: Parser Expr
 jsExprP =
@@ -80,29 +80,28 @@ matExprP :: Parser Expr
 matExprP =
     pure MatExpr
         <*  reserved "match"
-        <*> exprP
+        <*> syntax
         <*  reserved "with"
         <*> withCont (try caseP `sepEndBy` sep)
         <?> "Match Expression"
     where
-        caseP = (,) <$> pattP <* toOp <*> withCont exprP
+        caseP = (,) <$> syntax <* toOp <*> withCont syntax
 
 toOp :: Parser ()
 toOp  = reservedOp "->" <|> reservedOp "="
 
 recExprP :: Parser Expr
 recExprP =
-    RecExpr <$> recordP exprP
+    RecExpr <$> syntax
         <?> "Record Expression"
 
 typExprP :: Parser Expr
 typExprP =
     pure TypExpr
         <*  optional (reserved "data")
-        <*> try (typSymP
-        <*  reserved ":")
-        <*> typAbsP
-        <*> capture (withSep exprP)
+        <*> try (syntax <*  reserved ":")
+        <*> syntax
+        <*> capture (withSep syntax)
         <?> "Type Kind Expression"
 
 capture :: Parser Expr -> Parser (Maybe Expr)
@@ -130,8 +129,8 @@ appExprP = do
                 &&& return . optr
 
         appl = indented >> return AppExpr
-        valExprP = VarExpr <$> valP <?> "Value"
-        termP = valExprP <|> matExprP <|> macroP <|> parens exprP
+        valExprP = VarExpr <$> syntax <?> "Value"
+        termP = valExprP <|> matExprP <|> macroP <|> parens syntax
         opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
 type OpTable = [Operator String MacroState Identity Expr]
@@ -142,7 +141,7 @@ macOps opss (Term (Arg x) (MacList ys)) =
     where
         ggg st (Term (Token y) ms) = do
             reservedOp y
-            cont <- macroPRec exprP ms
+            cont <- macroPRec ms
             return (\z -> replace st z . ($ undefined) . fst $ cont)
 
         ggg _ _ = error "PARADOX: This should not be"

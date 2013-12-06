@@ -3,14 +3,19 @@ module Unit.Parse.LitSpec where
 import Test.Hspec
 
 import Forml.AST
-import Forml.Parse.Lit
+import Forml.Parse.Lit()
+import Forml.Parse.Syntax
+import Forml.Parse.Token
 
 import Utils
 
-spec :: Spec
-spec = do
+litP :: Parser Lit
+litP = syntax
 
-    describe "Forml.Parser.Lit" $ do
+spec :: Spec
+spec =
+
+    describe "Forml.Parser.Lit" $
 
         describe "litP" $ do
 
