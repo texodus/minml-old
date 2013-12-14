@@ -4,9 +4,9 @@ import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
-import Forml.AST
-import Forml.Javascript
-import Forml.RenderText
+import Minml.AST
+import Minml.Javascript
+import Minml.RenderText
 
 assertGenerate :: Expr -> Either Err String -> Assertion
 assertGenerate a = assertEqual "" gen
@@ -18,7 +18,7 @@ assertGenerate a = assertEqual "" gen
 spec :: Spec
 spec =
 
-    describe "Forml.Javascript.Expr" $
+    describe "Minml.Javascript.Expr" $
 
         describe "generateJs" $ do
 

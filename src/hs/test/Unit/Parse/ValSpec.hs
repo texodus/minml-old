@@ -2,10 +2,10 @@ module Unit.Parse.ValSpec where
 
 import Test.Hspec
 
-import Forml.AST
-import Forml.Parse.Val()
-import Forml.Parse.Token
-import Forml.Parse.Syntax
+import Minml.AST
+import Minml.Parse.Val()
+import Minml.Parse.Token
+import Minml.Parse.Syntax
 
 import Utils
 
@@ -18,7 +18,7 @@ valP = syntax
 spec :: Spec
 spec =
 
-    describe "Forml.Parse.Val" $ do
+    describe "Minml.Parse.Val" $ do
 
         describe "symP" $ do
 

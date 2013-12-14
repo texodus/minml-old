@@ -4,8 +4,8 @@ import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
-import Forml.TypeCheck
-import Forml.AST
+import Minml.TypeCheck
+import Minml.AST
 
 assertCheck :: Expr -> Maybe Err -> Assertion
 assertCheck a b = assertEqual "" b checked
@@ -17,7 +17,7 @@ assertCheck a b = assertEqual "" b checked
 spec :: Spec
 spec =
 
-    describe "Forml.type check" $
+    describe "Minml.type check" $
 
         describe "type checkOhml" $ do
 

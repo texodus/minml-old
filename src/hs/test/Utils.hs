@@ -10,10 +10,10 @@ import Text.Parsec
 import Test.QuickCheck
 import Language.Javascript.JMacro
 
-import Forml.AST
-import Forml.Parse.Token
-import Forml.Prelude
-import Forml.RenderText
+import Minml.AST
+import Minml.Parse.Token
+import Minml.Prelude
+import Minml.RenderText
 
 
 import Control.Monad

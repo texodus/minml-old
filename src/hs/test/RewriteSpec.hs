@@ -11,10 +11,10 @@ import Test.Hspec
 import Test.HUnit
 import Text.InterpolatedString.Perl6
 
-import Forml.AST
-import Forml.Config
-import Forml.Compile
-import Forml.Prelude
+import Minml.AST
+import Minml.Config
+import Minml.Compile
+import Minml.Prelude
 
 import Utils hiding (assertParse)
 
@@ -47,7 +47,7 @@ instance Assert String String where
 spec :: Spec
 spec =
 
-    describe "Forml.Parser" $ do
+    describe "Minml.Parser" $ do
 
 
         describe "parse" $ do

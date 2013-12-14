@@ -3,9 +3,9 @@ module IntegrationSpec where
 import Test.Hspec
 import Test.HUnit
 
-import Forml.AST
-import Forml.Config
-import Forml.Compile
+import Minml.AST
+import Minml.Config
+import Minml.Compile
 
 import Utils
 
@@ -19,9 +19,9 @@ assertNode a b = do
 spec :: Spec
 spec =
 
-    describe "Forml.Parser" $
+    describe "Minml.Parser" $
 
-        describe "parseForml" $ do
+        describe "parseMinml" $ do
 
             it "should compile & run a trivial example " $ assertNode
               

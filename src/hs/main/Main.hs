@@ -1,7 +1,7 @@
 
 module Main where
 
-import Forml.Exec
+import Minml.Exec
 
 main :: IO ()
 main = exec

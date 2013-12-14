@@ -6,9 +6,9 @@ import qualified Data.Map as M
 import Test.Hspec
 import Test.HUnit
 
-import Forml.Compile
-import Forml.AST
-import Forml.Prelude
+import Minml.Compile
+import Minml.AST
+import Minml.Prelude
 
 assertParse :: String -> Either Err Expr -> Assertion
 assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)])
@@ -16,13 +16,13 @@ assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], empty
 spec :: Spec
 spec =
 
-    describe "Forml.Parser" $
+    describe "Minml.Parser" $
 
-        describe "parseForml" $ do
+        describe "parseMinml" $ do
 
             it "should parse anything it can format, and they should be the same" $ pendingWith "TODO this is useful, but transforms make this difficult"
  
-                -- property $ \x -> parseForml (fmt x) == Right x
+                -- property $ \x -> parseMinml (fmt x) == Right x
 
             it "should parse a trivial example " $ assertParse
               

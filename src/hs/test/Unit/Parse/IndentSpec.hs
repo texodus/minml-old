@@ -4,16 +4,16 @@ import Test.Hspec
 
 import Text.Parsec
 
-import Forml.AST
-import Forml.Parse.Indent
-import Forml.Parse.Token
+import Minml.AST
+import Minml.Parse.Indent
+import Minml.Parse.Token
 
 import Utils
 
 spec :: Spec
 spec = do
 
-    describe "Forml.Parser.Indent" $ do
+    describe "Minml.Parser.Indent" $ do
 
         describe "indented" $ do
 

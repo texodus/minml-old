@@ -2,15 +2,15 @@ module Unit.Javascript.ValSpec where
 
 import Test.Hspec
 
-import Forml.AST
-import Forml.Javascript.Val()
+import Minml.AST
+import Minml.Javascript.Val()
 
 import Utils
 
 spec :: Spec
 spec = do
 
-    describe "Forml.Javascript.Val" $ do
+    describe "Minml.Javascript.Val" $ do
 
         describe "toJExpr" $ do
 

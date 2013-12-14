@@ -2,10 +2,10 @@ module Unit.Parse.TypeSpec where
 
 import Test.Hspec
 
-import Forml.AST
-import Forml.Parse.Syntax
-import Forml.Parse.Token
-import Forml.Parse.Type()
+import Minml.AST
+import Minml.Parse.Syntax
+import Minml.Parse.Token
+import Minml.Parse.Type()
 
 import Utils
 
@@ -18,7 +18,7 @@ typAbsP = syntax
 spec :: Spec
 spec =
 
-    describe "Forml.Parser.Lit" $ do
+    describe "Minml.Parser.Lit" $ do
 
         describe "typSymP" $ do
 

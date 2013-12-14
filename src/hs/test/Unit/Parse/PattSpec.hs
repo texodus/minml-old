@@ -3,10 +3,10 @@ module Unit.Parse.PattSpec where
 import qualified Data.Map as M
 import Test.Hspec
 
-import Forml.AST
-import Forml.Parse.Patt()
-import Forml.Parse.Syntax
-import Forml.Parse.Token
+import Minml.AST
+import Minml.Parse.Patt()
+import Minml.Parse.Syntax
+import Minml.Parse.Token
 
 import Utils
 
@@ -16,7 +16,7 @@ pattP = syntax
 spec :: Spec
 spec =
 
-    describe "Forml.Parser.Patt" $
+    describe "Minml.Parser.Patt" $
 
         describe "pattP" $ do
 

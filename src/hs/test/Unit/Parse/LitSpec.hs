@@ -2,10 +2,10 @@ module Unit.Parse.LitSpec where
 
 import Test.Hspec
 
-import Forml.AST
-import Forml.Parse.Lit()
-import Forml.Parse.Syntax
-import Forml.Parse.Token
+import Minml.AST
+import Minml.Parse.Lit()
+import Minml.Parse.Syntax
+import Minml.Parse.Token
 
 import Utils
 
@@ -15,7 +15,7 @@ litP = syntax
 spec :: Spec
 spec =
 
-    describe "Forml.Parser.Lit" $
+    describe "Minml.Parser.Lit" $
 
         describe "litP" $ do
 

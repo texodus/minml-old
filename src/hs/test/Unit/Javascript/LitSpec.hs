@@ -2,15 +2,15 @@ module Unit.Javascript.LitSpec where
 
 import Test.Hspec
 
-import Forml.AST
-import Forml.Javascript.Lit()
+import Minml.AST
+import Minml.Javascript.Lit()
 
 import Utils
 
 spec :: Spec
 spec = do
 
-    describe "Forml.Javascript.Lit" $ do
+    describe "Minml.Javascript.Lit" $ do
 
         describe "toJExpr" $ do
 
