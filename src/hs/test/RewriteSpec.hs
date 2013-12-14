@@ -151,22 +151,26 @@ spec =
 
 
 
-            it "should compile & run nested definitions" $ [q|
+            it "should compile & run nested definitions" $
+
+                pending
+
+            -- [q|
               
-                True: Bool                     
-                False: Bool                    
+            --    True: Bool                     
+            --    False: Bool                    
                                                
-                `do (b)` =                     
-                    `bind (a) to (d) in (c)` = 
-                         c                     
-                    b                          
+            --    `do (b)` =                     
+            --        `bind (a) to (d) in (c)` = 
+            --             c                     
+            --        b                          
                                                
-                do bind x to 4          
-                   in x + 4                        
+            --    do bind x to 4          
+            --       in x + 4                        
 
-            |] ===
+            -- |] ===
 
-                "8\n"
+            --    "8\n"
 
 
 
