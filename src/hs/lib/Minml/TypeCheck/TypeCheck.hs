@@ -27,9 +27,9 @@ import Minml.Utils
 type TypeCheck a = StateT TypeCheckState (Either Err) a
 
 data TypeCheckState = TypeCheckState {
-	_substs :: Subst,
-	_seed :: Int,
-	_ass :: [Ass]
+    _substs :: Subst,
+    _seed :: Int,
+    _ass :: [Ass]
 }
 
 makeLenses ''TypeCheckState
@@ -38,7 +38,7 @@ newState :: TypeCheckState
 newState = TypeCheckState [] 0 []
 
 class Infer a where
-	infer :: a -> TypeCheck (Type Kind)
+    infer :: a -> TypeCheck (Type Kind)
 
 newTypeVar :: Kind -> TypeCheck (Type Kind)
 newTypeVar k = do
@@ -59,10 +59,26 @@ uniErr msg t u = typErr $
 find :: String -> TypeCheck (TypeAbs Kind)
 find i = use ass >>= find'
 
-	where
-		find' [] = typErr ("Unbound identifier: " ++ i)
-		find' ((i' :>: sc) : as)
-		    | i == i'   = return sc
-		    | otherwise = find' as
+    where
+        find' [] = typErr ("Unbound identifier: " ++ i)
+        find' ((i' :>: sc) : as)
+            | i == i'   = return sc
+            | otherwise = find' as
+
+scopeAss :: TypeCheck a -> TypeCheck a
+scopeAss tc = do
+    as <- use ass 
+    comAss as tc
+
+withAss :: Ass -> TypeCheck a -> TypeCheck a
+withAss newAs tc = do
+    as  <- ass <<%= (newAs :)
+    comAss as tc
+
+comAss :: [Ass] -> TypeCheck a -> TypeCheck a
+comAss as tc = do 
+    t   <- tc
+    ass .= as
+    return t
 
 ------------------------------------------------------------------------------

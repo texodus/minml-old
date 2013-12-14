@@ -55,7 +55,6 @@ module Minml.TypeCheck.Expr (
     infer
 ) where
 
-import Control.Lens
 import Control.Monad
 
 import qualified Data.Map as M
@@ -99,6 +98,8 @@ instance Infer Expr where
             typK = toKind Star typ
             typKAbs = quantify (getVars typK) typK
 
+    infer (TypExpr _ _ Nothing) = error "FATAL: incomplete"
+
     infer (LetExpr (Sym sym) val (Just expr)) = do
         symT <- newTypeVar Star
         valT <- withAss (sym :>: TypeAbsT [] symT) $ infer val
@@ -107,8 +108,6 @@ instance Infer Expr where
         withAss (sym :>: schT) $ infer expr
 
     infer (LetExpr _ _ Nothing) = error "FATAL: incomplete"
-
-    infer (TypExpr _ _ Nothing) = error "FATAL: incomplete"
 
     infer (AppExpr f x) = do
         fT   <- infer f
@@ -140,23 +139,5 @@ instance Infer Expr where
 
             argCheck _ [] =
                 error "FATAL: argCheck"
-
-
-scopeAss :: TypeCheck a -> TypeCheck a
-scopeAss tc = do
-    as <- use ass 
-    comAss as tc
-
-withAss :: Ass -> TypeCheck a -> TypeCheck a
-withAss newAs tc = do
-    as  <- ass <<%= (newAs :)
-    comAss as tc
-
-comAss :: [Ass] -> TypeCheck a -> TypeCheck a
-comAss as tc = do 
-    t   <- tc
-    ass .= as
-    return t
-
 
 ------------------------------------------------------------------------------

@@ -67,6 +67,7 @@ Library
     Minml.Parse,
     Minml.Parse.Expr
     Minml.Parse.Indent,
+    Minml.Parse.Infix,
     Minml.Parse.Lit,
     Minml.Parse.Notation,
     Minml.Parse.Macro,

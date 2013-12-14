@@ -18,7 +18,6 @@ module Minml.Parse.Expr where
 import Control.Applicative
 import Control.Arrow
 import Control.Lens
-import Control.Monad.Identity
 import Data.Monoid
 import Language.Javascript.JMacro
 import Text.Parsec.Expr
@@ -26,8 +25,8 @@ import Text.Parsec.Expr
 import Text.Parsec hiding (many, optional, (<|>))
 
 import Minml.AST
-import Minml.AST.Replace
 import Minml.Parse.Indent
+import Minml.Parse.Infix()
 import Minml.Parse.Notation
 import Minml.Parse.Macro
 import Minml.Parse.Patt()
@@ -112,14 +111,14 @@ capture prsr = Just <$> prsr <|> do
 
 appExprP :: Parser Expr
 appExprP = do
-    macs <- use macros
-    buildExpressionParser (opPs macs) termP <?> "Application"
+    table <- syntax
+    buildExpressionParser (opPs table) termP <?> "Application"
 
     where
-        opPs (MacList ms) =
+        opPs table =
             [ Infix appl AssocLeft ]
                 : toInfixTerm opConst AssocLeft (tail ops)
-                ++ [foldl macOps [] ms]
+                ++ [table]
 
         toInfixTerm optr assoc =
             fmap . fmap $
@@ -133,19 +132,4 @@ appExprP = do
         termP = valExprP <|> matExprP <|> macroP <|> parens syntax
         opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
-type OpTable = [Operator String MacroState Identity Expr]
-
-macOps :: OpTable -> Macro Expr -> OpTable
-macOps opss (Term (Arg x) (MacList ys)) =
-    opss ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
-    where
-        ggg st (Term (Token y) ms) = do
-            reservedOp y
-            cont <- macroPRec ms
-            return (\z -> replace st z . ($ undefined) . fst $ cont)
-
-        ggg _ _ = error "PARADOX: This should not be"
-
-macOps opss _ = opss
-    
 ------------------------------------------------------------------------------

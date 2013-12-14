@@ -77,7 +77,7 @@ instance Attributes Config where
             Short "t",
             Long ["typecheck"],
             Default True,
-            Help "Type check the sources"
+            Help "Type check the sources" 
         ]]
 
 instance RecordCommand Config where
