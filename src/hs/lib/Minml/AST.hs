@@ -9,6 +9,7 @@
 {-# LANGUAGE GADTs #-}
 
 module Minml.AST (
+    module Minml.AST.Err,
     module Minml.AST.Type,
     module Minml.AST.Val,
     module Minml.AST.Patt,
@@ -16,13 +17,13 @@ module Minml.AST (
     module Minml.AST.Record,
     module Minml.AST.Macro,
     module Minml.AST.Meta,
-    Err(..),
     isFun,
     isInfix,
     keywords,
     ops,
 ) where
 
+import Minml.AST.Err
 import Minml.AST.Type
 import Minml.AST.Patt
 import Minml.AST.Val
@@ -30,7 +31,6 @@ import Minml.AST.Expr
 import Minml.AST.Record
 import Minml.AST.Macro
 import Minml.AST.Meta
-import Minml.Utils
 
 --------------------------------------------------------------------------------
 
@@ -49,14 +49,6 @@ ops = [ [ "" ]
       , [ "+", "-" ]
       , [ "<=", ">=", "==", "!=" ]
       , [ "&&", "||" ] ]
-
--- | Error type
-
-newtype Err = Err String deriving (Eq, Show, Ord)
-
-instance Fmt Err where
-
-    fmt (Err x) = "ERROR " ++ x
 
 -- | Is type t a function type?
 

@@ -67,9 +67,9 @@ emptyTree = MacTree []
 
 appendTree :: (Show a, Eq a, Replace String a) => 
     MacTree a -> MacTree a -> Either String (MacTree a)
+
 appendTree (MacTree ms1) (MacTree ms2) = 
     MacTree `fmap` foldM insert [] (ms1 ++ ms2)
-
 
 insert :: (Show a, Eq a, Replace String a) =>
     [Macro a] -> Macro a -> Either String [Macro a]

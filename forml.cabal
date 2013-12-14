@@ -35,6 +35,7 @@ Library
     -optc-O3 -optc-ffast-math       
   exposed-modules:  
     Minml.AST,
+    Minml.AST.Err,
     Minml.AST.Expr,
     Minml.AST.Kind,
     Minml.AST.Lit,
