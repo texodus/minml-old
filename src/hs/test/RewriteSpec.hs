@@ -164,7 +164,7 @@ spec =
                 do bind x to 4          
                    in x + 4                        
 
-            |] =!=
+            |] ===
 
                 "8\n"
 

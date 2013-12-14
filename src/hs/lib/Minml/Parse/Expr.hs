@@ -18,7 +18,6 @@ module Minml.Parse.Expr where
 import Control.Applicative
 import Control.Arrow
 import Control.Lens
-import Data.Monoid
 import Language.Javascript.JMacro
 import Text.Parsec.Expr
 
@@ -56,7 +55,11 @@ letMacroP = withScope $ do
     antiQuote
     reservedOp "="
     ms <- def <$> withCont syntax
-    macros %= mappend (MacTree [ms])
+    macs <- use macros
+    newMacs <- case appendTree macs (MacTree [ms]) of
+        Left x -> parserFail x
+        Right x -> return x
+    macros .= newMacs
     withSep syntax
 
 macroP :: Parser Expr

@@ -16,13 +16,13 @@
 module Minml.AST.Macro(
     Macro(..), 
     Cell(..),
-    MacTree(..)
+    MacTree(..),
+    emptyTree,
+    appendTree
 ) where
 
 import Control.Applicative
 import Control.Monad
-import Data.Monoid
-import Data.Maybe
 
 import Minml.AST.Replace
 
@@ -62,22 +62,21 @@ newtype MacTree a =
     MacTree [Macro a] 
     deriving (Eq, Functor, Ord, Show)
 
-instance (Show a, Eq a, Replace String a) => Monoid (MacTree a) where
-    mempty = MacTree []
-    mappend (MacTree ms1) (MacTree ms2) =
-        MacTree $ fromMaybe err merged
-        where
-            err = error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2)
-            merged = foldM insert [] (ms1 ++ ms2)
+emptyTree :: MacTree a
+emptyTree = MacTree []
 
+appendTree :: (Show a, Eq a, Replace String a) => 
+    MacTree a -> MacTree a -> Either String (MacTree a)
+appendTree (MacTree ms1) (MacTree ms2) = 
+    MacTree `fmap` foldM insert [] (ms1 ++ ms2)
 
 
 insert :: (Show a, Eq a, Replace String a) =>
-    [Macro a] -> Macro a -> Maybe [Macro a]
+    [Macro a] -> Macro a -> Either String [Macro a]
 
 insert (mac : macs) postMac 
-    | Just x <- merge mac postMac =
-        Just $ x : macs
+    | Right x <- merge mac postMac =
+        return $ x : macs
 
 insert (Term cell ml : macs) postMac =
     (Term cell ml :) <$> insert macs postMac  
@@ -85,32 +84,32 @@ insert (Term cell ml : macs) postMac =
 insert (Leaf expr : []) postMac =
     insert [postMac] (Leaf expr)
 
-insert [] m = Just [m]
+insert [] m = return [m]
 
-insert _ _ = Nothing
+insert _ _ = Left "Undefined Error"
 
 merge :: (Show a, Replace String a, Eq a) => 
-    Macro a -> Macro a -> Maybe (Macro a)
+    Macro a -> Macro a -> Either String (Macro a)
 
 merge (Term x m) (Term y n) | x == y =
-    Just $ Term x $ n <> m
+    Term x `fmap` (n `appendTree` m)
 
 merge (Term (Pat x) m) (Term (Pat y) n) =
-    Just $ Term (Pat y) (n <> replace x y m)
+    Term (Pat y) `fmap` (n `appendTree` replace x y m)
 
 merge (Term (Arg x) m) (Term (Arg y) n) =
-    Just $ Term (Arg y) (n <> replace x y m)
+    Term (Arg y) `fmap` (n `appendTree` replace x y m)
 
 merge (Term (Let x) m) (Term (Let y) n) =
-    Just $ Term (Let y) (n <> replace x y m)
+    Term (Let y) `fmap` (n `appendTree` replace x y m)
 
 merge (Term (Pat _) _) (Term (Let _) _) =
-    error "Pattern shadows Let"
+    Left "Pattern shadows Let"
 
 merge (Term (Let _) _) (Term (Pat _) _) =
-    error "Let shadows Pattern"
+    Left "Let shadows Pattern"
 
 merge _ _ =
-    Nothing
+    Left "Undefined error"
 
 ------------------------------------------------------------------------------

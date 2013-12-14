@@ -32,6 +32,7 @@ module Minml.Prelude where
 
 import qualified Data.ByteString.UTF8 as B
 
+import Control.Monad
 import Data.FileEmbed
 import Data.Monoid
 import Text.Parsec
@@ -53,22 +54,28 @@ import Minml.Parse.Token
 -- function composition.
 
 bootstrap :: MacTree Expr
-bootstrap = foldl1 mappend
-
-    [ parseNote 
-        "fun (x) -> (y)" 
-        (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
-
-    , parseNote 
-        "let (a) = (b); (c)"  
-        (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (Just (VarExpr (SymVal (Sym "c")))))
- 
-    ]
-
+bootstrap = 
+    case foldM appendTree emptyTree defs of
+        Right x -> x
+        Left _ -> error "FATAL: Error in bootstrap"
     where
         parseNote a = case runParser syntax emptyState "" a of
             Left x  -> error . show $ x
             Right (Notation x) -> MacTree . (:[]) . x
+
+        defs :: [MacTree Expr]
+        defs =             
+            [ parseNote 
+                "fun (x) -> (y)" 
+                (AbsExpr (Sym "x") (VarExpr (SymVal (Sym "y"))))
+
+            , parseNote 
+                "let (a) = (b); (c)"  
+                (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (Just (VarExpr (SymVal (Sym "c")))))
+         
+            ]
+
+
 
 emptyState :: MacroState
 emptyState = MacroState (initialPos "") bootstrap bootstrap 0
