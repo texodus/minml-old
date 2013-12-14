@@ -39,6 +39,7 @@ Library
     Forml.AST.Kind,
     Forml.AST.Lit,
     Forml.AST.Macro,
+    Forml.AST.Meta,
     Forml.AST.Patt,
     Forml.AST.Record,
     Forml.AST.Replace,
@@ -53,6 +54,7 @@ Library
     Forml.Javascript.Expr,
     Forml.Javascript.Lit,
     Forml.Javascript.Match,
+    Forml.Javascript.Meta,
     Forml.Javascript.JMacro,
     Forml.Javascript.Record,
     Forml.Javascript.Type,
@@ -69,6 +71,7 @@ Library
     Forml.Parse.Notation,
     Forml.Parse.Macro,
     Forml.Parse.MacroToken,
+    Forml.Parse.Meta,
     Forml.Parse.Patt,
     Forml.Parse.Syntax
     Forml.Parse.Record,

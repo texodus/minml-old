@@ -32,6 +32,7 @@ import Forml.AST
 import Forml.AST.Replace
 import Forml.Javascript.Cases
 import Forml.Javascript.Curried
+import Forml.Javascript.Meta()
 import Forml.Javascript.Type()
 import Forml.Javascript.Val()
 import Forml.Javascript.Record()

@@ -16,17 +16,10 @@ module Forml.TypeCheck.Ass where
 
 import Forml.AST
 import Forml.TypeCheck.Subst
-import Forml.TypeCheck.TypeCheck
 
 ------------------------------------------------------------------------------
 
 data Ass = String :>: TypeAbs Kind
-
-find :: String -> [Ass] -> TypeCheck (TypeAbs Kind)
-find i [] = typErr ("Unbound identifier: " ++ i)
-find i ((i' :>: sc) : as)
-    | i == i'   = return sc
-    | otherwise = find i as
 
 instance Substitute Ass where
     apply s (i :>: sc) = i :>: apply s sc

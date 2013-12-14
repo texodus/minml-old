@@ -37,12 +37,12 @@ instance Arbitrary Expr where
     arbitrary = sized expr'
         where
             expr' 0 = VarExpr `fmap` arbitrary
-            expr' n = oneof [ liftM3 LetExpr arbitrary subExpr (Just `fmap` subExpr)
-                            , liftM2 AppExpr subExpr subExpr
-                            , liftM2 AbsExpr arbitrary subExpr
+            expr' n = oneof [ liftM3 LetExpr arbitrary subExprr (Just `fmap` subExprr)
+                            , liftM2 AppExpr subExprr subExprr
+                            , liftM2 AbsExpr arbitrary subExprr
                             , liftM  VarExpr arbitrary ]
 
-                where subExpr = expr' (n `div` 10)
+                where subExprr = expr' (n `div` 10)
 
 assertParse :: (Eq a, Show a) => Parser a -> String -> Either Err a -> Assertion
 assertParse p a b = assertEqual "" b parseResult
@@ -57,8 +57,8 @@ assertGenerate a = assertEqual "" gen
         gen = renderText $ toJExpr a 
 
 
-node :: String -> IO String
-node js = do
+nodejs :: String -> IO String
+nodejs js = do
 
     (Just std_in', Just std_out', Just std_err', p) <-
         createProcess (proc "node" []) { std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe }

@@ -33,18 +33,22 @@ module Forml.TypeCheck where
 
 import Control.Monad.State
 import Control.Arrow
+import Control.Lens
 
 import Forml.AST
 import Forml.TypeCheck.Prelude
+import Forml.TypeCheck.TypeCheck
 import Forml.TypeCheck.Expr
 
 ------------------------------------------------------------------------------
 
 typeCheck :: Expr -> Either Err Expr
-typeCheck =
-    uncurry fmap 
-         <<< const
-         &&& flip runStateT ([], 0)
-         . exprCheck prelude
+typeCheck ex = do
+	runStateT (infer ex) st
+	return ex
 
+	where
+		st :: TypeCheckState
+		st = (ass .~ prelude) newState
+ 
 ------------------------------------------------------------------------------

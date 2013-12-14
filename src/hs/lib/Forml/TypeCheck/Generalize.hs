@@ -31,18 +31,19 @@
 {-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE GADTs              #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Forml.TypeCheck.Generalize(
     generalize,
-    freshInst,
+    infer,
     quantify
 ) where
 
-import           Control.Applicative
-import           Control.Monad.State
+import Control.Lens
+
 import qualified Data.List           as L
 
 import Forml.AST
-import Forml.TypeCheck.Ass
 import Forml.TypeCheck.Kind
 import Forml.TypeCheck.Subst
 import Forml.TypeCheck.TypeCheck
@@ -58,10 +59,10 @@ quantify vars typ = TypeAbsT kinds (apply subs typ)
 
 -- | Creates a TypeAbs from a Type
 
-generalize :: [Ass] -> Type Kind -> TypeCheck (TypeAbs Kind)
-generalize as valT = do
-
-    subs <- fst <$> get
+generalize :: Type Kind -> TypeCheck (TypeAbs Kind)
+generalize valT = do
+    as   <- use ass
+    subs <- use substs
     return (quantify (getS subs valT L.\\ getS subs as) (apply subs valT))
 
     where
@@ -69,15 +70,15 @@ generalize as valT = do
 
 -- | Creates a new instance of a Type from a TypeAbs
 
-freshInst :: TypeAbs Kind -> TypeCheck (Type Kind)
-freshInst (TypeAbsT ks qt) = do
+instance Infer (TypeAbs Kind) where
 
-    ts <- mapM newTypeVar ks
-    return (inst ts qt)
+    infer (TypeAbsT ks qt) = do
+        ts <- mapM newTypeVar ks
+        return (inst ts qt)
 
-    where
-        inst ts (TypeApp l r) = TypeApp (inst ts l) (inst ts r)
-        inst ts (TypeGen n) = ts !! n
-        inst _ t = t
+        where
+            inst ts (TypeApp l r) = TypeApp (inst ts l) (inst ts r)
+            inst ts (TypeGen n) = ts !! n
+            inst _ t = t
 
 ------------------------------------------------------------------------------

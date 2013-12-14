@@ -15,6 +15,7 @@ module Forml.AST (
     module Forml.AST.Expr,
     module Forml.AST.Record,
     module Forml.AST.Macro,
+    module Forml.AST.Meta,
     Err(..),
     isFun,
     isInfix,
@@ -28,6 +29,7 @@ import Forml.AST.Val
 import Forml.AST.Expr
 import Forml.AST.Record
 import Forml.AST.Macro
+import Forml.AST.Meta
 import Forml.Utils
 
 --------------------------------------------------------------------------------

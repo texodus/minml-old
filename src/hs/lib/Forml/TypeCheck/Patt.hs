@@ -16,9 +16,13 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Forml.TypeCheck.Patt (
-    pattCheck
+    infer
 ) where
+
+import Control.Lens
 
 import qualified Data.Map as M
 
@@ -32,32 +36,31 @@ import Forml.TypeCheck.Lit
 
 ------------------------------------------------------------------------------
 
-pattCheck :: [Ass] -> Patt -> TypeCheck ([Ass], Type Kind)
+instance Infer Patt where
+    infer (ValPatt (LitVal l)) =
+        return (litCheck l)
 
-pattCheck _ (ValPatt (LitVal l)) =
-    return ([], litCheck l)
+    infer (ValPatt (SymVal (Sym s))) = do
+        t <- newTypeVar Star
+        ass %= (++ [ s :>: TypeAbsT [] t ])
+        return t
 
-pattCheck _ (ValPatt (SymVal (Sym s))) = do
-    t <- newTypeVar Star
-    return ([ s :>: TypeAbsT [] t ], t)
+    infer (ValPatt (ConVal (TypeSym (TypeSymP l)))) =
+        find l >>= infer
 
-pattCheck as (ValPatt (ConVal (TypeSym (TypeSymP l)))) = do
-    sc <- find l as
-    t  <- freshInst sc
-    return ([], t)
+    infer (ValPatt (ConVal t)) =
+        error $ "FATAL: " ++ show t
 
-pattCheck _ (ValPatt (ConVal t)) = error $ "FATAL: " ++ show t
+    infer (ConPatt (TypeSymP con) ps) = do
+        sc <- find con
+        x  <- mapM infer ps
+        t' <- newTypeVar Star
+        t  <- infer sc
+        unify t (foldr fn t' x)
+        return t'
 
-pattCheck as (ConPatt (TypeSymP con) ps) = do
-    sc <- find con as
-    x  <- mapM (pattCheck as) ps
-    t' <- newTypeVar Star
-    t  <- freshInst sc
-    unify t (foldr (fn . snd) t' x)
-    return (concatMap fst x, t')
-
-pattCheck as (RecPatt (Record (unzip . M.toList -> (ks, vs)))) = do
-    (ass, pattTs) <- unzip `fmap` mapM (pattCheck as) vs
-    return (concat ass, TypeRec . Record . M.fromList . zip ks $ pattTs)
+    infer (RecPatt (Record (unzip . M.toList -> (ks, vs)))) = do
+        pattTs <- mapM infer vs
+        return (TypeRec . Record . M.fromList . zip ks $ pattTs)
 
 ------------------------------------------------------------------------------

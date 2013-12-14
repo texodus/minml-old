@@ -13,13 +13,13 @@ assertNode :: String -> Either Err String -> Assertion
 assertNode a b = do
     res <- case compile defaultConfig [("Test Case", a)] of 
         Left x -> return $ Left x
-        Right x -> Right `fmap` node x
-    flip (assertEqual "") res b
+        Right x -> Right `fmap` nodejs x
+    assertEqual "" b res
 
 spec :: Spec
-spec = do
+spec =
 
-    describe "Forml.Parser" $ do
+    describe "Forml.Parser" $
 
         describe "parseForml" $ do
 

@@ -17,9 +17,9 @@
 
 module Forml.TypeCheck.Unify where
 
-import Control.Applicative
 import Control.Monad.State
-import Control.Arrow
+import Control.Lens
+
 import qualified Data.Map as M
 
 import Forml.AST
@@ -31,7 +31,7 @@ import Forml.TypeCheck.TypeCheck
 
 unify :: Type Kind -> Type Kind -> TypeCheck ()
 unify t u = do 
-    s <- fst <$> get
+    s <- use substs
     apply s t `mgu` apply s u
 
 mgu :: Type Kind -> Type Kind -> TypeCheck ()
@@ -51,6 +51,6 @@ varBind u t
     | otherwise          = extSubst [(u, t)]
 
 extSubst :: Subst -> TypeCheck ()
-extSubst new = liftM (first (ext new)) get >>= put          
+extSubst new = substs %= ext new
            
 ------------------------------------------------------------------------------

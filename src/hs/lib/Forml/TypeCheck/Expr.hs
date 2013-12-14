@@ -3,7 +3,7 @@
 -- Expression checking is the most complex.  Literals are lifted trivially.
 
 -- If you read a theoretical treatment of HM, you will encounter equations
--- that look like this.  The cases of `exprCheck` map directly to these
+-- that look like this.  The cases of `infer` map directly to these
 -- lifted from wikipedia:
 
 --  x : σ ∈ Γ
@@ -49,11 +49,15 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Forml.TypeCheck.Expr (
-    exprCheck
+    infer
 ) where
 
+import Control.Lens
 import Control.Monad
+
 import qualified Data.Map as M
 
 import Forml.AST
@@ -65,75 +69,94 @@ import Forml.TypeCheck.Subst
 import Forml.TypeCheck.TypeCheck
 import Forml.TypeCheck.Unify
 import Forml.TypeCheck.Lit
-import Forml.TypeCheck.Patt
+import Forml.TypeCheck.Patt()
 
 ------------------------------------------------------------------------------
 
-exprCheck :: [Ass] -> Expr -> TypeCheck (Type Kind)
+instance Infer Expr where
+    infer (VarExpr (LitVal l)) =
+        return (litCheck l)
 
-exprCheck _ (VarExpr (LitVal l)) =
-    return (litCheck l)
+    infer (VarExpr (SymVal (Sym sym))) =
+        find sym >>= infer
 
-exprCheck as (VarExpr (SymVal (Sym sym))) =
-    find sym as >>= freshInst
+    infer (VarExpr (ConVal (TypeSym (TypeSymP sym)))) =
+        find sym >>= infer
 
-exprCheck as (VarExpr (ConVal (TypeSym (TypeSymP sym)))) =
-    find sym as >>= freshInst
+    infer (JSExpr _) =
+        newTypeVar Star
 
-exprCheck _ (JSExpr _) =
-    newTypeVar Star
+    infer (VarExpr (ConVal t)) =
+        error $ "FATAL: " ++ show t
 
-exprCheck _ (VarExpr (ConVal t)) =
-    error $ "FATAL: " ++ show t
+    infer (RecExpr (Record (unzip . M.toList -> (ks, vs)))) =
+        liftM (TypeRec . Record . M.fromList . zip ks) (mapM infer vs)
 
-exprCheck as (RecExpr (Record (unzip . M.toList -> (ks, vs)))) =
-    liftM (TypeRec . Record . M.fromList . zip ks) (mapM (exprCheck as) vs)
+    infer (TypExpr (TypeSymP name) (TypeAbsP typ) (Just expr)) =
+        withAss (name :>: typKAbs) $ infer  expr
+        
+        where
+            typK = toKind Star typ
+            typKAbs = quantify (getVars typK) typK
 
-exprCheck as (TypExpr (TypeSymP name) (TypeAbsP typ) (Just expr)) =
-    exprCheck (name :>: typKAbs : as) expr
+    infer (LetExpr (Sym sym) val (Just expr)) = do
+        symT <- newTypeVar Star
+        valT <- withAss (sym :>: TypeAbsT [] symT) $ infer val
+        unify valT symT
+        schT <- generalize valT
+        withAss (sym :>: schT) $ infer expr
 
-    where
-        typK = toKind Star typ
-        typKAbs = quantify (getVars typK) typK
+    infer (LetExpr _ _ Nothing) = error "FATAL: incomplete"
 
-exprCheck as (LetExpr (Sym sym) val (Just expr)) = do
-    symT <- newTypeVar Star
-    valT <- exprCheck ((sym :>: TypeAbsT [] symT) : as) val
-    unify valT symT
-    schT <- generalize as valT 
-    exprCheck (sym :>: schT : as) expr
+    infer (TypExpr _ _ Nothing) = error "FATAL: incomplete"
 
-exprCheck as (AppExpr f x) = do
-    fT   <- exprCheck as f
-    xT   <- exprCheck as x
-    appT <- newTypeVar Star
-    unify (xT `fn` appT) fT
-    return appT
+    infer (AppExpr f x) = do
+        fT   <- infer f
+        xT   <- infer x
+        appT <- newTypeVar Star
+        unify (xT `fn` appT) fT
+        return appT
 
-exprCheck as (AbsExpr (Sym sym) expr) = do
-    symT <- newTypeVar Star
-    res  <- exprCheck (sym :>: TypeAbsT [] symT : as) expr
-    return (symT `fn` res)
+    infer (AbsExpr (Sym sym) expr) = do
+        symT <- newTypeVar Star
+        res  <- withAss (sym :>: TypeAbsT [] symT) $ infer expr
+        return (symT `fn` res)
 
-exprCheck as (MatExpr expr patts) = do
-    exprT <- exprCheck as expr
-    argCheck exprT patts
+    infer (MatExpr expr patts) = do
+        exprT <- infer expr
+        argCheck exprT patts
 
-    where
-        argCheck exprT ((patt, res):es) = do
-            (pattAs, pattT) <- pattCheck as patt
-            unify exprT pattT
-            argRecCheck exprT pattAs res es
+        where
+            argCheck exprT [(patt, res)] = do
+                pattT <- infer patt
+                unify exprT pattT
+                infer res
 
-        argCheck _ [] = error "FATAL: argCheck"
+            argCheck exprT (cse:es) = do
+                caseT <- scopeAss $ argCheck exprT [cse]
+                resT <- argCheck exprT es
+                unify caseT resT
+                return caseT
 
-        argRecCheck _ pattAs res [] =
-            exprCheck (pattAs ++ as) res
+            argCheck _ [] =
+                error "FATAL: argCheck"
 
-        argRecCheck exprT pattAs res es = do
-            resT  <- exprCheck (pattAs ++ as) res
-            esT   <- argCheck exprT es
-            unify resT esT
-            return resT
+
+scopeAss :: TypeCheck a -> TypeCheck a
+scopeAss tc = do
+    as <- use ass 
+    comAss as tc
+
+withAss :: Ass -> TypeCheck a -> TypeCheck a
+withAss newAs tc = do
+    as  <- ass <<%= (newAs :)
+    comAss as tc
+
+comAss :: [Ass] -> TypeCheck a -> TypeCheck a
+comAss as tc = do 
+    t   <- tc
+    ass .= as
+    return t
+
 
 ------------------------------------------------------------------------------

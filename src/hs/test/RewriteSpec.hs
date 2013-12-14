@@ -22,7 +22,7 @@ assertNode :: String -> Either Err String -> Assertion
 assertNode a b = do
     res <- case compile defaultConfig [("Test Case", a)] of 
         Left x -> return $ Left x
-        Right x -> Right `fmap` node x
+        Right x -> Right `fmap` nodejs x
     assertEqual "" b res
 
 assertParse :: String -> Either Err Expr -> Assertion

@@ -9,9 +9,11 @@
 
 module Forml.Macro.Cell where
 
+import Control.Lens
+import Data.Maybe
+
 import qualified Data.Set as S
 import qualified Data.Map as P
-import Data.Maybe
 
 import Forml.AST
 
@@ -34,6 +36,9 @@ instance ToCell Patt where
 
 instance ToCell Box where
     toCell s (Box x) = toCell s x
+
+instance ToCell a => ToCell (Meta a) where
+    toCell x a = toCell x (a^.node)
 
 instance ToCell Expr where
 
