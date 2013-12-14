@@ -16,7 +16,7 @@
 module Minml.AST.Macro(
     Macro(..), 
     Cell(..),
-    MacList(..)
+    MacTree(..)
 ) where
 
 import Control.Applicative
@@ -45,7 +45,7 @@ data Cell where
 --   and `Replace`s.
 
 data Macro a where
-    Term :: Cell -> MacList a -> Macro a
+    Term :: Cell -> MacTree a -> Macro a
     Leaf :: a -> Macro a
     deriving (Eq, Functor, Show)
 
@@ -55,17 +55,17 @@ instance Eq a => Ord (Macro a) where
     compare _ (Term _ _) = LT
     compare _ _ = EQ
 
--- | A `MacList a` simply provides a type-safe `Monoid` instance for 
+-- | A `MacTree a` simply provides a type-safe `Monoid` instance for 
 --   a `[Macro a]`.
 
-newtype MacList a =
-    MacList [Macro a] 
+newtype MacTree a =
+    MacTree [Macro a] 
     deriving (Eq, Functor, Ord, Show)
 
-instance (Show a, Eq a, Replace String a) => Monoid (MacList a) where
-    mempty = MacList []
-    mappend (MacList ms1) (MacList ms2) =
-        MacList $ fromMaybe err merged
+instance (Show a, Eq a, Replace String a) => Monoid (MacTree a) where
+    mempty = MacTree []
+    mappend (MacTree ms1) (MacTree ms2) =
+        MacTree $ fromMaybe err merged
         where
             err = error ("Invalid Macro " ++ show ms1 ++ " ::: " ++ show ms2)
             merged = foldM insert [] (ms1 ++ ms2)

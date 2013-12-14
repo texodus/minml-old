@@ -49,8 +49,8 @@ instance MonadState st (Parsec tok st) where
 
 data MacroState = MacroState {
     _sourcePos  :: SourcePos,
-    _macros     :: MacList Expr,
-    _tailMacros :: MacList Expr,
+    _macros     :: MacTree Expr,
+    _tailMacros :: MacTree Expr,
     _uniqState  :: Int
 }
 

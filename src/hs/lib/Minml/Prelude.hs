@@ -52,7 +52,7 @@ import Minml.Parse.Token
 -- The structure of compilation can be expressed as a simple
 -- function composition.
 
-bootstrap :: MacList Expr
+bootstrap :: MacTree Expr
 bootstrap = foldl1 mappend
 
     [ parseNote 
@@ -68,7 +68,7 @@ bootstrap = foldl1 mappend
     where
         parseNote a = case runParser syntax emptyState "" a of
             Left x  -> error . show $ x
-            Right (Notation x) -> MacList . (:[]) . x
+            Right (Notation x) -> MacTree . (:[]) . x
 
 emptyState :: MacroState
 emptyState = MacroState (initialPos "") bootstrap bootstrap 0

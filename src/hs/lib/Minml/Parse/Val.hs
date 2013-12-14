@@ -35,14 +35,14 @@ instance Syntax Sym where
             then parserFail ("symbol (`" ++ sym ++ "` is a keyword)\n\nDEBUG: " ++ show (getReserved ars) )
             else return $ Sym sym
 
-getReserved :: MacList Expr -> [String]
+getReserved :: MacTree Expr -> [String]
 
-getReserved (MacList (Term cell xs : ys)) =
-    getReserved' cell ++ getReserved xs ++ getReserved (MacList ys)
+getReserved (MacTree (Term cell xs : ys)) =
+    getReserved' cell ++ getReserved xs ++ getReserved (MacTree ys)
 
-getReserved (MacList (_ : ys)) = getReserved (MacList ys)
+getReserved (MacTree (_ : ys)) = getReserved (MacTree ys)
 
-getReserved (MacList []) = []
+getReserved (MacTree []) = []
 
 getReserved' :: Cell -> [String]
 getReserved' (Token x) = [x]

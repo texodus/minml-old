@@ -30,16 +30,16 @@ import Minml.Parse.Token
 
 -- TODO this can be simplified alot
 
-type PartMacro a = (a -> a, MacList a)
+type PartMacro a = (a -> a, MacTree a)
 
 macroPRec :: (Syntax a, Replace LetPatt a, Replace Sym a, Replace Expr a, Replace Patt a, Syntax Expr) => 
-    MacList a -> Parser (PartMacro a)
+    MacTree a -> Parser (PartMacro a)
 
 macroPRec = 
     merge rootP
     where
 
-        merge f (MacList ms) =
+        merge f (MacTree ms) =
             foldl (<|>) parserZero (fmap f ms)
 
         rootP (Term Sep xs) = 
@@ -90,14 +90,14 @@ macroPRec =
         wrap p a m exs = 
             first . (.) . replace a <$> p <*> merge m exs
 
-filterP :: MacList Expr -> MacList Expr
+filterP :: MacTree Expr -> MacTree Expr
 
-filterP (MacList (Term (Arg _) _ : ms)) =
-    filterP (MacList ms)
+filterP (MacTree (Term (Arg _) _ : ms)) =
+    filterP (MacTree ms)
 
-filterP (MacList (x : ms)) =
-    case filterP (MacList ms) of
-        (MacList mss) -> MacList (x : mss)
+filterP (MacTree (x : ms)) =
+    case filterP (MacTree ms) of
+        (MacTree mss) -> MacTree (x : mss)
 
 filterP x =
     x

@@ -33,12 +33,12 @@ type OpTable = [Operator String MacroState Identity Expr]
 
 instance Syntax Expr => Syntax OpTable where
     syntax = do
-        MacList macs <- use macros
+        MacTree macs <- use macros
         return $ foldl macOps [] macs
 
 
 macOps :: Syntax Expr => OpTable -> Macro Expr -> OpTable
-macOps opss (Term (Arg x) (MacList ys)) =
+macOps opss (Term (Arg x) (MacTree ys)) =
     opss ++ [Postfix $ foldl1 (<|>) (ggg x `fmap` ys)]
     where
         ggg st (Term (Token y) ms) = do

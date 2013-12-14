@@ -20,10 +20,10 @@ import Minml.Macro.Cell
 ------------------------------------------------------------------------------
 
 toMac :: Cell -> Macro Expr -> Macro Expr
-toMac cell = Term cell . MacList . (:[])
+toMac cell = Term cell . MacTree . (:[])
 
 fromMac :: Macro Expr -> Expr
-fromMac (Term _ (MacList [x])) = fromMac x
+fromMac (Term _ (MacTree [x])) = fromMac x
 fromMac (Leaf x) = x
 fromMac _ = undefined
 

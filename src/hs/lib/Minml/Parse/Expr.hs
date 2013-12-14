@@ -56,7 +56,7 @@ letMacroP = withScope $ do
     antiQuote
     reservedOp "="
     ms <- def <$> withCont syntax
-    macros %= mappend (MacList [ms])
+    macros %= mappend (MacTree [ms])
     withSep syntax
 
 macroP :: Parser Expr
