@@ -161,13 +161,30 @@ spec =
                          c                     
                     b                          
                                                
-                do bind True to False          
-                   in 4                        
+                do bind x to 4          
+                   in x + 4                        
+
+            |] =!=
+
+                "8\n"
+
+
+
+            it "should compile & run nested definitions" $ [q|
+              
+                True: Bool                     
+                False: Bool                    
+                                               
+                `do (b)` =                     
+                    `bind (a) to (d) in (c)` = 
+                         c                     
+                    b                          
+                                               
+                bind True to False          
 
             |] =!=
 
                 "Unbound identifier: bind"
-
 
 
             it "should compile & run a complicated nested macro" $ [q|
