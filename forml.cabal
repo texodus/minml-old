@@ -105,8 +105,20 @@ Executable minml
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
     -funfolding-use-threshold=16 -fexcess-precision
+    -optc-O3 -optc-ffast-math
+
+Executable build
+  hs-source-dirs: src/hs/main
+  main-is: Main.hs
+  Build-depends:
+    minml,
+    base >= 4 && <= 5
+  ghc-options: 
+    -Wall -fwarn-tabs -funbox-strict-fields
+    -fno-warn-unused-do-bind -threaded
+    -funfolding-use-threshold=16 -fexcess-precision
     -optc-O3 -optc-ffast-math        
-  
+
 Test-Suite spec
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: src/hs/test
