@@ -13,7 +13,7 @@ import Unit.Scripts
 import Unit.Source
 
 assertGenerate :: Expr -> Either Err String -> Assertion
-assertGenerate a = assertEqual "" (join . fmap renderText . generateJs $ a)
+assertGenerate a b = assertEqual "" b (join . fmap renderText . generateJs $ a)
 
 
 spec :: Spec
