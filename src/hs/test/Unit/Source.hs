@@ -13,7 +13,7 @@ import Minml.Javascript
 import Minml.RenderText
 
 genData :: IO ()
-genData = case mapM parse' (sources `zip` [0 ..]) of
+genData = case mapM parse' (sources `zip` [(0 :: Int) ..]) of
     Left x-> error (show x)
     Right asts -> do
         writeFile "src/hs/test/Unit/Asts.hs" (header "Asts" ++ show asts)
@@ -192,6 +192,7 @@ sources = [
     \       _ = 0        \n" ]
 
 
+toSpec :: Example a => String -> (Int -> a) -> Spec
 toSpec title f =
 
     describe (title ++ " correct cases (from template)") $ do
@@ -274,6 +275,6 @@ toSpec title f =
 
         describe "Records" $
 
-            it "should compile & run basic record patterns" $ f 33
+            it "should parse basic record patterns" $ f 33
 
 ------------------------------------------------------------------------------

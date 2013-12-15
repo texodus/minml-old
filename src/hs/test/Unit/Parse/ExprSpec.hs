@@ -4,15 +4,28 @@ import Control.Applicative
 import Control.Monad
 import Test.Hspec
 import Test.HUnit
+import Test.QuickCheck
 
 import Minml.Compile
 import Minml.AST
 import Minml.Prelude
+import Minml.Utils
+
 import Unit.Source
 import Unit.Asts
+import Utils()
 
-assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)])
+assertFail :: String -> Either Err Expr -> Assertion
+assertFail a b = assertEqual "" b (parseMinml a)
+
+parseMinml :: SourceCode -> Either Err Expr
+parseMinml a = 
+    head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)]
+
+reflect :: Expr -> Bool
+reflect x = case parseMinml (fmt x) of
+    Left e -> error (show e)
+    Right _ -> True
 
 spec :: Spec
 spec =
@@ -21,20 +34,20 @@ spec =
 
         --it "GENERATING DATA" $ genData
 
-        toSpec "parseing" (\x -> assertParse (sources !! x) (Right $ asts !! x))
+        toSpec "parseing" (\x -> assertFail (sources !! x) (Right $ asts !! x))
 
         describe "parsing failure cases" $ do
 
-            it "should parse anything it can format, and they should be the same" $ pendingWith "TODO this is useful, but transforms make this difficult"
- 
-                -- property $ \x -> parseMinml (fmt x) == Right x
+            it "should parse anything it can format, and they should be the same" $ 
 
-            it "should error when trying to parse a missing let continuation" $ assertParse
+                property reflect
+
+            it "should error when trying to parse a missing let continuation" $ assertFail
 
                 "   let x = 1;   "
                 $ Left (Err "\"Test Case\" (line 1, column 17):\nunexpected end of input\nexpecting Expression")
 
-            it "should fail to parse match mixed semicolon" $ assertParse
+            it "should fail to parse match mixed semicolon" $ assertFail
 
                 "   let fib = fun n ->                      \
                 \       match n with                        \

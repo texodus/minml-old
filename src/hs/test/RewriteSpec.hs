@@ -153,7 +153,7 @@ spec =
 
             it "should compile & run nested definitions" $
 
-                pending
+                pendingWith "Not yet implemented"
 
             -- [q|
               
