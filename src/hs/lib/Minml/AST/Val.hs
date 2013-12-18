@@ -28,7 +28,7 @@ data Val where
     LitVal  :: Lit -> Val
     ConVal  :: Type () -> Val
 
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Read)
 
 instance Fmt Val where
     fmt (SymVal s) = fmt s
@@ -37,7 +37,7 @@ instance Fmt Val where
 
 -- | `Sym` is just a type alias for String, representing a symbol name.
 
-newtype Sym = Sym String deriving (Show, Eq, Ord)
+newtype Sym = Sym String deriving (Show, Eq, Ord, Read)
 
 instance Fmt Sym where
     fmt (Sym s) = s

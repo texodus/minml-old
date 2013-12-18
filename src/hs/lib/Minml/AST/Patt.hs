@@ -32,7 +32,7 @@ data Patt where
     ConPatt :: TypeSym () -> [Patt] -> Patt
     RecPatt :: Record Patt -> Patt
 
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Read)
 
 instance Fmt Patt where fmt = show
 

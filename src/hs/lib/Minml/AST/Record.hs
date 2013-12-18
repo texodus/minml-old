@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE DeriveFunctor    #-}
+{-# LANGUAGE DeriveFunctor        #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -25,7 +25,7 @@ import Minml.Utils
 
 newtype Record a =
     Record (M.Map String a) 
-    deriving (Eq, Functor, Show, Ord)
+    deriving (Eq, Functor, Show, Ord, Read)
 
 instance (Fmt a) => Fmt (Record a) where
     fmt (Record m) = "{" ++ showRec m ++ "}"

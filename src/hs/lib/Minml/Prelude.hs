@@ -34,7 +34,6 @@ import qualified Data.ByteString.UTF8 as B
 
 import Control.Monad
 import Data.FileEmbed
-import Data.Monoid
 import Text.Parsec
 import Text.Parsec.Pos
 

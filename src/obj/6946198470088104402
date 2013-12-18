@@ -1,0 +1,1 @@
+("   4 + \"whoops\"   ",TestRec {_source = "   4 + \"whoops\"   ", _ast = Right (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (LitVal (NumLit 4.0)))) (VarExpr (LitVal (StrLit "whoops")))), _types = Left (Err "Types do not unify\n  Double and String"), _js = Right "var jmId_0;jmId_0 = (4.0+\"whoops\");console.log(jmId_0);", _evaled = Right "4whoops\n"})

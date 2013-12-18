@@ -11,6 +11,8 @@
 {-# LANGUAGE OverlappingInstances  #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Minml.AST.Expr (
     Expr(..)
 ) where
@@ -41,7 +43,13 @@ data Expr where
 
     TypExpr :: TypeSym () -> TypeAbs () -> Maybe Expr -> Expr
 
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Read)
+
+instance Read JExpr where
+    readsPrec _ result =
+        return $ case parseJME result of
+            Left x  -> error (show x ++ "\n\n" ++ result)
+            Right x -> (x, "")
 
 instance Monoid (Maybe Expr) where
 

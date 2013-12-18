@@ -10,7 +10,7 @@ import Minml.Utils
 
 --------------------------------------------------------------------------------
 
-newtype Err = Err String deriving (Eq, Show, Ord)
+newtype Err = Err String deriving (Eq, Show, Ord, Read)
 
 instance Fmt Err where
 

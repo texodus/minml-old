@@ -1,47 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module RewriteSpec where
 
-import Control.Applicative
-import Control.Monad
 import Test.Hspec
-import Test.HUnit
 import Text.InterpolatedString.Perl6
 
-import Minml.AST
-import Minml.Config
-import Minml.Compile
-import Minml.Prelude
-
-import Utils hiding (assertParse)
-
-assertNode :: String -> Either Err String -> Assertion
-assertNode a b = do
-    res <- case compile defaultConfig [("Test Case", a)] of 
-        Left x -> return $ Left x
-        Right x -> Right `fmap` nodejs x
-    assertEqual "" b res
-
-assertParse :: String -> Either Err Expr -> Assertion
-assertParse a b = assertEqual "" b (head . tail . fst <$> foldM parse ([], emptyState) [("Prelude", prelude), ("Test Case", a)])
-
-class Assert a b | b -> a, a -> b where
-
-    (===) :: String -> a -> Assertion
-    (=!=) :: String -> b -> Assertion
-
-instance Assert Expr Err where
-
-    x === y = assertParse x (Right y)
-    x =!= y = assertParse x (Left y)
-
-instance Assert String String where
-
-    x === y = assertNode x (Right y)
-    x =!= y = assertNode x (Left (Err y))
+import Unit.Source
 
 
 spec :: Spec
@@ -49,11 +15,9 @@ spec =
 
     describe "Minml.Parser" $ do
 
-
         describe "parse" $ do
 
-
-            it "should parse a trivial example " $ [q|
+            sample "should parse a trivial example " [q|
               
                 `if (a) than (d) else (c)` =
 
@@ -63,17 +27,10 @@ spec =
                                                          
                 if False than 3 else 4                   
 
-            |] ===
-
-                MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
-                        [ ( ValPatt (ConVal (TypeSym (TypeSymP "True")))
-                          , VarExpr (LitVal (NumLit 3.0)))
-                        , ( ValPatt (ConVal (TypeSym (TypeSymP "False")))
-                          , VarExpr (LitVal (NumLit 4.0)))]
+            |]
 
 
-
-            it "should parse a trivial example with some odd whitespace" $ [q|
+            sample "should parse a trivial example with some odd whitespace" [q|
               
                 `if (a) than (d) else (c)` = match a with   
                     True = d                                
@@ -83,17 +40,9 @@ spec =
                     than 3                                  
                     else 4                                  
 
-            |] ===
+            |] 
 
-                MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False"))))
-                        [ ( ValPatt (ConVal (TypeSym (TypeSymP "True")))
-                          , VarExpr (LitVal (NumLit 3.0)))
-                        , ( ValPatt (ConVal (TypeSym (TypeSymP "False")))
-                          , VarExpr (LitVal (NumLit 4.0)))]
-
-
-
-            it "should parse nested macros" $ assertParse
+            sample "should parse nested macros"
               
                 "   `if (a) than (d) else (c)` = match a with   \n\
                 \       True = d                                \n\
@@ -103,9 +52,7 @@ spec =
                 \       than if True than 3 else 5              \n\
                 \       else 4                                  \n"
 
-                (Right (MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "False")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),MatExpr (VarExpr (ConVal (TypeSym (TypeSymP "True")))) [(ValPatt (ConVal (TypeSym (TypeSymP "True"))),VarExpr (LitVal (NumLit 3.0))),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 5.0)))]),(ValPatt (ConVal (TypeSym (TypeSymP "False"))),VarExpr (LitVal (NumLit 4.0)))]))
-
-            it "should parse scope introduction" $ assertParse
+            sample "should parse scope introduction"
               
                 "   `bind (a) to (b) in (c)` =    \n\
                 \       let a = b                 \n\
@@ -113,11 +60,9 @@ spec =
                 \                                 \n\
                 \   bind x to 12 in x + 1         \n"
 
-                (Right (LetExpr (Sym "x") (VarExpr (LitVal (NumLit 12.0))) (Just (AppExpr (AppExpr (VarExpr (SymVal (Sym "+"))) (VarExpr (SymVal (Sym "x")))) (VarExpr (LitVal (NumLit 1.0)))))))
-
         describe "run" $ do
 
-            it "should compile & run a trivial example " $ [q|
+            sample "should compile & run a trivial example " [q|
               
                 True: Bool                               
                 False: Bool                              
@@ -128,11 +73,9 @@ spec =
                                                          
                 if False than 3 else 4                   
 
-            |] ===
+            |]
 
-                "4\n"
-
-            it "should compile & run nested macros" $ [q|
+            sample "should compile & run nested macros" [q|
               
                 True: Bool                               
                 False: Bool                              
@@ -145,11 +88,7 @@ spec =
                     than if False than 3 else 5          
                     else 4                               
 
-            |] === 
-
-                "5\n"
-
-
+            |]
 
             it "should compile & run nested definitions" $
 
@@ -174,7 +113,7 @@ spec =
 
 
 
-            it "should compile & run nested definitions" $ [q|
+            sample "should compile & run nested definitions" [q|
               
                 True: Bool                     
                 False: Bool                    
@@ -186,12 +125,9 @@ spec =
                                                
                 bind True to False          
 
-            |] =!=
+            |]
 
-                "Unbound identifier: bind"
-
-
-            it "should compile & run a complicated nested macro" $ [q|
+            sample "should compile & run a complicated nested macro" [q|
 
                 `when (a) then (b) else (c)` = match a with
                     True  = b
@@ -203,13 +139,9 @@ spec =
 
                 when True then when False { 1 } else 2 else 3
 
-            |] ===
+            |]
 
-                "2\n"
-
-
-
-            it "should compile & run nested definitions" $ [q|
+            sample "should compile & run nested definitions" $ [q|
               
                 `do (b)` =                                  
                     `bind (a) to (b) in (c)` =              
@@ -218,13 +150,9 @@ spec =
                                                             
                 do 4
 
-            |] ===
+            |]
 
-                "4\n"
-
-
-
-            it "should compile & run nested definitions, without var capturing" $ [q|
+            sample "should compile & run nested definitions, without var capturing" [q|
               
                 True: Bool
                 False: Bool
@@ -236,17 +164,13 @@ spec =
 
                 do 4 
 
-            |] ===
-
-                "4\n"
-
-
+            |]
 
             describe "Let binding replacements" $ do
 
 
 
-                it "should compile & run scope introduction" $ [q|
+                sample "should compile & run scope introduction" [q|
                   
                     `bind (a) to (b) in (c)` =
                         let a = b             
@@ -254,13 +178,9 @@ spec =
                                               
                     bind x to 12 in x + 1     
 
-                |] ===
+                |]
 
-                    "13\n"
-
-
-
-                it "should compile & run scope introduction" $ [q|
+                sample "should compile & run scope introduction" $ [q|
                   
                     `bind (a) to (b) in (c)` =
                         let a = b             
@@ -268,13 +188,10 @@ spec =
                                               
                     bind x to 12 in x + 1     
 
-                |] ===
-
-                    "13\n"
+                |] 
 
 
-
-                it "should compile & run separators with a newline" $ [q|
+                sample "should compile & run separators with a newline" $ [q|
                   
                     `bind (a) to (b); (c)` =
                         let a = b             
@@ -283,13 +200,9 @@ spec =
                     bind x to 12
                     x + 1     
 
-                |] ===
+                |]
 
-                    "13\n"
-
-
-
-                it "should compile & run separators with a semicolon" $ [q|
+                sample "should compile & run separators with a semicolon" $ [q|
                   
                     `bind (a) to (b); (c)` =
                         let a = b             
@@ -297,13 +210,9 @@ spec =
                                               
                     bind x to 12; x + 1     
 
-                |] ===
+                |]
 
-                    "13\n"
-
-
-
-                it "should compile & run recursive references bound to let replacements" $ [q|
+                sample "should compile & run recursive references bound to let replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a                         
@@ -319,15 +228,12 @@ spec =
 
                     check prop size of (Cons 1 (Cons 2 Nil)) 
 
-                |] ===
-
-                    "2\n"
-
+                |]
 
             describe "Pattern Replacements" $ do
 
 
-                it "should compile & run pattern replacements" $ [q|
+                sample "should compile & run pattern replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a   
@@ -339,10 +245,9 @@ spec =
                     bind Cons 1 Nil to Cons x y
                     x + 1     
 
-                |] === "2\n"
+                |]
 
-
-                it "should compile & run nested pattern replacements" $ [q|
+                sample "should compile & run nested pattern replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a   
@@ -355,35 +260,35 @@ spec =
                     bind first Cons 1 (Cons 2 Nil) to 1
                     2     
 
-                |] === "2\n"
+                |]
 
-                it "should compile & run pattern replacements when they collide with let" $ [q|
+                sample "should compile & run pattern replacements when they collide with let" $ [q|
                   
                     Box: a -> Box a
                     unbox (Box x) = x
                     unbox (Box 5) == 5    
 
-                |] === "true\n"
+                |]
 
-                it "should compile & run complex pattern replacements when they collide with let" $ [q|
+                sample "should compile & run complex pattern replacements when they collide with let" $ [q|
                   
                     Box: a -> Box a
                     unbox z (Box x) = x + z
                     unbox 2 (Box 5) == 7   
 
-                |] === "true\n"
+                |]
 
-                it "should compile & run let-patterns" $ [q|
+                sample "should compile & run let-patterns" $ [q|
                   
                     Box: a -> Box a
                     let (Box x) = Box 5
                     x + 5    
 
-                |] === "10\n"
+                |]
 
             describe "XML tests" $
 
-                it "Should run simple XML" $ [q|
+                sample "Should run simple XML" $ [q|
  
                     Xml: String -> String -> String
                    
@@ -393,62 +298,51 @@ spec =
                         <"a">"test"</"a">
                     </"div">
 
-                |] ===
-
-                    "{ '0': 'div', '1': { '0': 'a', '1': 'test' } }\n"
+                |] 
 
             describe "Infix tests" $ do
 
-                it "Should run simple infix expressions" $ [q|
+                sample "Should run simple infix expressions" $ [q|
  
                     `(a) +++ (b)` = a + b
                     2 +++ 2
 
-                |] ===
+                |]
 
-                    "4\n"
-
-                it "Should run nested infix expressions" $ [q|
+                sample "Should run nested infix expressions" $ [q|
  
                     `(a) +++ (b)` = a + b
                     2 +++ 2 +++ 2 +++ 2
 
-                |] ===
+                |]
 
-                    "8\n"
-
-                it "Should run nested triple infix expressions" $ [q|
+                sample "Should run nested triple infix expressions" $ [q|
  
                     `(a) <- (b) -< (c)` = a + b + c
                     2 <- 2 <- 2 -< 2 -< 2
 
-                |] ===
-
-                    "10\n"
+                |] 
 
             describe "Javascript replacements" $
 
-                it "Should run simple javascript replacements" $ [q|
+                it "Should run simple javascript replacements" $ 
+
+                    pendingWith "Works, but has no gold record"
+
+                -- [q|
  
-                    `add (x) to (y)` = ``x + y``
-                    add 4 to 4
+                --    `add (x) to (y)` = ``x + y``
+                --    add 4 to 4
 
-                |] ===
-
-                    "8\n"
+                -- |]
 
 
             describe "Regression tests" $
 
-                it "Should run programs with 2 arguments" $ [q|
+                sample "Should run programs with 2 arguments" $ [q|
                   
                     f a b = a + b
                     f 1 2
 
-                |] ===
-
-                    "3\n"
-
-
-
+                |]
  

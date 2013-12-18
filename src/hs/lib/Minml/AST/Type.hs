@@ -13,6 +13,7 @@
 {-# LANGUAGE GADTs              #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections      #-}
+{-# LANGUAGE FlexibleInstances  #-}
 
 module Minml.AST.Type (
     module Minml.AST.Kind,
@@ -22,7 +23,12 @@ module Minml.AST.Type (
     Type( .. )
 ) where
 
+import Control.Applicative
+import GHC.Read
 import Data.Ix
+import Text.Read.Lex
+import Text.ParserCombinators.ReadPrec
+
 
 import Minml.AST.Kind
 import Minml.AST.Record
@@ -43,7 +49,6 @@ instance (Fmt a) => Fmt (TypeVar a) where
 deriving instance (Ord a)  => Ord  (TypeVar a)
 deriving instance (Eq a)   => Eq   (TypeVar a)
 deriving instance (Show a) => Show (TypeVar a)
-
 
 -- | Type Symbols
 
@@ -67,7 +72,6 @@ data Type a where
     TypeRec :: Record (Type a) -> Type a
 
     TypeGen :: Int -> Type Kind
-
 
 instance (Fmt a) => Fmt (TypeSym a) where
     fmt (TypeSymP s) = s
@@ -98,5 +102,95 @@ deriving instance (Eq a) => Eq (TypeAbs a)
 deriving instance (Show a) => Show (Type a)
 deriving instance (Show a) => Show (TypeSym a)
 deriving instance (Show a) => Show (TypeAbs a)
+
+instance Read (TypeVar ()) where
+    readPrec = parens $ prec 10 $ do
+        Ident "TypeVarP" <- lexP
+        arg1 <- step readPrec
+        return $ TypeVarP arg1  
+
+instance Read (TypeVar Kind) where
+   readPrec = parens $ prec 10 $ do
+        Ident "TypeVarT" <- lexP
+        arg1 <- step readPrec
+        arg2 <- step readPrec
+        return $ TypeVarT arg1 arg2
+
+instance Read (TypeSym ()) where
+     readPrec = parens $ prec 10 $ do
+        Ident "TypeSymP" <- lexP
+        arg1 <- step readPrec
+        return $ TypeSymP arg1  
+ 
+instance Read (TypeSym Kind) where
+   readPrec = parens $ prec 10 $ do
+        Ident "TypeSymT" <- lexP
+        arg1 <- step readPrec
+        arg2 <- step readPrec
+        return $ TypeSymT arg1 arg2
+
+instance Read (TypeAbs ()) where
+    readPrec = parens $ prec 10 $ do
+        Ident "TypeAbsP" <- lexP
+        arg1 <- step readPrec
+        return $ TypeAbsP arg1  
+ 
+instance Read (TypeAbs Kind) where
+   readPrec = parens $ prec 10 $ do
+        Ident "TypeAbsT" <- lexP
+        arg1 <- step readPrec
+        arg2 <- step readPrec
+        return $ TypeAbsT arg1 arg2
+
+instance Read (Type ()) where
+    readPrec =  
+        typeSym +++ typeVar +++ typeApp +++ typeRec
+
+        where
+            typeSym = parens $ prec 10 $ do
+                Ident "TypeSym" <- lexP
+                TypeSym <$> step readPrec
+
+            typeVar = parens $ prec 10 $ do
+                Ident "TypeVar" <- lexP
+                TypeVar <$> step readPrec
+
+            typeApp = parens $ prec 10 $ do
+                Ident "TypeApp" <- lexP
+                arg1 <- step readPrec
+                arg2 <- step readPrec
+                return $ TypeApp arg1 arg2
+
+            typeRec = parens $ prec 10 $ do
+                Ident "TypeRec" <- lexP
+                TypeRec <$> step readPrec
+
+
+instance Read (Type Kind) where
+    readPrec = parens $ prec 10 $ 
+        typeSym +++ typeVar +++ typeApp +++ typeRec +++ typeGen
+
+        where
+            typeSym = parens $ prec 10 $ do
+                Ident "TypeSym" <- lexP
+                TypeSym <$> step readPrec
+
+            typeVar = parens $ prec 10 $ do
+                Ident "TypeVar" <- lexP
+                TypeVar <$> step readPrec
+
+            typeApp = parens $ prec 10 $ do
+                Ident "TypeApp" <- lexP
+                arg1 <- step readPrec
+                arg2 <- step readPrec
+                return $ TypeApp arg1 arg2
+
+            typeRec = parens $ prec 10 $ do
+                Ident "TypeRec" <- lexP
+                TypeRec <$> step readPrec
+
+            typeGen = parens $ prec 10 $ do
+                Ident "TypeGen" <- lexP
+                TypeGen <$> step readPrec
 
 --------------------------------------------------------------------------------

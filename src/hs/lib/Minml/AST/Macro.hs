@@ -38,7 +38,7 @@ data Cell where
     Pat   :: String -> Cell
     Token :: String -> Cell
   
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Read)
 
 -- | Since the n-tree representing a `Macro a` has no root, `Macro a` is
 --   newtype'd `[Cell a]`.  `Macro a`s are `Functor`s, `Monoid`s, 
@@ -47,7 +47,7 @@ data Cell where
 data Macro a where
     Term :: Cell -> MacTree a -> Macro a
     Leaf :: a -> Macro a
-    deriving (Eq, Functor, Show)
+    deriving (Eq, Functor, Show, Read)
 
 instance Eq a => Ord (Macro a) where
     compare (Term c _) (Term d _) = compare c d
@@ -60,7 +60,7 @@ instance Eq a => Ord (Macro a) where
 
 newtype MacTree a =
     MacTree [Macro a] 
-    deriving (Eq, Functor, Ord, Show)
+    deriving (Eq, Functor, Ord, Show, Read)
 
 emptyTree :: MacTree a
 emptyTree = MacTree []

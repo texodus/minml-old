@@ -7,20 +7,34 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Minml.AST.Meta where
 
 import Control.Lens
+import GHC.Read
 import Text.Parsec
+import Text.Parsec.Pos
+import Text.ParserCombinators.ReadPrec
+import Text.Read.Lex
 
 import Minml.Utils
 
 ------------------------------------------------------------------------------
 
+instance Read SourcePos where
+   readPrec = parens $ prec 10 $ do
+        Ident "SourcePos" <- lexP
+        arg1 <- step readPrec
+        arg2 <- step readPrec
+        arg3 <- step readPrec
+        return $ newPos arg1 arg2 arg3
+
 data Meta a = Meta {
     _sourcePos :: SourcePos,
     _subExpr :: String,
     _node :: a
-} deriving (Functor, Show)
+} deriving (Functor, Show, Read)
 
 makeLenses ''Meta
 

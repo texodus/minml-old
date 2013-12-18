@@ -19,7 +19,7 @@ import Minml.Utils
 data Kind where
     Star :: Kind
     Kfun :: Kind -> Kind -> Kind
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Read)
 
 instance Fmt Kind where
     fmt Star = "*"

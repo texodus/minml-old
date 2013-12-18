@@ -21,7 +21,7 @@ data Lit where
     StrLit  :: String -> Lit
     NumLit  :: Double -> Lit
 
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Read)
 
 instance Fmt Lit where fmt = show
 
