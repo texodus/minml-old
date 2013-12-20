@@ -10,6 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverlappingInstances  #-}
 {-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -18,6 +19,7 @@ module Minml.AST.Expr (
 ) where
 
 import Data.Monoid
+import Data.Serialize
 import Language.Javascript.JMacro
 import Text.PrettyPrint.Leijen.Text
 
@@ -26,6 +28,8 @@ import Minml.AST.Record
 import Minml.AST.Type
 import Minml.AST.Val
 import Minml.Utils
+
+import GHC.Generics
 
 ------------------------------------------------------------------------------
 
@@ -43,13 +47,21 @@ data Expr where
 
     TypExpr :: TypeSym () -> TypeAbs () -> Maybe Expr -> Expr
 
-    deriving (Eq, Ord, Show, Read)
+    deriving (Eq, Ord, Show, Read, Generic)
 
-instance Read JExpr where
-    readsPrec _ result =
+instance Serialize Expr
+
+instance Serialize JExpr where
+    get = do
+        result <- get
         return $ case parseJME result of
             Left x  -> error (show x ++ "\n\n" ++ result)
-            Right x -> (x, "")
+            Right x -> x
+
+    put x = put . show . renderOneLine . renderJs $ x
+
+instance Read JExpr where
+    readsPrec _ _ = undefined
 
 instance Monoid (Maybe Expr) where
 

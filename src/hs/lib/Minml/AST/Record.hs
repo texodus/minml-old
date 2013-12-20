@@ -5,6 +5,7 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -12,6 +13,9 @@
 module Minml.AST.Record (
     Record( .. )
 ) where
+
+import Data.Serialize
+import GHC.Generics
 
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -25,7 +29,9 @@ import Minml.Utils
 
 newtype Record a =
     Record (M.Map String a) 
-    deriving (Eq, Functor, Show, Ord, Read)
+    deriving (Eq, Functor, Show, Ord, Read, Generic)
+
+instance Serialize a => Serialize (Record a)
 
 instance (Fmt a) => Fmt (Record a) where
     fmt (Record m) = "{" ++ showRec m ++ "}"

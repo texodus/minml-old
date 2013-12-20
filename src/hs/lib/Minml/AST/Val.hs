@@ -5,6 +5,7 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Minml.AST.Val (
     module Minml.AST.Type,
@@ -12,6 +13,9 @@ module Minml.AST.Val (
     Val( .. ),
     Sym( .. )
 ) where
+
+import GHC.Generics
+import Data.Serialize
 
 import Minml.AST.Lit
 import Minml.AST.Type
@@ -28,7 +32,9 @@ data Val where
     LitVal  :: Lit -> Val
     ConVal  :: Type () -> Val
 
-    deriving (Show, Eq, Ord, Read)
+    deriving (Show, Eq, Ord, Read, Generic)
+
+instance Serialize Val
 
 instance Fmt Val where
     fmt (SymVal s) = fmt s
@@ -37,7 +43,9 @@ instance Fmt Val where
 
 -- | `Sym` is just a type alias for String, representing a symbol name.
 
-newtype Sym = Sym String deriving (Show, Eq, Ord, Read)
+newtype Sym = Sym String deriving (Show, Eq, Ord, Read, Generic)
+
+instance Serialize Sym
 
 instance Fmt Sym where
     fmt (Sym s) = s

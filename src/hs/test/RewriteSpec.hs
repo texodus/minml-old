@@ -325,16 +325,12 @@ spec =
 
             describe "Javascript replacements" $
 
-                it "Should run simple javascript replacements" $ 
-
-                    pendingWith "Works, but has no gold record"
-
-                -- [q|
+                sample "Should run simple javascript replacements" $ [q|
  
-                --    `add (x) to (y)` = ``x + y``
-                --    add 4 to 4
+                    `add (x) to (y)` = ``x + y``
+                    add 4 to 4
 
-                -- |]
+                 |]
 
 
             describe "Regression tests" $

@@ -29,26 +29,19 @@ import Data.Ix
 import Text.Read.Lex
 import Text.ParserCombinators.ReadPrec
 
+import qualified Data.Serialize as S
 
 import Minml.AST.Kind
 import Minml.AST.Record
 import Minml.Utils
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- | Type Variables
 
 data TypeVar a where
     TypeVarP :: String -> TypeVar ()
     TypeVarT :: Kind -> String -> TypeVar Kind
-
-instance (Fmt a) => Fmt (TypeVar a) where
-    fmt (TypeVarP s) = s
-    fmt (TypeVarT _ s) = s
-
-deriving instance (Ord a)  => Ord  (TypeVar a)
-deriving instance (Eq a)   => Eq   (TypeVar a)
-deriving instance (Show a) => Show (TypeVar a)
 
 -- | Type Symbols
 
@@ -73,6 +66,30 @@ data Type a where
 
     TypeGen :: Int -> Type Kind
 
+-- Standalone instances
+
+deriving instance (Ord a) => Ord (Type a)
+deriving instance (Ord a) => Ord (TypeSym a)
+deriving instance (Ord a) => Ord (TypeAbs a)
+
+deriving instance (Eq a) => Eq (Type a)
+deriving instance (Eq a) => Eq (TypeSym a)
+deriving instance (Eq a) => Eq (TypeAbs a)
+
+deriving instance (Show a) => Show (Type a)
+deriving instance (Show a) => Show (TypeSym a)
+deriving instance (Show a) => Show (TypeAbs a)
+
+deriving instance (Ord a)  => Ord  (TypeVar a)
+deriving instance (Eq a)   => Eq   (TypeVar a)
+deriving instance (Show a) => Show (TypeVar a)
+
+-- Fmt
+
+instance (Fmt a) => Fmt (TypeVar a) where
+    fmt (TypeVarP s) = s
+    fmt (TypeVarT _ s) = s
+
 instance (Fmt a) => Fmt (TypeSym a) where
     fmt (TypeSymP s) = s
     fmt (TypeSymT _ s) = s
@@ -91,17 +108,65 @@ instance (Fmt a) => Fmt (Type a) where
     fmt (TypeGen i) = "<<" ++ show i ++ ">>"
     fmt (TypeRec m) = fmt m
 
-deriving instance (Ord a) => Ord (Type a)
-deriving instance (Ord a) => Ord (TypeSym a)
-deriving instance (Ord a) => Ord (TypeAbs a)
+-- Serialize
 
-deriving instance (Eq a) => Eq (Type a)
-deriving instance (Eq a) => Eq (TypeSym a)
-deriving instance (Eq a) => Eq (TypeAbs a)
+instance S.Serialize (TypeVar ()) where
+    get = TypeVarP <$> S.get
+    put (TypeVarP str) = S.put str
 
-deriving instance (Show a) => Show (Type a)
-deriving instance (Show a) => Show (TypeSym a)
-deriving instance (Show a) => Show (TypeAbs a)
+instance S.Serialize (TypeVar Kind) where
+    get = TypeVarT <$> S.get <*> S.get
+    put (TypeVarT str kind) = S.put str >> S.put kind
+
+instance S.Serialize (TypeSym ()) where
+    get = TypeSymP <$> S.get
+    put (TypeSymP str) = S.put str
+
+instance S.Serialize (TypeSym Kind) where
+    get = TypeSymT <$> S.get <*> S.get
+    put (TypeSymT str kind) = S.put str >> S.put kind
+
+instance S.Serialize (TypeAbs ()) where
+    get = TypeAbsP <$> S.get
+    put (TypeAbsP str) = S.put str
+
+instance S.Serialize (TypeAbs Kind) where
+    get = TypeAbsT <$> S.get <*> S.get
+    put (TypeAbsT str kind) = S.put str >> S.put kind
+
+instance S.Serialize (Type ()) where
+    
+    get = do
+        name <- S.get
+        case name of
+            "TypeSym" -> TypeSym <$> S.get
+            "TypeVar" -> TypeVar <$> S.get
+            "TypeApp" -> TypeApp <$> S.get <*> S.get
+            "TypeRec" -> TypeRec <$> S.get
+    
+    put (TypeSym s)   = S.put "TypeSym" >> S.put s
+    put (TypeVar s)   = S.put "TypeVar" >> S.put s
+    put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
+    put (TypeSym s)   = S.put "TypeRec" >> S.put s
+
+instance S.Serialize (Type Kind) where
+    
+    get = do
+        name <- S.get
+        case name of
+            "TypeSym" -> TypeSym <$> S.get
+            "TypeVar" -> TypeVar <$> S.get
+            "TypeApp" -> TypeApp <$> S.get <*> S.get
+            "TypeRec" -> TypeRec <$> S.get
+            "TypeGen" -> TypeGen <$> S.get
+    
+    put (TypeSym s)   = S.put "TypeSym" >> S.put s
+    put (TypeVar s)   = S.put "TypeVar" >> S.put s
+    put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
+    put (TypeSym s)   = S.put "TypeRec" >> S.put s
+    put (TypeGen s)   = S.put "TypeGen" >> S.put s
+
+-- Read
 
 instance Read (TypeVar ()) where
     readPrec = parens $ prec 10 $ do

@@ -8,11 +8,14 @@
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
+{-# LANGUAGE DeriveGeneric #-}
 
 module Minml.AST.Patt (
     Patt(..)
 ) where
+
+import Data.Serialize
+import GHC.Generics
 
 import Minml.AST.Type
 import Minml.AST.Val
@@ -32,7 +35,9 @@ data Patt where
     ConPatt :: TypeSym () -> [Patt] -> Patt
     RecPatt :: Record Patt -> Patt
 
-    deriving (Show, Eq, Ord, Read)
+    deriving (Show, Eq, Ord, Read, Generic)
+
+instance Serialize Patt
 
 instance Fmt Patt where fmt = show
 
