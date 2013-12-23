@@ -17,7 +17,7 @@ spec =
 
         describe "parse" $ do
 
-            sample "should parse a trivial example " [q|
+            sample "a trivial example " [q|
               
                 `if (a) than (d) else (c)` =
 
@@ -30,7 +30,7 @@ spec =
             |]
 
 
-            sample "should parse a trivial example with some odd whitespace" [q|
+            sample "a trivial example with some odd whitespace" [q|
               
                 `if (a) than (d) else (c)` = match a with   
                     True = d                                
@@ -42,7 +42,7 @@ spec =
 
             |] 
 
-            sample "should parse nested macros"
+            sample "nested macros"
               
                 "   `if (a) than (d) else (c)` = match a with   \n\
                 \       True = d                                \n\
@@ -52,7 +52,7 @@ spec =
                 \       than if True than 3 else 5              \n\
                 \       else 4                                  \n"
 
-            sample "should parse scope introduction"
+            sample "scope introduction"
               
                 "   `bind (a) to (b) in (c)` =    \n\
                 \       let a = b                 \n\
@@ -62,7 +62,7 @@ spec =
 
         describe "run" $ do
 
-            sample "should compile & run a trivial example " [q|
+            sample "a trivial example " [q|
               
                 True: Bool                               
                 False: Bool                              
@@ -75,7 +75,7 @@ spec =
 
             |]
 
-            sample "should compile & run nested macros" [q|
+            sample "nested macros" [q|
               
                 True: Bool                               
                 False: Bool                              
@@ -90,7 +90,7 @@ spec =
 
             |]
 
-            it "should compile & run nested definitions" $
+            it "nested definitions" $
 
                 pendingWith "Not yet implemented"
 
@@ -113,7 +113,7 @@ spec =
 
 
 
-            sample "should compile & run nested definitions" [q|
+            sample "nested definitions" [q|
               
                 True: Bool                     
                 False: Bool                    
@@ -127,7 +127,7 @@ spec =
 
             |]
 
-            sample "should compile & run a complicated nested macro" [q|
+            sample "a complicated nested macro" [q|
 
                 `when (a) then (b) else (c)` = match a with
                     True  = b
@@ -141,7 +141,7 @@ spec =
 
             |]
 
-            sample "should compile & run nested definitions" $ [q|
+            sample "nested definitions" $ [q|
               
                 `do (b)` =                                  
                     `bind (a) to (b) in (c)` =              
@@ -152,7 +152,7 @@ spec =
 
             |]
 
-            sample "should compile & run nested definitions, without var capturing" [q|
+            sample "nested definitions, without var capturing" [q|
               
                 True: Bool
                 False: Bool
@@ -170,7 +170,7 @@ spec =
 
 
 
-                sample "should compile & run scope introduction" [q|
+                sample "scope introduction" [q|
                   
                     `bind (a) to (b) in (c)` =
                         let a = b             
@@ -180,7 +180,7 @@ spec =
 
                 |]
 
-                sample "should compile & run scope introduction" $ [q|
+                sample "scope introduction" $ [q|
                   
                     `bind (a) to (b) in (c)` =
                         let a = b             
@@ -191,7 +191,7 @@ spec =
                 |] 
 
 
-                sample "should compile & run separators with a newline" $ [q|
+                sample "separators with a newline" $ [q|
                   
                     `bind (a) to (b); (c)` =
                         let a = b             
@@ -202,7 +202,7 @@ spec =
 
                 |]
 
-                sample "should compile & run separators with a semicolon" $ [q|
+                sample "separators with a semicolon" $ [q|
                   
                     `bind (a) to (b); (c)` =
                         let a = b             
@@ -212,7 +212,7 @@ spec =
 
                 |]
 
-                sample "should compile & run recursive references bound to let replacements" $ [q|
+                sample "recursive references bound to let replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a                         
@@ -233,7 +233,7 @@ spec =
             describe "Pattern Replacements" $ do
 
 
-                sample "should compile & run pattern replacements" $ [q|
+                sample "pattern replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a   
@@ -247,7 +247,7 @@ spec =
 
                 |]
 
-                sample "should compile & run nested pattern replacements" $ [q|
+                sample "nested pattern replacements" $ [q|
                   
                     Cons: a -> List a -> List a         
                     Nil: List a   
@@ -262,7 +262,7 @@ spec =
 
                 |]
 
-                sample "should compile & run pattern replacements when they collide with let" $ [q|
+                sample "pattern replacements when they collide with let" $ [q|
                   
                     Box: a -> Box a
                     unbox (Box x) = x
@@ -270,7 +270,7 @@ spec =
 
                 |]
 
-                sample "should compile & run complex pattern replacements when they collide with let" $ [q|
+                sample "complex pattern replacements when they collide with let" $ [q|
                   
                     Box: a -> Box a
                     unbox z (Box x) = x + z
@@ -278,7 +278,7 @@ spec =
 
                 |]
 
-                sample "should compile & run let-patterns" $ [q|
+                sample "let-patterns" $ [q|
                   
                     Box: a -> Box a
                     let (Box x) = Box 5
@@ -288,7 +288,7 @@ spec =
 
             describe "XML tests" $
 
-                sample "Should run simple XML" $ [q|
+                sample "simple XML" $ [q|
  
                     Xml: String -> String -> String
                    
@@ -302,21 +302,21 @@ spec =
 
             describe "Infix tests" $ do
 
-                sample "Should run simple infix expressions" $ [q|
+                sample "simple infix expressions" $ [q|
  
                     `(a) +++ (b)` = a + b
                     2 +++ 2
 
                 |]
 
-                sample "Should run nested infix expressions" $ [q|
+                sample "nested infix expressions" $ [q|
  
                     `(a) +++ (b)` = a + b
                     2 +++ 2 +++ 2 +++ 2
 
                 |]
 
-                sample "Should run nested triple infix expressions" $ [q|
+                sample "nested triple infix expressions" $ [q|
  
                     `(a) <- (b) -< (c)` = a + b + c
                     2 <- 2 <- 2 -< 2 -< 2
@@ -325,7 +325,7 @@ spec =
 
             describe "Javascript replacements" $
 
-                sample "Should run simple javascript replacements" $ [q|
+                sample "simple javascript replacements" $ [q|
  
                     `add (x) to (y)` = ``x + y``
                     add 4 to 4
@@ -335,7 +335,7 @@ spec =
 
             describe "Regression tests" $
 
-                sample "Should run programs with 2 arguments" $ [q|
+                sample "programs with 2 arguments" $ [q|
                   
                     f a b = a + b
                     f 1 2

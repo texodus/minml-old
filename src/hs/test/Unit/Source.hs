@@ -59,17 +59,18 @@ sample title source = do
             let parsed  = either (error "test") id $ unpack . pack . parse' $ source
             let checked = join . fmap typeCheck $ gold ^. ast
             let scripted = join . fmap renderText . join . fmap generateJs $ gold ^. ast
-            it ("should parse " ++ title) $
-                assertEqual "" (gold ^. ast) parsed
-            it ("should type check " ++ title) $
-                assertEqual "" (gold ^. types) checked
-            it ("should generate javascript for " ++ title) $
-                assertEqual "" (gold ^. js) scripted
-            it ("should compile & run " ++ title) $ do
-                answer <- case fmap nodejs $ gold ^. js of
-                    Left x -> return $ Left x
-                    Right y -> Right `fmap` y
-                assertEqual "" (gold ^. evaled) answer
+            describe title $ do
+                it "should parse" $
+                    assertEqual "" (gold ^. ast) parsed
+                it "should type check" $
+                    assertEqual "" (gold ^. types) checked
+                it "should generate javascript" $
+                    assertEqual "" (gold ^. js) scripted
+                it "should compile & run" $ do
+                    answer <- case fmap nodejs $ gold ^. js of
+                        Left x -> return $ Left x
+                        Right y -> Right `fmap` y
+                    assertEqual "" (gold ^. evaled) answer
         Nothing ->
             it ("Writing new gold record for " ++ title) $ do
                 let parsed  = parse' source

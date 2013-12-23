@@ -8,6 +8,9 @@
 --   `TypeGen`s are a special `TypeVar` which we use to mark places where
 --   we want a type to be polymorphic.
 
+--   The `Serialize` and `Read` instances cannot be derived becaues they are 
+--   GADTs.  Lame.
+
 --------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs              #-}
@@ -108,6 +111,8 @@ instance (Fmt a) => Fmt (Type a) where
     fmt (TypeGen i) = "<<" ++ show i ++ ">>"
     fmt (TypeRec m) = fmt m
 
+--------------------------------------------------------------------------------
+
 -- Serialize
 
 instance S.Serialize (TypeVar ()) where
@@ -143,11 +148,12 @@ instance S.Serialize (Type ()) where
             "TypeVar" -> TypeVar <$> S.get
             "TypeApp" -> TypeApp <$> S.get <*> S.get
             "TypeRec" -> TypeRec <$> S.get
+            _ -> error "Bad serialization"
     
     put (TypeSym s)   = S.put "TypeSym" >> S.put s
     put (TypeVar s)   = S.put "TypeVar" >> S.put s
     put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
-    put (TypeSym s)   = S.put "TypeRec" >> S.put s
+    put (TypeRec s)   = S.put "TypeRec" >> S.put s
 
 instance S.Serialize (Type Kind) where
     
@@ -163,7 +169,7 @@ instance S.Serialize (Type Kind) where
     put (TypeSym s)   = S.put "TypeSym" >> S.put s
     put (TypeVar s)   = S.put "TypeVar" >> S.put s
     put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
-    put (TypeSym s)   = S.put "TypeRec" >> S.put s
+    put (TypeRec s)   = S.put "TypeRec" >> S.put s
     put (TypeGen s)   = S.put "TypeGen" >> S.put s
 
 -- Read

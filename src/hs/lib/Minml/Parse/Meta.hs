@@ -13,15 +13,18 @@ import Text.Parsec
 
 import Minml.AST.Meta
 import Minml.Parse.Syntax
+import Minml.Parse.Token
 
 ------------------------------------------------------------------------------
 
 instance (Syntax a) => Syntax (Meta a) where
- 
-    syntax = do
-        start <- getPosition
-        expr <- syntax
-        --end <- getPosition
-        return $ Meta start "TODO: Fill me in!" expr
+    syntax = withMeta syntax
+
+withMeta :: Parser a -> Parser (Meta a)
+withMeta p = do
+    start <- getPosition
+    expr <- p
+    --end <- getPosition
+    return $ Meta start "TODO: Fill me in!" expr
 
 ------------------------------------------------------------------------------

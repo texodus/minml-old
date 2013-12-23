@@ -31,12 +31,12 @@ import Minml.AST.Replace
 -- | A single child node on an n-tree
 
 data Cell where 
+    Token :: String -> Cell
     Let   :: String -> Cell
     Arg   :: String -> Cell
+    Pat   :: String -> Cell
     Scope :: Cell
     Sep   :: Cell
-    Pat   :: String -> Cell
-    Token :: String -> Cell
   
     deriving (Eq, Ord, Show, Read)
 
@@ -69,7 +69,7 @@ appendTree :: (Show a, Eq a, Replace String a) =>
     MacTree a -> MacTree a -> Either String (MacTree a)
 
 appendTree (MacTree ms1) (MacTree ms2) = 
-    MacTree `fmap` foldM insert [] (ms1 ++ ms2)
+    MacTree `fmap` foldM insert [] (ms2 ++ ms1)
 
 insert :: (Show a, Eq a, Replace String a) =>
     [Macro a] -> Macro a -> Either String [Macro a]

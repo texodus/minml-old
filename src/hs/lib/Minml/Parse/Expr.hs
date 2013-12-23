@@ -39,14 +39,20 @@ import Minml.Parse.Val()
 
 instance Syntax Expr where
 
-    syntax = letMacroP
-        <|> macroP
-        <|> jsExprP
-        <|> recExprP
-        <|> matExprP
-        <|> typExprP
-        <|> appExprP
-        <?> "Expression"
+    syntax = do
+        table <- syntax
+        buildExpressionParser table termP
+
+termP :: Parser Expr
+termP = letMacroP
+    <|> macroP
+    <|> typExprP
+    <|> matExprP
+    <|> jsExprP
+    <|> try recExprP 
+    <|> valExprP 
+    <|> parens syntax
+    <?> "Expression"
 
 letMacroP :: Parser Expr
 letMacroP = withScope $ do
@@ -55,10 +61,8 @@ letMacroP = withScope $ do
     antiQuote
     reservedOp "="
     ms <- def <$> withCont syntax
-    macs <- use macros
-    newMacs <- case appendTree macs (MacTree [ms]) of
-        Left x -> parserFail x
-        Right x -> return x
+    macs <- appendTree (MacTree [ms]) <$> use macros
+    newMacs <- either parserFail return macs
     macros .= newMacs
     withSep syntax
 
@@ -92,10 +96,12 @@ matExprP =
 toOp :: Parser ()
 toOp  = reservedOp "->" <|> reservedOp "="
 
+valExprP :: Parser Expr
+valExprP = VarExpr <$> syntax <?> "Value"
+
 recExprP :: Parser Expr
 recExprP =
-    RecExpr <$> syntax
-        <?> "Record Expression"
+    RecExpr <$> syntax <?> "Record Expression"
 
 typExprP :: Parser Expr
 typExprP =
@@ -111,28 +117,5 @@ capture prsr = Just <$> prsr <|> do
     ms <- use macros
     tailMacros .= ms
     return Nothing
-
-appExprP :: Parser Expr
-appExprP = do
-    table <- syntax
-    buildExpressionParser (opPs table) termP <?> "Application"
-
-    where
-        opPs table =
-            [ Infix appl AssocLeft ]
-                : toInfixTerm opConst AssocLeft (tail ops)
-                ++ [table]
-
-        toInfixTerm optr assoc =
-            fmap . fmap $
-                flip Infix assoc
-                <<< uncurry (*>)
-                <<< reservedOp
-                &&& return . optr
-
-        appl = indented >> return AppExpr
-        valExprP = VarExpr <$> syntax <?> "Value"
-        termP = valExprP <|> matExprP <|> macroP <|> parens syntax
-        opConst = (AppExpr .) . AppExpr . VarExpr . SymVal . Sym
 
 ------------------------------------------------------------------------------
