@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Source where
 
@@ -13,6 +14,7 @@ import System.IO.Unsafe
 import System.Directory
 import Test.Hspec
 import Test.HUnit
+import Text.InterpolatedString.Perl6
 
 import qualified Data.ByteString as B
 
@@ -71,8 +73,7 @@ sample title source = do
                         Left x -> return $ Left x
                         Right y -> Right `fmap` y
                     assertEqual "" (gold ^. evaled) answer
-        Nothing ->
-            it ("Writing new gold record for " ++ title) $ do
+        Nothing -> it ("Writing new gold record for " ++ title) $ do
                 let parsed  = parse' source
                 let checked = join . fmap typeCheck $ parsed
                 let scripted = join . fmap renderText . join . fmap generateJs $ parsed
@@ -81,7 +82,30 @@ sample title source = do
                     Right y -> Right `fmap` y
                 B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
                     pack (source, TestRec source parsed checked scripted answer)
-                assertFailure "Generated records, rerun suite"
+                assertFailure [qq|
+Generated record for "$title":
+
+    Min.ml:
+
+        $source
+
+    Parse:
+
+        $parsed
+
+    Type:
+
+        $checked
+
+    Javascript:
+
+        $scripted
+
+    Exec:
+
+        $answer
+
+                |]
 
 
     where

@@ -36,8 +36,8 @@ instance Syntax (Type ()) where
 
         where
             opPs =
-                [ [Infix (spaces >> indented >> return TypeApp) AssocLeft]
-                , [Infix (reservedOp "->" >> return (fnConst "->")) AssocRight] ]
+                [ [Infix (indented >> return TypeApp) AssocLeft]
+                , [Infix (indented >> reservedOp "->" >> return (fnConst "->")) AssocRight] ]
 
             fnConst = (TypeApp .) . TypeApp . TypeSym . TypeSymP
             termP   = typVarP <|> parens syntax <|> TypeSym <$> syntax
