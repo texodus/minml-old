@@ -1,7 +1,15 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Utils where
 
+import Control.Exception as E
+import Control.Concurrent
+import Control.Concurrent.Chan
+import Data.Maybe
+import Network.HTTP
+import Network.URI
 import System.IO
 import System.Process
 import System.Exit
@@ -9,6 +17,11 @@ import Test.HUnit
 import Text.Parsec
 import Test.QuickCheck
 import Language.Javascript.JMacro
+import Data.FileEmbed
+import System.IO.Unsafe
+import Data.IORef
+
+import qualified Data.ByteString.UTF8 as BU
 
 import Minml.AST
 import Minml.Parse.Token
@@ -56,22 +69,52 @@ assertGenerate a = assertEqual "" gen
     where
         gen = renderText $ toJExpr a 
 
+nodejs x =
+  let uri = fromMaybe undefined $ parseURI "http://127.0.0.1:1337"
+      args = [ mkHeader HdrContentLength (show$ length x)
+             , mkHeader HdrContentType "application/x-www-form-urlencoded" ]
+  in do
+    result <- E.try $ simpleHTTP (Request uri POST args x) >>= getResponseBody
+    case result of
+        Right z -> return z
+        Left (err :: SomeException) -> do
+            evalServer
+            nodejs x
 
-nodejs :: String -> IO String
-nodejs js = do
+server :: Chan ProcessHandle
+server = unsafePerformIO newChan
 
-    (Just std_in', Just std_out', Just std_err', p) <-
-        createProcess (proc "node" []) { std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe }
+evalServer :: IO ()
+evalServer = do
 
-    hPutStrLn std_in' $ js ++ ";process.exit(0);\n"
+    ch <- newChan
 
-    z <- waitForProcess p
-    status <- hGetContents std_out'
-    errs <- hGetContents std_err'
-    
-    case z of
-        ExitFailure n -> return $ "FATAL: error code " ++ show n ++ "\n" ++ errs
-        ExitSuccess   -> return status
-    
+    forkOS $ do
+        
+        (Just std_in', Just std_out', Just std_err', p) <-
+            createProcess (proc "node" []) {
+                std_in = CreatePipe, 
+                std_out = CreatePipe, 
+                std_err = CreatePipe,
+                close_fds = True
+            }
 
+        hPutStrLn std_in' $ jsServer ++ ";\n"
+        hFlush std_in'
+        hSetBuffering std_out' NoBuffering
+        status <- hGetContents std_out'
+        threadDelay 1000000
+        writeChan ch ()
+        length status `seq` hGetContents std_err'
+        z <- waitForProcess p
+        case z of
+            ExitFailure _ -> putStrLn "FAILED"
+            ExitSuccess -> do
+                putStrLn "Closed"
+                return ()
 
+    readChan ch
+    return ()
+
+jsServer :: String
+jsServer = BU.toString $(embedFile "src/js/test/evalServer.js")

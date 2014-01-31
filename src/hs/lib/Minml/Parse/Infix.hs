@@ -42,7 +42,7 @@ instance Syntax Expr => Syntax [OpTable] where
 
 macOps :: Syntax Expr => OpTable -> Macro Expr -> OpTable
 macOps opss (Term (Arg x) (MacTree ys)) =
-    opss ++ [Postfix $ foldl1 (<|>) (ggg `fmap` ys)]
+    opss ++ (Postfix . ggg <$> ys)
     where
         ggg :: Macro Expr -> Parser (Expr -> Expr)
         ggg (Term (Token y) ms) = do

@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module RewriteSpec where
+module Integration.MacroSpec where
 
 import Test.Hspec
 import Text.InterpolatedString.Perl6
@@ -290,36 +290,13 @@ spec =
 
                 sample "simple XML" $ [q|
  
-                    Xml: String -> String -> String
+                    Xml: String -> String -> Xml
                    
                     `<(a)> (b) </(c)>` = Xml a b
                  
                     <"div"> 
                         <"a">"test"</"a">
                     </"div">
-
-                |] 
-
-            describe "Infix tests" $ do
-
-                sample "simple infix expressions" $ [q|
- 
-                    `(a) +++ (b)` = a + b
-                    2 +++ 2
-
-                |]
-
-                sample "nested infix expressions" $ [q|
- 
-                    `(a) +++ (b)` = a + b
-                    2 +++ 2 +++ 2 +++ 2
-
-                |]
-
-                sample "nested triple infix expressions" $ [q|
- 
-                    `(a) <- (b) -< (c)` = a + b + c
-                    2 <- 2 <- 2 -< 2 -< 2
 
                 |] 
 
@@ -332,13 +309,3 @@ spec =
 
                  |]
 
-
-            describe "Regression tests" $
-
-                sample "programs with 2 arguments" $ [q|
-                  
-                    f a b = a + b
-                    f 1 2
-
-                |]
- 

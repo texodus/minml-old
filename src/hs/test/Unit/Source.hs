@@ -7,6 +7,9 @@ module Unit.Source where
 import Control.Monad
 import Control.Applicative
 import Control.Lens
+import Data.FileEmbed
+import Data.Maybe
+import Data.Monoid
 import Data.Hashable
 import Data.Serialize
 import GHC.Generics
@@ -17,6 +20,7 @@ import Test.HUnit
 import Text.InterpolatedString.Perl6
 
 import qualified Data.ByteString as B
+import qualified Data.ByteString.UTF8 as BU
 
 import Minml.AST
 import Minml.Compile
@@ -73,39 +77,8 @@ sample title source = do
                         Left x -> return $ Left x
                         Right y -> Right `fmap` y
                     assertEqual "" (gold ^. evaled) answer
-        Nothing -> it ("Writing new gold record for " ++ title) $ do
-                let parsed  = parse' source
-                let checked = join . fmap typeCheck $ parsed
-                let scripted = join . fmap renderText . join . fmap generateJs $ parsed
-                answer <- case fmap nodejs scripted of
-                    Left x -> return $ Left x
-                    Right y -> Right `fmap` y
-                B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
-                    pack (source, TestRec source parsed checked scripted answer)
-                assertFailure [qq|
-Generated record for "$title":
-
-    Min.ml:
-
-        $source
-
-    Parse:
-
-        $parsed
-
-    Type:
-
-        $checked
-
-    Javascript:
-
-        $scripted
-
-    Exec:
-
-        $answer
-
-                |]
+        Nothing -> it ("Writing gold record: " ++ title ++ ";  please rerun suite") $
+            inProgress' title source pendingWith
 
 
     where
@@ -113,11 +86,49 @@ Generated record for "$title":
             Nothing -> return Nothing
             Just x  -> return $ Just x
 
-        parse' a = head . tail . fst <$> 
-            foldM parse ([], emptyState) [
-                ("Prelude", prelude), 
-                ("Test Case",  a)
-            ]
+parse' :: String -> Either Err Expr
+parse' a = fromMaybe undefined . foldl1 mappend . fmap Just . fst <$> 
+    foldM parse ([], emptyState) [
+        ("Prelude", prelude), 
+        ("Test Case",  a)
+    ]
+
+inProgress title source = it ("In Progress: " ++ title) $ inProgress' title source assertFailure
+
+inProgress' title source asert = do
+    let parsed  = parse' source
+    let checked = join . fmap typeCheck $ parsed
+    let scripted = join . fmap renderText . join . fmap generateJs $ parsed
+    answer <- case fmap nodejs scripted of
+        Left x -> return $ Left x
+        Right y -> Right `fmap` y
+    B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
+        pack (source, TestRec source parsed checked scripted answer)
+    asert [qq|
+Generated record for "$title":
+
+    Min.ml:
+
+$source
+
+    Parse:
+
+$parsed
+
+    Type:
+
+$checked
+
+    Javascript:
+
+$scripted
+
+    Exec:
+
+$answer
+|]
+
+
 
 
 -------------------------------------------------------------------------------

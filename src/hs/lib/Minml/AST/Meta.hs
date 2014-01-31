@@ -29,7 +29,7 @@ import Minml.Utils
 ------------------------------------------------------------------------------
 
 instance Read SourcePos where
-   readPrec = parens $ prec 10 $ do
+   readPrec = parens . prec 10 $ do
         Ident "SourcePos" <- lexP
         arg1 <- step readPrec
         arg2 <- step readPrec

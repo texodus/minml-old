@@ -18,7 +18,6 @@
 ------------------------------------------------------------------------------
 
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Minml.Javascript (
@@ -32,13 +31,12 @@ import Minml.Javascript.Expr()
 
 ------------------------------------------------------------------------------
 
-generateJs :: (ToJExpr a) => a -> Either Err JStat
-generateJs = Right . consoleLog . toJExpr
+generateJs :: (ToJExpr a) => a -> Either Err JExpr
+generateJs = Right . toJExpr
 
     where
         consoleLog x = scopify [jmacro| 
-            var y = `(x)`;   
-            console.log(y);
+            `(x)`;   
         |]                       
 
 ------------------------------------------------------------------------------
