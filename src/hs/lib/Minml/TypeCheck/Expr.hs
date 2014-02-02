@@ -1,47 +1,47 @@
 ------------------------------------------------------------------------------
 
--- Expression checking is the most complex.  Literals are lifted trivially.
+-- | Expression checking is the most complex.  Literals are lifted trivially.
 
--- If you read a theoretical treatment of HM, you will encounter equations
--- that look like this.  The cases of `infer` map directly to these
--- lifted from wikipedia:
-
---  x : σ ∈ Γ
---  ----------
---  Γ ⊦ x : σ
-
--- where
---  σ    = a type scheme, `TypeAbs Kind`
---  τ    = a type, `Type Kind`
---  Γ    = a type environment, `TypeCheck a`
---  ⊦     = an assertion.
---  :    = an assumption,  `Ass` type
--- ---   = a judgment, premise is the numerator, conclusion is the denominator
-
--- `TypExpr a` simply requires that we introduce a new assumption for this
--- constructor.  We borrow part of our generalization mechanism to make
--- these constructors fully polymorphic for all free type variables.
--- This generalization is implied by the premise `eₒ : σ`
-
---  Γ ⊦ eₒ : σ   Γ, x : σ ⊦ e₁ : τ
---  ------------------------------
---  Γ ⊦ let x = eₒ in e₁ : τ
-
--- Application checking simply involves verifying the parameter types unify.
-
---  Γ ⊦ eₒ : τ → τ'   Γ ⊦ e₁ : τ
---  ----------------------------
---  Γ ⊦ eₒ e₁ : τ'
-
--- Abstraction in our language is easy to typecheck, as we will not
--- generalize the parameter x (notice that `x : τ`)
-
---  Γ, x : τ ⊦ e : τ'
---  --------------------
---  Γ ⊦ λ x . e : τ → τ' 
-
--- Pattern matching is just a special case of abstraction & application.
--- We accomplish this recursively to make sure each case is the same.
+--   If you read a theoretical treatment of HM, you will encounter equations
+--   that look like this.  The cases of `infer` map directly to these
+--   lifted from wikipedia:
+  
+--    x : σ ∈ Γ
+--    ----------
+--    Γ ⊦ x : σ
+  
+--   where
+--    σ    = a type scheme, `TypeAbs Kind`
+--    τ    = a type, `Type Kind`
+--    Γ    = a type environment, `TypeCheck a`
+--    ⊦     = an assertion.
+--    :    = an assumption,  `Ass` type
+--   ---   = a judgment, premise is the numerator, conclusion is the denominator
+  
+--   `TypExpr a` simply requires that we introduce a new assumption for this
+--   constructor.  We borrow part of our generalization mechanism to make
+--   these constructors fully polymorphic for all free type variables.
+--   This generalization is implied by the premise `eₒ : σ`
+  
+--    Γ ⊦ eₒ : σ   Γ, x : σ ⊦ e₁ : τ
+--    ------------------------------
+--    Γ ⊦ let x = eₒ in e₁ : τ
+  
+--   Application checking simply involves verifying the parameter types unify.
+  
+--    Γ ⊦ eₒ : τ → τ'   Γ ⊦ e₁ : τ
+--    ----------------------------
+--    Γ ⊦ eₒ e₁ : τ'
+  
+--   Abstraction in our language is easy to typecheck, as we will not
+--   generalize the parameter x (notice that `x : τ`)
+  
+--    Γ, x : τ ⊦ e : τ'
+--    --------------------
+--    Γ ⊦ λ x . e : τ → τ' 
+  
+--   Pattern matching is just a special case of abstraction & application.
+--   We accomplish this recursively to make sure each case is the same.
 
 ------------------------------------------------------------------------------
 

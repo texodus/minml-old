@@ -37,7 +37,8 @@ data TestRec = TestRec {
     _ast :: Either Err Expr,
     _types :: Either Err Expr,
     _js :: Either Err String,
-    _evaled :: Either Err String
+    _evaled :: Either Err String,
+    _name :: String
 } deriving (Show, Read, Generic)
 
 instance Serialize TestRec
@@ -103,7 +104,7 @@ inProgress' title source asert = do
         Left x -> return $ Left x
         Right y -> Right `fmap` y
     B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
-        pack (source, TestRec source parsed checked scripted answer)
+        pack (source, TestRec source parsed checked scripted answer title)
     asert [qq|
 Generated record for "$title":
 

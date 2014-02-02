@@ -111,6 +111,31 @@ Executable minml
     -funfolding-use-threshold=16 -fexcess-precision
     -optc-O3 -optc-ffast-math    
 
+Benchmark bench
+  Type: exitcode-stdio-1.0
+  Hs-Source-Dirs: src/hs/bench
+  Main-Is: Bench.hs
+  ghc-options: 
+    -Wall -fwarn-tabs -funbox-strict-fields
+    -fno-warn-unused-do-bind -threaded
+    -funfolding-use-threshold=16 -fexcess-precision
+    -optc-O3 -optc-ffast-math    
+  Build-Depends: 
+    base,
+    criterion,
+    base,
+    bytestring   == 0.10.0.2,
+    utf8-string    ,    
+    directory    == 1.2.0.1,
+    file-embed   == 0.0.5,
+    cereal       == 0.4.0.1,
+    HTTP         == 4000.2.8,
+    network      == 2.4.1.2,
+    process      == 1.1.0.2,
+    jmacro       == 0.6.8,
+    lens         == 3.9.0.2,
+    minml
+
 Test-Suite spec
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: src/hs/test

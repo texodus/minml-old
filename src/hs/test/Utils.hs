@@ -6,7 +6,7 @@ module Utils where
 
 import Control.Exception as E
 import Control.Concurrent
-import Control.Concurrent.Chan
+import Control.Concurrent.MVar
 import Data.Maybe
 import Network.HTTP
 import Network.URI
@@ -87,7 +87,7 @@ server = unsafePerformIO newChan
 evalServer :: IO ()
 evalServer = do
 
-    ch <- newChan
+    ch <- newEmptyMVar
 
     forkOS $ do
         
@@ -99,22 +99,21 @@ evalServer = do
                 close_fds = True
             }
 
-        hPutStrLn std_in' $ jsServer ++ ";\n"
+        hPutStrLn std_in' jsServer
         hFlush std_in'
         hSetBuffering std_out' NoBuffering
         status <- hGetContents std_out'
-        threadDelay 1000000
-        writeChan ch ()
-        length status `seq` hGetContents std_err'
-        z <- waitForProcess p
+        length (takeWhile (/= '\n') status) `seq` putMVar ch ()
+        errors <- hGetContents std_err'
+        putStrLn errors
+        z <- length status `seq` waitForProcess p
         case z of
-            ExitFailure _ -> putStrLn "FAILED"
+            ExitFailure _ -> error "Don't go into an infinite loop!"
             ExitSuccess -> do
                 putStrLn "Closed"
                 return ()
 
-    readChan ch
-    return ()
+    takeMVar ch
 
 jsServer :: String
 jsServer = BU.toString $(embedFile "src/js/test/evalServer.js")
