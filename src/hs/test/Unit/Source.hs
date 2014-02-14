@@ -1,44 +1,45 @@
 {-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Source where
 
-import Control.Monad
 import Control.Applicative
 import Control.Lens
+import Control.Monad
 import Data.FileEmbed
+import Data.Hashable
 import Data.Maybe
 import Data.Monoid
-import Data.Hashable
 import Data.Serialize
 import GHC.Generics
-import System.IO.Unsafe
 import System.Directory
+import System.IO.Unsafe
 import Test.Hspec
 import Test.HUnit
 import Text.InterpolatedString.Perl6
 
-import qualified Data.ByteString as B
+import qualified Data.ByteString      as B
 import qualified Data.ByteString.UTF8 as BU
 
 import Minml.AST
 import Minml.Compile
-import Minml.Prelude
-import Minml.TypeCheck
+import Minml.Compile.Prelude
+import Minml.Compile.RenderText
 import Minml.Javascript
-import Minml.RenderText
 import Minml.Serialize
+import Minml.TypeCheck
 
 import Utils
 
 data TestRec = TestRec {
-    _source :: String,
-    _ast :: Either Err Expr,
-    _types :: Either Err Expr,
-    _js :: Either Err String,
-    _evaled :: Either Err String,
-    _name :: String
+    _source  :: String,
+    _ast     :: Either Err Expr,
+    _types   :: Either Err Expr,
+    _js      :: Either Err String,
+    _evaled  :: Either Err String,
+    _end2end :: Either Err String,
+    _name    :: String
 } deriving (Show, Read, Generic)
 
 instance Serialize TestRec
@@ -73,62 +74,68 @@ sample title source = do
                     assertEqual "" (gold ^. types) checked
                 it "should generate javascript" $
                     assertEqual "" (gold ^. js) scripted
-                it "should compile & run" $ do
+                it "should execute" $ do
                     answer <- case fmap nodejs $ gold ^. js of
                         Left x -> return $ Left x
                         Right y -> Right `fmap` y
                     assertEqual "" (gold ^. evaled) answer
-        Nothing -> it ("Writing gold record: " ++ title ++ ";  please rerun suite") $
-            inProgress' title source pendingWith
+                it "should run end to end" $ do
+                    answer <- case com parsed of
+                        Left x -> return $ Left x
+                        Right y -> Right `fmap` y
+                    assertEqual "" (gold ^. end2end) answer
+
+        Nothing ->
+            inProgress' title source pendingWith True
 
 
     where
+        com q = do
+            p <- q
+            p' <- typeCheck p
+            p'' <- generateJs p'
+            p''' <- renderText p''
+            return $ nodejs p'''
+
         getGold = case source `lookup` golds of
             Nothing -> return Nothing
             Just x  -> return $ Just x
 
 parse' :: String -> Either Err Expr
-parse' a = fromMaybe undefined . foldl1 mappend . fmap Just . fst <$> 
+parse' a = fromMaybe undefined . foldl1 mappend . fmap Just . fst <$>
     foldM parse ([], emptyState) [
-        ("Prelude", prelude), 
+        ("Prelude", prelude),
         ("Test Case",  a)
     ]
 
-inProgress title source = it ("In Progress: " ++ title) $ inProgress' title source assertFailure
+pendingSample title source =
+    inProgress' title source pendingWith False
 
-inProgress' title source asert = do
+inProgress title source =
+    inProgress' title source assertFailure False
+
+inProgress' title source asert gen = do
     let parsed  = parse' source
     let checked = join . fmap typeCheck $ parsed
     let scripted = join . fmap renderText . join . fmap generateJs $ parsed
-    answer <- case fmap nodejs scripted of
-        Left x -> return $ Left x
-        Right y -> Right `fmap` y
-    B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
-        pack (source, TestRec source parsed checked scripted answer title)
-    asert [qq|
-Generated record for "$title":
+    let all = join . fmap renderText . join . fmap generateJs $ checked
+    let answer = unsafePerformIO $ case fmap nodejs scripted of
+            Left x -> return $ Left x
+            Right y -> Right `fmap` y
+    let allAnswer = unsafePerformIO $ case fmap nodejs all of
+            Left x -> return $ Left x
+            Right y -> Right `fmap` y
 
-    Min.ml:
-
-$source
-
-    Parse:
-
-$parsed
-
-    Type:
-
-$checked
-
-    Javascript:
-
-$scripted
-
-    Exec:
-
-$answer
-|]
-
+    describe title $ do
+        when gen $ it ("\nGenerated new gold record for:\n\n" ++ source) $ do
+            B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
+                pack (source, TestRec source parsed checked scripted answer allAnswer title)
+            assertFailure "Please rerun test suite"
+        it "should parse" $ asert $ show parsed
+        it "should type check" $ asert $ show checked
+        it "should generate javascript" $ asert $ show scripted
+        it "should execute" $ asert $ show answer
+        it "should run end to end"$ asert $ show allAnswer
 
 
 

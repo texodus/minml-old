@@ -8,15 +8,17 @@
 --   `TypeGen`s are a special `TypeVar` which we use to mark places where
 --   we want a type to be polymorphic.
 
---   The `Serialize` and `Read` instances cannot be derived becaues they are 
+--   The `Serialize` and `Read` instances cannot be derived becaues they are
 --   GADTs.  Lame.
 
 --------------------------------------------------------------------------------
 
+{-# LANGUAGE EmptyDataDecls     #-}
+{-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE GADTs              #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections      #-}
-{-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE TypeFamilies       #-}
 
 module Minml.AST.Type (
     module Minml.AST.Kind,
@@ -27,12 +29,13 @@ module Minml.AST.Type (
 ) where
 
 import Control.Applicative
-import GHC.Read
 import Data.Ix
+import GHC.Generics
+import GHC.Read
 import Text.Read.Lex
-import Text.ParserCombinators.ReadPrec
 
-import qualified Data.Serialize as S
+import qualified Data.Serialize                  as S
+import qualified Text.ParserCombinators.ReadPrec as P
 
 import Minml.AST.Kind
 import Minml.AST.Record
@@ -45,6 +48,96 @@ import Minml.Utils
 data TypeVar a where
     TypeVarP :: String -> TypeVar ()
     TypeVarT :: Kind -> String -> TypeVar Kind
+
+--instance Generic (UserTree a) where
+--  -- Representation type
+--  type Rep (UserTree a) =
+--    M1 D D1UserTree (
+--          M1 C C1_0UserTree (
+--                M1 S NoSelector (K1 P a)
+--            :*: M1 S NoSelector (K1 R (UserTree a))
+--            :*: M1 S NoSelector (K1 R (UserTree a)))
+--      :+: M1 C C1_1UserTree U1)
+
+--  -- Conversion functions
+--  from (Node x l r) = M1 (L1 (M1 (M1 (K1 x) :*: M1 (K1 l) :*: M1 (K1 r))))
+--  from Leaf         = M1 (R1 (M1 U1))
+--  to (M1 (L1 (M1 (M1 (K1 x) :*: M1 (K1 l) :*: M1 (K1 r))))) = Node x l r
+--  to (M1 (R1 (M1 U1)))                                      = Leaf
+
+instance Generic (TypeVar ()) where
+
+    type Rep (TypeVar ()) =
+        M1 D D1TypeVar (M1 C C1_0TypeVarP (M1 S NoSelector (Rec0 String)))
+
+    from (TypeVarP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeVarP x
+
+data D1TypeVar
+data C1_0TypeVarP
+
+instance Datatype D1TypeSym where
+    datatypeName _ = "TypeSym ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeSymP where
+    conName _ = "TypeSymP"
+
+instance Generic (Type ()) where
+
+    type Rep (Type ()) =
+        M1 D D1TypeVar (M1 C C1_0TypeVarP (M1 S NoSelector (Rec0 String)))
+
+    from = undefined
+    to = undefined
+
+data D1Type
+data C1_0Type
+
+instance Datatype D1Type where
+    datatypeName _ = "TypeSym ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0Type where
+    conName _ = "TypeSymP"
+
+instance Generic (TypeSym ()) where
+
+    type Rep (TypeSym ()) =
+        M1 D D1TypeSym (M1 C C1_0TypeSymP (M1 S NoSelector (Rec0 String)))
+
+    from (TypeSymP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeSymP x
+
+data D1TypeSym
+data C1_0TypeSymP
+
+instance Datatype D1TypeVar where
+    datatypeName _ = "TypeVar ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeVarP where
+    conName _ = "TypeVarP"
+
+
+
+instance Generic (TypeAbs ()) where
+
+    type Rep (TypeAbs ()) =
+        M1 D D1TypeAbs (M1 C C1_0TypeAbsP (M1 S NoSelector (Rec0 (Type ()))))
+
+    from (TypeAbsP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeAbsP x
+
+data D1TypeAbs
+data C1_0TypeAbsP
+
+instance Datatype D1TypeAbs where
+    datatypeName _ = "TypeAbs ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeAbsP where
+    conName _ = "TypeAbsP"
 
 -- | Type Symbols
 
@@ -140,7 +233,7 @@ instance S.Serialize (TypeAbs Kind) where
     put (TypeAbsT str kind) = S.put str >> S.put kind
 
 instance S.Serialize (Type ()) where
-    
+
     get = do
         name <- S.get
         case name of
@@ -149,14 +242,14 @@ instance S.Serialize (Type ()) where
             "TypeApp" -> TypeApp <$> S.get <*> S.get
             "TypeRec" -> TypeRec <$> S.get
             _ -> error "Bad serialization"
-    
+
     put (TypeSym s)   = S.put "TypeSym" >> S.put s
     put (TypeVar s)   = S.put "TypeVar" >> S.put s
     put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
     put (TypeRec s)   = S.put "TypeRec" >> S.put s
 
 instance S.Serialize (Type Kind) where
-    
+
     get = do
         name <- S.get
         case name of
@@ -165,7 +258,7 @@ instance S.Serialize (Type Kind) where
             "TypeApp" -> TypeApp <$> S.get <*> S.get
             "TypeRec" -> TypeRec <$> S.get
             "TypeGen" -> TypeGen <$> S.get
-    
+
     put (TypeSym s)   = S.put "TypeSym" >> S.put s
     put (TypeVar s)   = S.put "TypeVar" >> S.put s
     put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
@@ -175,93 +268,93 @@ instance S.Serialize (Type Kind) where
 -- Read
 
 instance Read (TypeVar ()) where
-    readPrec = parens $ prec 10 $ do
+    readPrec = parens $ P.prec 10 $ do
         Ident "TypeVarP" <- lexP
-        arg1 <- step readPrec
-        return $ TypeVarP arg1  
+        arg1 <- P.step readPrec
+        return $ TypeVarP arg1
 
 instance Read (TypeVar Kind) where
-   readPrec = parens $ prec 10 $ do
+   readPrec = parens $ P.prec 10 $ do
         Ident "TypeVarT" <- lexP
-        arg1 <- step readPrec
-        arg2 <- step readPrec
+        arg1 <- P.step readPrec
+        arg2 <- P.step readPrec
         return $ TypeVarT arg1 arg2
 
 instance Read (TypeSym ()) where
-     readPrec = parens $ prec 10 $ do
+     readPrec = parens $ P.prec 10 $ do
         Ident "TypeSymP" <- lexP
-        arg1 <- step readPrec
-        return $ TypeSymP arg1  
- 
+        arg1 <- P.step readPrec
+        return $ TypeSymP arg1
+
 instance Read (TypeSym Kind) where
-   readPrec = parens $ prec 10 $ do
+   readPrec = parens $ P.prec 10 $ do
         Ident "TypeSymT" <- lexP
-        arg1 <- step readPrec
-        arg2 <- step readPrec
+        arg1 <- P.step readPrec
+        arg2 <- P.step readPrec
         return $ TypeSymT arg1 arg2
 
 instance Read (TypeAbs ()) where
-    readPrec = parens $ prec 10 $ do
+    readPrec = parens $ P.prec 10 $ do
         Ident "TypeAbsP" <- lexP
-        arg1 <- step readPrec
-        return $ TypeAbsP arg1  
- 
+        arg1 <- P.step readPrec
+        return $ TypeAbsP arg1
+
 instance Read (TypeAbs Kind) where
-   readPrec = parens $ prec 10 $ do
+   readPrec = parens $ P.prec 10 $ do
         Ident "TypeAbsT" <- lexP
-        arg1 <- step readPrec
-        arg2 <- step readPrec
+        arg1 <- P.step readPrec
+        arg2 <- P.step readPrec
         return $ TypeAbsT arg1 arg2
 
 instance Read (Type ()) where
-    readPrec =  
-        typeSym +++ typeVar +++ typeApp +++ typeRec
+    readPrec =
+        typeSym P.+++ typeVar P.+++ typeApp P.+++ typeRec
 
         where
-            typeSym = parens $ prec 10 $ do
+            typeSym = parens $ P.prec 10 $ do
                 Ident "TypeSym" <- lexP
-                TypeSym <$> step readPrec
+                TypeSym <$> P.step readPrec
 
-            typeVar = parens $ prec 10 $ do
+            typeVar = parens $ P.prec 10 $ do
                 Ident "TypeVar" <- lexP
-                TypeVar <$> step readPrec
+                TypeVar <$> P.step readPrec
 
-            typeApp = parens $ prec 10 $ do
+            typeApp = parens $ P.prec 10 $ do
                 Ident "TypeApp" <- lexP
-                arg1 <- step readPrec
-                arg2 <- step readPrec
+                arg1 <- P.step readPrec
+                arg2 <- P.step readPrec
                 return $ TypeApp arg1 arg2
 
-            typeRec = parens $ prec 10 $ do
+            typeRec = parens $ P.prec 10 $ do
                 Ident "TypeRec" <- lexP
-                TypeRec <$> step readPrec
+                TypeRec <$> P.step readPrec
 
 
 instance Read (Type Kind) where
-    readPrec = parens $ prec 10 $ 
-        typeSym +++ typeVar +++ typeApp +++ typeRec +++ typeGen
+    readPrec = parens $ P.prec 10 $
+        typeSym P.+++ typeVar P.+++ typeApp P.+++ typeRec P.+++ typeGen
 
         where
-            typeSym = parens $ prec 10 $ do
+            typeSym = parens $ P.prec 10 $ do
                 Ident "TypeSym" <- lexP
-                TypeSym <$> step readPrec
+                TypeSym <$> P.step readPrec
 
-            typeVar = parens $ prec 10 $ do
+            typeVar = parens $ P.prec 10 $ do
                 Ident "TypeVar" <- lexP
-                TypeVar <$> step readPrec
+                TypeVar <$> P.step readPrec
 
-            typeApp = parens $ prec 10 $ do
+            typeApp = parens $ P.prec 10 $ do
                 Ident "TypeApp" <- lexP
-                arg1 <- step readPrec
-                arg2 <- step readPrec
+                arg1 <- P.step readPrec
+                arg2 <- P.step readPrec
                 return $ TypeApp arg1 arg2
 
-            typeRec = parens $ prec 10 $ do
+            typeRec = parens $ P.prec 10 $ do
                 Ident "TypeRec" <- lexP
-                TypeRec <$> step readPrec
+                TypeRec <$> P.step readPrec
 
-            typeGen = parens $ prec 10 $ do
+            typeGen = parens $ P.prec 10 $ do
                 Ident "TypeGen" <- lexP
-                TypeGen <$> step readPrec
+                TypeGen <$> P.step readPrec
 
 --------------------------------------------------------------------------------

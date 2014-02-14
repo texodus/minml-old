@@ -4,10 +4,10 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes            #-}
 
 module Minml.AST.Replace where
 
@@ -25,9 +25,9 @@ instance (Functor f, Replace a b) => Replace a (f b) where
     replace sym = fmap . replace sym
 
 instance (JMacro a) => Replace JExpr a where
- 
-    replace s x = 
-        withHygiene (jfromGADT . composOp f . jtoGADT)
+
+    replace s x =
+        withHygiene (jfromGADT . f . jtoGADT)
         where
             f :: JMGadt a -> JMGadt a
             f (JMGExpr (ValExpr (JVar (StrI z)))) | z == s = JMGExpr x

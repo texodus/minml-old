@@ -166,9 +166,14 @@ spec =
 
             |]
 
+            sample "replacements in the val of a record" [q|
+
+                `test (x)` = { result: x }
+                match test 4 with { result: x } -> x
+
+            |]
+
             describe "Let binding replacements" $ do
-
-
 
                 sample "scope introduction" [q|
                   
@@ -286,9 +291,9 @@ spec =
 
                 |]
 
-            describe "XML tests" $
+            describe "XML tests" $ do
 
-                sample "simple XML" $ [q|
+                sample "simple XML" [q|
  
                     Xml: String -> String -> Xml
                    
@@ -297,6 +302,18 @@ spec =
                     <"div"> 
                         <"a">"test"</"a">
                     </"div">
+
+                |] 
+
+                pendingSample "XML, with arbitrary string parsing" [q|
+ 
+                    Xml: String -> String -> Xml
+                   
+                    `<("a")> ("b") </("c")>` = Xml a b
+                 
+                    <div> 
+                        <a>Brown house mouse, louse!</a>
+                    </div>
 
                 |] 
 

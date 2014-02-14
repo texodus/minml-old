@@ -28,7 +28,7 @@
 
 ------------------------------------------------------------------------------
 
-module Minml.Prelude where
+module Minml.Compile.Prelude where
 
 import qualified Data.ByteString.UTF8 as B
 

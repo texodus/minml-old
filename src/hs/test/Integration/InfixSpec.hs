@@ -29,7 +29,7 @@ spec =
 
         |]
 
-        inProgress "Demonstrating mixed associativity" $ [q|
+        pendingSample "Demonstrating mixed associativity" $ [q|
 
             `(a) +++ (b)` = a + b
             `(a) -+- (b)` = a - b

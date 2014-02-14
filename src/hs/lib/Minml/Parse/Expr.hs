@@ -16,7 +16,6 @@
 module Minml.Parse.Expr where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Lens
 import Language.Javascript.JMacro
 import Text.Parsec.Expr

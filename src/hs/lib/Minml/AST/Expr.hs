@@ -4,13 +4,15 @@
 
 ------------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -48,6 +50,83 @@ data Expr where
     TypExpr :: TypeSym () -> TypeAbs () -> Maybe Expr -> Expr
 
     deriving (Eq, Ord, Show, Read, Generic)
+
+
+--class Minml a where
+--    mtoGadt   :: a -> MGadt a
+--    mfromGadt :: MGadt a -> a
+
+--instance Minml Expr where
+--    mtoGadt = MGExpr
+--    mfromGadt (MGExpr x) = x
+--    mfromGadt _ = error "impossible"
+
+
+---- | Union type to allow regular traversal by compos.
+--data MGadt a where
+--    MGExpr :: Expr -> MGadt Expr
+
+--composOpM :: (Compos t, Monad m) =>
+--    (forall a. t a -> m (t a)) -> t b -> m (t b)
+--composOpM = compos return ap
+
+--composOpFold :: Compos t => b -> (b -> b -> b) ->
+--    (forall a. t a -> b) -> t c -> b
+
+--composOpFold z c f =
+--    unC . compos (\_ -> C z) (\(C x) (C y) -> C (c x y)) (C . f)
+
+--newtype C b a = C { unC :: b }
+
+--instance Compos MGadt where
+--    compos = mcompos
+
+--mcompos :: forall m c. (forall a. a -> m a) -> (forall a b. m (a -> b) -> m a -> m b) -> (forall a. MGadt a -> m (MGadt a)) -> MGadt c -> m (MGadt c)
+
+--mcompos ret app f' v = case v of
+--    MGExpr v' -> ret MGExpr `app` case v' of
+--        LetExpr s e x -> ret (LetExpr s) `app` f e `app` (f `fmap` x)
+--        --AppExpr :: Expr -> Expr -> Expr
+--        --AbsExpr :: Sym  -> Expr -> Expr
+--        --VarExpr :: Val  -> Expr
+--        --MatExpr :: Expr -> [(Patt, Expr)] -> Expr
+--        --RecExpr :: Record Expr -> Expr
+--        --JSExpr  :: JExpr -> Expr
+
+--        --TypExpr :: TypeSym () -> TypeAbs () -> Maybe Expr -> Expr
+
+--        --ValExpr e -> ret ValExpr `app` f e
+--        --SelExpr e e' -> ret SelExpr `app` f e `app` f e'
+--        --IdxExpr e e' -> ret IdxExpr `app` f e `app` f e'
+--        --InfixExpr o e e' -> ret (InfixExpr o) `app` f e `app` f e'
+--        --PPostExpr b o e -> ret (PPostExpr b o) `app` f e
+--        --IfExpr e e' e'' -> ret IfExpr `app` f e `app` f e' `app` f e''
+--        --NewExpr e -> ret NewExpr `app` f e
+--        --ApplExpr e xs -> ret ApplExpr `app` f e `app` mapM' f xs
+--        --AntiExpr _ -> ret v'
+--        --TypeExpr b e t -> ret (TypeExpr b) `app` f e `app` ret t
+--        --UnsatExpr _ -> ret v'
+
+--    where
+--        mapM' :: forall a. (a -> m a) -> [a] -> m [a]
+--        mapM' g = foldr (app . app (ret (:)) . g) (ret [])
+--        f :: forall b. Minml b => b -> m b
+--        f x = ret mfromGadt `app` f' (mtoGadt x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 instance Serialize Expr
 

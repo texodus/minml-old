@@ -1,7 +1,7 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Main where
 
@@ -10,39 +10,40 @@ import Criterion.Main
 import Minml.Parse
 
 
-import Control.Monad
+import Control.Concurrent
+import Control.Exception  as E
 import Control.Lens
+import Control.Monad
+import Data.FileEmbed
+import Data.Maybe
 import Data.Serialize
 import GHC.Generics
-import System.Directory
-import Control.Exception as E
-import Control.Concurrent
-import Data.Maybe
 import Network.HTTP
 import Network.URI
-import System.IO
-import System.Process
+import System.Directory
 import System.Exit
-import Data.FileEmbed
+import System.IO
 import System.IO.Unsafe
+import System.Process
 
-import qualified Data.ByteString as B
+import qualified Data.ByteString      as B
 import qualified Data.ByteString.UTF8 as BU
 
 import Minml.AST
-import Minml.Prelude
-import Minml.TypeCheck
+import Minml.Compile.Prelude
+import Minml.Compile.RenderText
 import Minml.Javascript
-import Minml.RenderText
 import Minml.Serialize
+import Minml.TypeCheck
 
 data TestRec = TestRec {
-    _source :: String,
-    _ast :: Either Err Expr,
-    _types :: Either Err Expr,
-    _js :: Either Err String,
-    _evaled :: Either Err String,
-    _name :: String
+    _source  :: String,
+    _ast     :: Either Err Expr,
+    _types   :: Either Err Expr,
+    _js      :: Either Err String,
+    _evaled  :: Either Err String,
+    _end2end :: Either Err String,
+    _name    :: String
 } deriving (Show, Read, Generic)
 
 instance Serialize TestRec
@@ -85,11 +86,11 @@ evalServer = do
     ch <- newEmptyMVar
 
     forkIO $ do
-        
+
         (Just std_in', Just std_out', _, p) <-
             createProcess (proc "node" []) {
-                std_in = CreatePipe, 
-                std_out = CreatePipe, 
+                std_in = CreatePipe,
+                std_out = CreatePipe,
                 close_fds = True
             }
 

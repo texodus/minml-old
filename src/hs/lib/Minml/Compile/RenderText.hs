@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------------
 
-module Minml.RenderText (
+module Minml.Compile.RenderText (
     renderText
 ) where
 

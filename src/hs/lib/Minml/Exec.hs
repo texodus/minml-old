@@ -14,12 +14,6 @@
 -- (5) [OHML]
 --     (https://github.com/texodus/ohml)
 
--- I. Introduction
--- ===============
-
--- We can accomplish this in Haskell '98 - but it's not fun!
--- Let's make things complicated by using some extensions!
-
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -28,27 +22,16 @@
 
 ------------------------------------------------------------------------------
 
--- There is one module.  We'll need a few elements from `System` for
--- handling the plumbing aspects, and a handful of elements from the
--- `containers` and `mtl` libraries.
-
 module Minml.Exec where
 
 import Control.Lens
 import System.Console.CmdLib
 
 import Minml.Compile
-import Minml.Config
 
 ------------------------------------------------------------------------------
 
--- So what does this language look like?
-
--- 2. Compiler "Architecture"
--- ==========================
-
--- The structure of compilation can be expressed as a simple
--- function composition.
+-- | Compiler "Architecture"
 
 exec :: IO ()
 exec = do

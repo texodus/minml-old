@@ -10,7 +10,7 @@ spec =
 
     describe "Assumptions (from template)" $
         
-        inProgress "a trivial example"
+        pendingSample "a trivial example"
 
             "   x : Num   \n\
             \   x = 1     \n\

@@ -32,7 +32,7 @@
 -- handling the plumbing aspects, and a handful of elements from the
 -- `containers` and `mtl` libraries.
 
-module Minml.Config where
+module Minml.Compile.Config where
 
 import Control.Lens
 import System.Console.CmdLib

@@ -32,7 +32,7 @@ newtype Notation = Notation (Expr -> Macro Expr)
 instance Syntax Notation where
 
     syntax = 
-        inferScope `comp` (term <|> capture <|> sep <|> lastTerm)
+        inferScope `comp` term <|> capture <|> sep <|> lastTerm
         where
             term = do
                 f <- M.identifier <|> M.operator <|> (M.reserved "λ" >> return "λ")

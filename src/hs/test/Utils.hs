@@ -25,8 +25,8 @@ import qualified Data.ByteString.UTF8 as BU
 
 import Minml.AST
 import Minml.Parse.Token
-import Minml.Prelude
-import Minml.RenderText
+import Minml.Compile.Prelude
+import Minml.Compile.RenderText
 
 
 import Control.Monad
