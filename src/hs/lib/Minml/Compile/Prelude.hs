@@ -38,6 +38,7 @@ import Text.Parsec
 import Text.Parsec.Pos
 
 import Minml.AST
+import Minml.Macro.Append
 import Minml.Parse.Notation
 import Minml.Parse.Syntax
 import Minml.Parse.Token

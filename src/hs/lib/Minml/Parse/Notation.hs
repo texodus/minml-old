@@ -17,9 +17,10 @@ import Control.Lens
 import Minml.AST
 import Minml.Macro.Infer
 import Minml.Macro.Scope
-import Minml.Macro.Replace
+import Minml.Replace
 import Minml.Parse.Syntax
 import Minml.Parse.Token
+
 import qualified Minml.Parse.MacroToken as M
 
 ------------------------------------------------------------------------------

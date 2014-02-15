@@ -27,7 +27,7 @@ module Minml.Javascript.Cases (
 import Language.Javascript.JMacro
 
 import Minml.AST
-import Minml.AST.Replace
+import Minml.Replace.Base
 
 import Minml.Javascript.Val()
 import Minml.Javascript.Match

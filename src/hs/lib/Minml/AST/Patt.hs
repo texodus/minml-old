@@ -20,7 +20,6 @@ import GHC.Generics
 import Minml.AST.Type
 import Minml.AST.Val
 import Minml.AST.Record
-import Minml.AST.Replace
 import Minml.Utils
 
 --------------------------------------------------------------------------------
@@ -40,12 +39,6 @@ data Patt where
 instance Serialize Patt
 
 instance Fmt Patt where fmt = show
-
-instance Replace Patt Patt where
-
-    replace f patt (ValPatt (SymVal (Sym t))) | f == t = patt
-    replace f patt (ConPatt g xs) = ConPatt g (replace f patt `fmap` xs)
-    replace _ _ p = p
 
 ------------------------------------------------------------------------------
 

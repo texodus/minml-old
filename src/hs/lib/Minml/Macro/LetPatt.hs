@@ -13,7 +13,7 @@ import Control.Arrow
 import Control.Applicative
 
 import Minml.AST
-import Minml.Macro.Replace
+import Minml.Replace
 
 ------------------------------------------------------------------------------
 

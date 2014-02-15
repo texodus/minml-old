@@ -1,13 +1,13 @@
 --------------------------------------------------------------------------------
 
 -- | Types
-
+--
 --   This ensures that any `Type a` will be consistent, and allows us to
 --   generate 2 types of `Type a` which share most of their structure.
-
+--
 --   `TypeGen`s are a special `TypeVar` which we use to mark places where
 --   we want a type to be polymorphic.
-
+--
 --   The `Serialize` and `Read` instances cannot be derived becaues they are
 --   GADTs.  Lame.
 
@@ -19,6 +19,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections      #-}
 {-# LANGUAGE TypeFamilies       #-}
+{-# LANGUAGE TypeOperators      #-}
 
 module Minml.AST.Type (
     module Minml.AST.Kind,
@@ -49,96 +50,6 @@ data TypeVar a where
     TypeVarP :: String -> TypeVar ()
     TypeVarT :: Kind -> String -> TypeVar Kind
 
---instance Generic (UserTree a) where
---  -- Representation type
---  type Rep (UserTree a) =
---    M1 D D1UserTree (
---          M1 C C1_0UserTree (
---                M1 S NoSelector (K1 P a)
---            :*: M1 S NoSelector (K1 R (UserTree a))
---            :*: M1 S NoSelector (K1 R (UserTree a)))
---      :+: M1 C C1_1UserTree U1)
-
---  -- Conversion functions
---  from (Node x l r) = M1 (L1 (M1 (M1 (K1 x) :*: M1 (K1 l) :*: M1 (K1 r))))
---  from Leaf         = M1 (R1 (M1 U1))
---  to (M1 (L1 (M1 (M1 (K1 x) :*: M1 (K1 l) :*: M1 (K1 r))))) = Node x l r
---  to (M1 (R1 (M1 U1)))                                      = Leaf
-
-instance Generic (TypeVar ()) where
-
-    type Rep (TypeVar ()) =
-        M1 D D1TypeVar (M1 C C1_0TypeVarP (M1 S NoSelector (Rec0 String)))
-
-    from (TypeVarP x) = M1 (M1 (M1 (K1 x)))
-    to (M1 (M1 (M1 (K1 x)))) = TypeVarP x
-
-data D1TypeVar
-data C1_0TypeVarP
-
-instance Datatype D1TypeSym where
-    datatypeName _ = "TypeSym ()"
-    moduleName _   = "Minml.AST.Type"
-
-instance Constructor C1_0TypeSymP where
-    conName _ = "TypeSymP"
-
-instance Generic (Type ()) where
-
-    type Rep (Type ()) =
-        M1 D D1TypeVar (M1 C C1_0TypeVarP (M1 S NoSelector (Rec0 String)))
-
-    from = undefined
-    to = undefined
-
-data D1Type
-data C1_0Type
-
-instance Datatype D1Type where
-    datatypeName _ = "TypeSym ()"
-    moduleName _   = "Minml.AST.Type"
-
-instance Constructor C1_0Type where
-    conName _ = "TypeSymP"
-
-instance Generic (TypeSym ()) where
-
-    type Rep (TypeSym ()) =
-        M1 D D1TypeSym (M1 C C1_0TypeSymP (M1 S NoSelector (Rec0 String)))
-
-    from (TypeSymP x) = M1 (M1 (M1 (K1 x)))
-    to (M1 (M1 (M1 (K1 x)))) = TypeSymP x
-
-data D1TypeSym
-data C1_0TypeSymP
-
-instance Datatype D1TypeVar where
-    datatypeName _ = "TypeVar ()"
-    moduleName _   = "Minml.AST.Type"
-
-instance Constructor C1_0TypeVarP where
-    conName _ = "TypeVarP"
-
-
-
-instance Generic (TypeAbs ()) where
-
-    type Rep (TypeAbs ()) =
-        M1 D D1TypeAbs (M1 C C1_0TypeAbsP (M1 S NoSelector (Rec0 (Type ()))))
-
-    from (TypeAbsP x) = M1 (M1 (M1 (K1 x)))
-    to (M1 (M1 (M1 (K1 x)))) = TypeAbsP x
-
-data D1TypeAbs
-data C1_0TypeAbsP
-
-instance Datatype D1TypeAbs where
-    datatypeName _ = "TypeAbs ()"
-    moduleName _   = "Minml.AST.Type"
-
-instance Constructor C1_0TypeAbsP where
-    conName _ = "TypeAbsP"
-
 -- | Type Symbols
 
 data TypeSym a where
@@ -162,6 +73,8 @@ data Type a where
 
     TypeGen :: Int -> Type Kind
 
+--------------------------------------------------------------------------------
+
 -- Standalone instances
 
 deriving instance (Ord a) => Ord (Type a)
@@ -179,6 +92,8 @@ deriving instance (Show a) => Show (TypeAbs a)
 deriving instance (Ord a)  => Ord  (TypeVar a)
 deriving instance (Eq a)   => Eq   (TypeVar a)
 deriving instance (Show a) => Show (TypeVar a)
+
+--------------------------------------------------------------------------------
 
 -- Fmt
 
@@ -258,12 +173,15 @@ instance S.Serialize (Type Kind) where
             "TypeApp" -> TypeApp <$> S.get <*> S.get
             "TypeRec" -> TypeRec <$> S.get
             "TypeGen" -> TypeGen <$> S.get
+            _ -> error "Unknown type"
 
     put (TypeSym s)   = S.put "TypeSym" >> S.put s
     put (TypeVar s)   = S.put "TypeVar" >> S.put s
     put (TypeApp s x) = S.put "TypeApp" >> S.put s >> S.put x
     put (TypeRec s)   = S.put "TypeRec" >> S.put s
     put (TypeGen s)   = S.put "TypeGen" >> S.put s
+
+--------------------------------------------------------------------------------
 
 -- Read
 
@@ -356,5 +274,99 @@ instance Read (Type Kind) where
             typeGen = parens $ P.prec 10 $ do
                 Ident "TypeGen" <- lexP
                 TypeGen <$> P.step readPrec
+
+--------------------------------------------------------------------------------
+
+-- Generic
+
+instance Generic (TypeVar ()) where
+
+    type Rep (TypeVar ()) =
+        M1 D D1TypeVar (M1 C C1_0TypeVarP (M1 S NoSelector (Rec0 String)))
+
+    from (TypeVarP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeVarP x
+
+data D1TypeVar
+data C1_0TypeVarP
+
+instance Datatype D1TypeVar where
+    datatypeName _ = "TypeVar ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeVarP where
+    conName _ = "TypeVarP"
+
+instance Generic (Type ()) where
+
+    type Rep (Type ()) =
+        M1 D D1Type (M1 C C1_0Type (M1 S NoSelector (Rec0 (TypeSym ())))
+            :+: M1 C C1_1Type (M1 S NoSelector (Rec0 (TypeVar ())))
+            :+: M1 C C1_1Type (M1 S NoSelector (Rec0 (Type ())) :*: M1 S NoSelector (Rec0 (Type ())))
+            :+: M1 C C1_1Type (M1 S NoSelector (Rec0 (Record (Type ())))))
+
+    from (TypeSym s) = M1 (L1 (M1 (M1 (K1 s))))
+    from (TypeVar s) = M1 (R1 (L1 (M1 (M1 (K1 s)))))
+    from (TypeApp s a) = M1 (R1 (R1 (L1 (M1 (M1 (K1 s) :*: M1 (K1 a))))))
+    from (TypeRec s) = M1 (R1 (R1 (R1 (M1 (M1 (K1 s))))))
+    to = undefined
+
+data D1Type
+data C1_0Type
+data C1_1Type
+data C1_2Type
+data C1_3Type
+
+instance Datatype D1Type where
+    datatypeName _ = "Type ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0Type where
+    conName _ = "TypeSym"
+
+instance Constructor C1_1Type where
+    conName _ = "TypeVar"
+
+instance Constructor C1_2Type where
+    conName _ = "TypeApp"
+
+instance Constructor C1_3Type where
+    conName _ = "TypeRec"
+
+instance Generic (TypeSym ()) where
+
+    type Rep (TypeSym ()) =
+        M1 D D1TypeSym (M1 C C1_0TypeSymP (M1 S NoSelector (Rec0 String)))
+
+    from (TypeSymP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeSymP x
+
+data D1TypeSym
+data C1_0TypeSymP
+
+instance Datatype D1TypeSym where
+    datatypeName _ = "TypeSym ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeSymP where
+    conName _ = "TypeSymP"
+
+instance Generic (TypeAbs ()) where
+
+    type Rep (TypeAbs ()) =
+        M1 D D1TypeAbs (M1 C C1_0TypeAbsP (M1 S NoSelector (Rec0 (Type ()))))
+
+    from (TypeAbsP x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = TypeAbsP x
+
+data D1TypeAbs
+data C1_0TypeAbsP
+
+instance Datatype D1TypeAbs where
+    datatypeName _ = "TypeAbs ()"
+    moduleName _   = "Minml.AST.Type"
+
+instance Constructor C1_0TypeAbsP where
+    conName _ = "TypeAbsP"
 
 --------------------------------------------------------------------------------

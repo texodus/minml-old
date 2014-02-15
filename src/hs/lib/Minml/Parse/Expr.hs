@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 
 -- | Expression parser.
-
+--
 --   `LetExpr` and `TypExpr` are roughly identical; here they've been arranged
 --   slightly differently to show the symmetry between function application
 --   & combinators of the `Applicative` type class.
@@ -23,6 +23,7 @@ import Text.Parsec.Expr
 import Text.Parsec hiding (many, optional, (<|>))
 
 import Minml.AST
+import Minml.Macro.Append
 import Minml.Parse.Indent
 import Minml.Parse.Infix()
 import Minml.Parse.Notation

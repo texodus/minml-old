@@ -19,12 +19,12 @@ import Text.Parsec hiding ((<|>), many)
 
 import Minml.AST
 import Minml.Macro.LetPatt
-import Minml.Macro.Replace
 import Minml.Parse.Indent
 import Minml.Parse.Syntax
 import Minml.Parse.Val()
 import Minml.Parse.Patt()
 import Minml.Parse.Token
+import Minml.Replace
 
 ------------------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ import Control.Monad.Identity
 import Text.Parsec.Expr
 
 import Minml.AST
-import Minml.AST.Replace
+import Minml.Replace
 import Minml.Parse.Indent
 import Minml.Parse.Macro
 import Minml.Parse.Patt()

@@ -29,7 +29,8 @@ module Minml.Javascript.Expr where
 import Language.Javascript.JMacro
 
 import Minml.AST
-import Minml.AST.Replace
+import Minml.Replace.Base
+import Minml.Replace.JExpr
 import Minml.Javascript.Cases
 import Minml.Javascript.Curried
 import Minml.Javascript.Meta()
