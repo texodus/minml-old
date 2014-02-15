@@ -24,6 +24,7 @@ data Cell where
     Let   :: String -> Cell
     Arg   :: String -> Cell
     Pat   :: String -> Cell
+    Typ   :: String -> Cell
     Scope :: Cell
     Sep   :: Cell
   

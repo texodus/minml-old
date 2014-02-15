@@ -4,6 +4,11 @@
 True:  Bool
 False: Bool
 
+`(a) :: (b)` = 
+	let __match__ = a
+	__match__ :: b
+	__match__
+
 `if (a) then (b) else (c)` = match a with
 	True  = b
 	False = c

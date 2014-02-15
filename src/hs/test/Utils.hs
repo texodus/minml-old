@@ -69,17 +69,21 @@ assertGenerate a = assertEqual "" gen
     where
         gen = renderText $ toJExpr a 
 
-nodejs x =
-  let uri = fromMaybe undefined $ parseURI "http://127.0.0.1:1337"
-      args = [ mkHeader HdrContentLength (show$ length x)
-             , mkHeader HdrContentType "application/x-www-form-urlencoded" ]
-  in do
-    result <- E.try $ simpleHTTP (Request uri POST args x) >>= getResponseBody
-    case result of
-        Right z -> return z
-        Left (err :: SomeException) -> do
-            evalServer
-            nodejs x
+nodejs x = nodejs' x True
+
+    where
+        uri = fromMaybe undefined $ parseURI "http://127.0.0.1:1337"
+        args = [ mkHeader HdrContentLength (show$ length x)
+               , mkHeader HdrContentType "application/x-www-form-urlencoded" ]
+        nodejs' x rep = do
+            result <- E.try $ simpleHTTP (Request uri POST args x) >>= getResponseBody
+            case (result, rep) of
+                (Right z, _) -> return z
+                (Left (err :: SomeException), True) -> do
+                    evalServer
+                    nodejs' x False
+                (Left (err :: SomeException), False) -> 
+                    error (show err)
 
 server :: Chan ProcessHandle
 server = unsafePerformIO newChan

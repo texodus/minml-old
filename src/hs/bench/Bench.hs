@@ -32,9 +32,11 @@ import qualified Data.ByteString.UTF8 as BU
 import Minml.AST
 import Minml.Compile.Prelude
 import Minml.Compile.RenderText
+import Minml.Optimize
 import Minml.Javascript
 import Minml.Serialize
 import Minml.TypeCheck
+
 
 data TestRec = TestRec {
     _source  :: String,
@@ -42,6 +44,7 @@ data TestRec = TestRec {
     _types   :: Either Err Expr,
     _js      :: Either Err String,
     _evaled  :: Either Err String,
+    _optd    :: Either Err Expr,
     _end2end :: Either Err String,
     _name    :: String
 } deriving (Show, Read, Generic)
@@ -66,6 +69,8 @@ golds = take 10 $ unsafePerformIO $ do
 parse' = nf (show . fmap fst . flip (parseMinml "Benchmark") emptyState)
 
 check' = nf (show . (>>= typeCheck))
+
+optimize' = nf (show . (fmap optimize :: Either Err Expr -> Either Err Expr))
 
 generate' = nf (show . join . fmap renderText . join . fmap generateJs)
 
@@ -117,6 +122,7 @@ main = do
     defaultMain [
         bgroup "Parsing" $ fmap (\rec -> bench (rec ^. name) $ parse' (rec ^. source)) (fmap snd golds),
         bgroup "Type Checking" $ fmap (\rec -> bench (rec ^. name) $ check' (rec ^. ast)) (fmap snd golds),
-        bgroup "Generating Javascript" $ fmap (\rec -> bench (rec ^. name) $ generate' (rec ^. ast)) (fmap snd golds),
+        bgroup "Optimizing" $ fmap (\rec -> bench (rec ^. name) $ optimize' (rec ^. ast)) (fmap snd golds),
+        bgroup "Generating Javascript" $ fmap (\rec -> bench (rec ^. name) $ generate' (rec ^. optd)) (fmap snd golds),
         bgroup "Executing" $ fmap (\rec -> bench (rec ^. name) $ nfIO (case rec ^. js of Right ex -> nodejs ex; Left err -> return $ show err)) (fmap snd golds)
         ]

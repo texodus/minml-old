@@ -71,7 +71,15 @@ bootstrap =
 
             , parseNote 
                 "let (a) = (b); (c)"  
-                (LetExpr (Sym "a") (VarExpr (SymVal (Sym "b"))) (Just (VarExpr (SymVal (Sym "c")))))
+                (LetExpr (Sym "a") 
+                    (VarExpr (SymVal (Sym "b"))) 
+                    (Just (VarExpr (SymVal (Sym "c")))))
+
+            , parseNote 
+                "(a) :: (b); (c)"  
+                (AnnExpr (VarExpr (SymVal (Sym "a"))) 
+                    (TypeVar (TypeVarP "b")) 
+                    (Just (VarExpr (SymVal (Sym "c")))))
          
             ]
 

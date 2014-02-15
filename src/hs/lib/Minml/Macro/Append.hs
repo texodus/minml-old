@@ -64,6 +64,9 @@ merge (Term (Pat x) m) (Term (Pat y) n) =
 merge (Term (Arg x) m) (Term (Arg y) n) =
     Term (Arg y) `fmap` (n `appendTree` replace x y m)
 
+merge (Term (Typ x) m) (Term (Typ y) n) =
+    Term (Typ y) `fmap` (n `appendTree` replace x y m)
+
 merge (Term (Let x) m) (Term (Let y) n) =
     Term (Let y) `fmap` (n `appendTree` replace x y m)
 

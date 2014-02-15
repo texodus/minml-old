@@ -12,31 +12,32 @@ homepage:      http://texodus.github.com/minml
 
 Library
   hs-source-dirs: src/hs/lib
-  Build-depends:
-    base           ,
-    bytestring     ,
-    cereal         == 0.4.0.1,
-    cmdlib         == 0.3.5,
-    file-embed     == 0.0.5,
-    generic-deriving == 1.5.0,
-    parsec         ,
-    utf8-string    ,    
-    mtl            >= 2.1 && <= 2.2,
-    jmacro         >= 0.6.3 && <0.7,
-    containers     >= 0.5 && < 0.6,
-    process        >= 1.1,
-    transformers   == 0.3.0.0,
-    wl-pprint-text == 1.1.0.0,
-    lens           == 3.9.0.2,
-    directory      >= 1.1,
-    zlib           == 0.5.4.1
 
+  Build-depends:
+    base             ,
+    bytestring       ,
+    cereal           == 0.4.0.1,
+    cmdlib           == 0.3.5,
+    file-embed       == 0.0.5,
+    parsec           ,
+    utf8-string      ,    
+    mtl              >= 2.1 && <= 2.2,
+    MissingH         == 1.2.0.2,
+    jmacro           >= 0.6.3 && <0.7,
+    containers       >= 0.5 && < 0.6,
+    process          >= 1.1,
+    transformers     == 0.3.0.0,
+    wl-pprint-text   == 1.1.0.0,
+    lens             == 3.9.0.2,
+    directory        >= 1.1,
+    zlib             == 0.5.4.1
 
   ghc-options: 
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
     -funfolding-use-threshold=16 -fexcess-precision
-    -optc-O3 -optc-ffast-math       
+    -optc-O3 -optc-ffast-math
+
   exposed-modules:  
     Minml.AST,
     Minml.AST.Err,
@@ -65,10 +66,12 @@ Library
     Minml.Javascript.Record,
     Minml.Javascript.Type,
     Minml.Javascript.Val,
+    Minml.Macro.Append,
     Minml.Macro.Infer,
     Minml.Macro.LetPatt,
     Minml.Macro.Cell,
     Minml.Macro.Scope,
+    Minml.Optimize,
     Minml.Parse,
     Minml.Parse.Expr
     Minml.Parse.Indent,
@@ -110,6 +113,7 @@ Executable minml
   Build-depends:
     minml,
     base >= 4 && <= 5
+
   ghc-options: 
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
@@ -120,11 +124,13 @@ Benchmark bench
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: src/hs/bench
   Main-Is: Bench.hs
+
   ghc-options: 
     -Wall -fwarn-tabs -funbox-strict-fields
     -fno-warn-unused-do-bind -threaded
     -funfolding-use-threshold=16 -fexcess-precision
     -optc-O3 -optc-ffast-math    
+
   Build-Depends: 
     base,
     criterion,
@@ -146,6 +152,7 @@ Test-Suite spec
   Hs-Source-Dirs: src/hs/test
   Ghc-Options: -Wall -threaded -fbreak-on-exception
   Main-Is: Spec.hs
+
   Build-Depends:
     base,
     bytestring   == 0.10.0.2,

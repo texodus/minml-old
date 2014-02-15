@@ -81,7 +81,7 @@ instance Attributes Config where
         ]]
 
 instance RecordCommand Config where
-     mode_summary _ = "Welcome to the FORML Programming language.\n"
+     mode_summary _ = "Welcome to the MIN.ML Programming Language.\n"
      run' = undefined
 
 ------------------------------------------------------------------------------

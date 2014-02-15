@@ -26,6 +26,7 @@ import Minml.AST
 import Minml.Compile
 import Minml.Compile.Prelude
 import Minml.Compile.RenderText
+import Minml.Optimize
 import Minml.Javascript
 import Minml.Serialize
 import Minml.TypeCheck
@@ -38,6 +39,7 @@ data TestRec = TestRec {
     _types   :: Either Err Expr,
     _js      :: Either Err String,
     _evaled  :: Either Err String,
+    _optd    :: Either Err Expr,
     _end2end :: Either Err String,
     _name    :: String
 } deriving (Show, Read, Generic)
@@ -64,14 +66,17 @@ sample title source = do
     gold <- getGold
     case gold of
         Just gold -> do
-            let parsed  = either (error "test") id $ unpack . pack . parse' $ source
+            let parsed  = clean . parse' $ source
             let checked = join . fmap typeCheck $ gold ^. ast
-            let scripted = join . fmap renderText . join . fmap generateJs $ gold ^. ast
+            let opted   = clean $ fmap optimize parsed
+            let scripted = join . fmap renderText . join . fmap generateJs $ gold ^. optd
             describe title $ do
                 it "should parse" $
                     assertEqual "" (gold ^. ast) parsed
                 it "should type check" $
                     assertEqual "" (gold ^. types) checked
+                it "should optimize" $
+                    assertEqual "" (gold ^. optd) opted
                 it "should generate javascript" $
                     assertEqual "" (gold ^. js) scripted
                 it "should execute" $ do
@@ -87,13 +92,14 @@ sample title source = do
 
         Nothing ->
             inProgress' title source pendingWith True
-
+  
 
     where
+        clean = either (error "test") id . unpack . pack
         com q = do
             p <- q
             p' <- typeCheck p
-            p'' <- generateJs p'
+            p'' <- generateJs (optimize p')
             p''' <- renderText p''
             return $ nodejs p'''
 
@@ -115,10 +121,11 @@ inProgress title source =
     inProgress' title source assertFailure False
 
 inProgress' title source asert gen = do
-    let parsed  = parse' source
+    let parsed  = clean $ parse' source
     let checked = join . fmap typeCheck $ parsed
-    let scripted = join . fmap renderText . join . fmap generateJs $ parsed
-    let all = join . fmap renderText . join . fmap generateJs $ checked
+    let opted   = clean $ fmap optimize parsed
+    let scripted = join . fmap renderText . join . fmap generateJs $ opted
+    let all = join . fmap renderText . join . fmap (generateJs . optimize) $ checked
     let answer = unsafePerformIO $ case fmap nodejs scripted of
             Left x -> return $ Left x
             Right y -> Right `fmap` y
@@ -129,14 +136,16 @@ inProgress' title source asert gen = do
     describe title $ do
         when gen $ it ("\nGenerated new gold record for:\n\n" ++ source) $ do
             B.writeFile ("src/obj/" ++ show (abs $ hash source)) $
-                pack (source, TestRec source parsed checked scripted answer allAnswer title)
+                pack (source, TestRec source parsed checked scripted answer opted allAnswer title)
             assertFailure "Please rerun test suite"
         it "should parse" $ asert $ show parsed
         it "should type check" $ asert $ show checked
+        it "should optimize" $ asert $ show opted
         it "should generate javascript" $ asert $ show scripted
         it "should execute" $ asert $ show answer
         it "should run end to end"$ asert $ show allAnswer
 
-
+    where
+        clean = either (error "test") id . unpack . pack
 
 -------------------------------------------------------------------------------

@@ -42,6 +42,8 @@ import Minml.Javascript.Record()
 
 instance ToJExpr Expr where
 
+    toJExpr (AnnExpr _ _ (Just expr)) = toJExpr expr
+
     toJExpr (VarExpr v) =
         toJExpr v
 
@@ -72,6 +74,8 @@ instance ToJExpr Expr where
     |]
 
 instance ToStat Expr where
+
+    toStat (AnnExpr _ _ expr) = toStat expr
 
     toStat (LetExpr (Sym sym) ex expr) = [jmacro| 
 

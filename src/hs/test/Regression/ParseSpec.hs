@@ -15,10 +15,9 @@ spec =
 
     describe "Parsing regressions" $
 
-        sample "Funciton definition and application with 2 arguments" $ [q|
+        sample "Function definition and application with 2 arguments" $ [q|
           
             f a b = a + b
             f 1 2
 
         |]
- 

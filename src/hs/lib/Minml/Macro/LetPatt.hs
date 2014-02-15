@@ -29,6 +29,9 @@ instance Replace LetPatt Expr where
     replace f ex (LetExpr f' a b) =
         LetExpr f' (replace f ex a) (replace f ex b)
 
+    replace f ex (AnnExpr f' a b) =
+        AnnExpr f' a (replace f ex b)
+
     replace f ex (AppExpr a b) =
         AppExpr (replace f ex a) (replace f ex b)
 

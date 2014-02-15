@@ -26,6 +26,7 @@ import Minml.Compile.Config
 import Minml.Compile.Prelude
 import Minml.Compile.RenderText
 import Minml.Javascript
+import Minml.Optimize
 import Minml.Parse
 import Minml.Parse.Token
 import Minml.TypeCheck
@@ -48,7 +49,7 @@ compile config srcs = do
 
     (config ^. shouldTypeCheck) `when` void (typeCheck ast)
 
-    js <- generateJs ast
+    js <- generateJs (optimize ast)
     renderText js
 
 type ParseArtifact = ([Expr], MacroState)

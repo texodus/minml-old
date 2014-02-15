@@ -55,6 +55,7 @@ module Minml.TypeCheck.Expr (
     infer
 ) where
 
+import Control.Lens
 import Control.Monad
 
 import qualified Data.Map as M
@@ -72,6 +73,22 @@ import Minml.TypeCheck.Patt()
 
 ------------------------------------------------------------------------------
 
+tryFind :: String -> TypeCheck (Type Kind) -> TypeCheck (Type Kind)
+tryFind sym cont = use ass >>= find'
+
+    where
+        find' [] = do
+            symT <- newTypeVar Star
+            withAss (sym :>: TypeAbsT [] symT) $ cont
+        
+        find' ((i' :>: sc) : as)
+            | sym == i' = do
+                iT <- infer sc
+                x  <- cont
+                unify iT x
+                return x
+            | otherwise = find' as
+
 instance Infer Expr where
     infer (VarExpr (LitVal l)) =
         return (litCheck l)
@@ -88,11 +105,37 @@ instance Infer Expr where
     infer (VarExpr (ConVal t)) =
         error $ "FATAL: " ++ show t
 
+    infer (AnnExpr (VarExpr (SymVal (Sym sym))) typ (Just cont)) = use ass >>= find'
+ 
+        where
+            find' [] = do
+                symT <- newTypeVar Star
+                unify symT typK
+                withAss (sym :>: TypeAbsT [] symT) $ infer cont
+            
+            find' ((i' :>: sc) : as)
+                | sym == i' = do
+                    iT <- infer sc
+                    x  <- infer cont
+                    unify iT typK
+                    unify iT x
+                    return x
+                | otherwise = find' as
+            typK = toKind Star typ
+
+
+    infer (AnnExpr ex typ (Just cont)) = do
+        eT <- infer ex
+        unify eT typK
+        infer cont
+        where
+            typK = toKind Star typ
+
     infer (RecExpr (Record (unzip . M.toList -> (ks, vs)))) =
         liftM (TypeRec . Record . M.fromList . zip ks) (mapM infer vs)
 
     infer (TypExpr (TypeSymP name) (TypeAbsP typ) (Just expr)) =
-        withAss (name :>: typKAbs) $ infer  expr
+        withAss (name :>: typKAbs) $ infer expr
         
         where
             typK = toKind Star typ
@@ -101,9 +144,7 @@ instance Infer Expr where
     infer (TypExpr _ _ Nothing) = error "FATAL: incomplete"
 
     infer (LetExpr (Sym sym) val (Just expr)) = do
-        symT <- newTypeVar Star
-        valT <- withAss (sym :>: TypeAbsT [] symT) $ infer val
-        unify valT symT
+        valT <- tryFind sym $ infer val
         schT <- generalize valT
         withAss (sym :>: schT) $ infer expr
 

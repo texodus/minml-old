@@ -35,7 +35,7 @@ import Minml.AST
 ohmlDef :: LanguageDef MacroState
 ohmlDef = emptyDef {
     T.reservedNames   = keywords,
-    T.reservedOpNames = "=" : concat ops ,
+    T.reservedOpNames = ":" : "=" : concat ops ,
     T.commentLine     = "--",
     T.identStart      = lower <|> char '_',
     T.identLetter     = upper <|> lower <|> digit <|> char '_',

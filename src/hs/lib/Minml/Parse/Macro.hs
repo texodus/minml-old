@@ -32,7 +32,7 @@ import Minml.Replace
 
 type PartMacro a = (a -> a, MacTree a)
 
-macroPRec :: (Syntax a, Replace LetPatt a, Replace Sym a, Replace Expr a, Replace Patt a, Syntax Expr) => 
+macroPRec :: (Syntax a, Replace LetPatt a, Replace Sym a, Replace Expr a, Replace Patt a, Replace (Type ()) a, Syntax Expr) => 
     MacTree a -> Parser (PartMacro a)
 
 macroPRec = 
@@ -78,6 +78,9 @@ macroPRec =
 
         bothP m (Term (Arg a) exs) =
             wrap (syntax :: Parser Expr) a m exs
+
+        bothP m (Term (Typ a) exs) =
+            wrap (syntax :: Parser (Type ())) a m exs
 
         bothP m (Term (Let a) exs) =
             try (wrap (syntax :: Parser Sym) a m exs <|> wrap letPattP a m exs)

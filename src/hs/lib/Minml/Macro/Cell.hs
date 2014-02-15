@@ -4,16 +4,17 @@
 
 ------------------------------------------------------------------------------
 
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Minml.Macro.Cell where
 
 import Control.Lens
 import Data.Maybe
 
-import qualified Data.Set as S
 import qualified Data.Map as P
+import qualified Data.Set as S
 
 import Minml.AST
 
@@ -40,10 +41,21 @@ instance ToCell Box where
 instance ToCell a => ToCell (Meta a) where
     toCell x a = toCell x (a^.node)
 
+instance ToCell (Type ()) where
+    toCell s (TypeSym (TypeSymP s')) | s == s' = Just $ Typ s
+    toCell s (TypeSym (TypeSymP s')) = Nothing
+    toCell s (TypeVar (TypeVarP s')) | s == s' = Just $ Typ s
+    toCell s (TypeVar (TypeVarP s')) = Nothing
+    toCell s (TypeApp a b) = equ s [a, b]
+    toCell s (TypeRec (Record xs)) = equ s (P.elems xs)
+
 instance ToCell Expr where
 
     toCell sym (LetExpr (Sym f) a (Just b)) =
         isArg f sym [a, b]
+
+    toCell sym (AnnExpr c a (Just b)) =
+        equ sym [Box c, Box a, Box b]
 
     toCell sym (AppExpr a b) =
         equ sym [a, b]
@@ -73,7 +85,7 @@ instance ToCell Expr where
     toCell _ _ = error "PARADOX: I should not be"
 
 equ :: (ToCell a) => String -> [a] -> Maybe Cell
-equ n (catMaybes . fmap (toCell n) -> xs) = 
+equ n (catMaybes . fmap (toCell n) -> xs) =
     case S.size . S.fromList $ xs of
     0 -> Nothing
     1 -> Just $ head xs
